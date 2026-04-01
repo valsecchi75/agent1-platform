@@ -1,0 +1,38 @@
+{
+  "nodeType": "promptConstructor",
+  "name": "Prompt Constructor",
+  "version": "1.0.0",
+  "category": "Transform",
+  "tags": ["prompt", "template", "interpolation", "text"],
+  "summary": "Template-based prompt builder that interpolates @variableName placeholders with text from upstream Prompt nodes.",
+  "inputs": [
+    {
+      "id": "text",
+      "type": "text",
+      "required": false,
+      "description": "Multiple text inputs from Prompt nodes (matched by variableName)"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "text",
+      "type": "text",
+      "description": "The fully interpolated prompt template with all @variable placeholders resolved"
+    }
+  ],
+  "executionNotes": "Stores a template string with @variableName placeholders. Connected Prompt nodes that have a matching variableName will have their text substituted into the template. Tracks unresolvedVars for variables that have no upstream connection. Outputs the final interpolated text.",
+  "exampleConnections": [
+    {
+      "from": "prompt.text",
+      "to": "promptConstructor.text",
+      "scenario": "Connect multiple Prompt nodes with different variableNames to populate a template"
+    },
+    {
+      "from": "promptConstructor.text",
+      "to": "nanoBanana.prompt",
+      "scenario": "Pass the interpolated template to an image generation node"
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

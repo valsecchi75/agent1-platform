@@ -1,0 +1,43 @@
+{
+  "nodeType": "switch",
+  "name": "Switch",
+  "version": "1.0.0",
+  "category": "routing",
+  "tags": ["routing", "toggle", "conditional-flow", "named-outputs"],
+  "summary": "Toggle-controlled routing node with named outputs. Accepts any input type and routes data to enabled outputs while blocking disabled ones.",
+  "inputs": [
+    {
+      "id": "input",
+      "type": "any",
+      "required": true,
+      "description": "Single input handle accepting any data type (image, text, audio, video, 3d). Type is derived from connected upstream node."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "output",
+      "type": "any",
+      "description": "Multiple named output handles. Each output has an enable/disable toggle. Data only flows to enabled outputs."
+    }
+  ],
+  "executionNotes": "Switch maintains a switches array of {id, name, enabled} objects. Each switch represents an output handle. inputType is dynamically inferred from the connected input edge. When an output switch is disabled (enabled: false), data does not flow to that output even if it has downstream connections. Users toggle switches via UI buttons or checkboxes. No data transformation occurs; enabled outputs pass data through unchanged.",
+  "exampleConnections": [
+    {
+      "from": "veo.video",
+      "to": "switch.input",
+      "scenario": "Route generated video to multiple named outputs (e.g., 'hd', 'preview', 'archive'). Toggle which outputs receive the video."
+    },
+    {
+      "from": "switch.output",
+      "to": "videoStitch.video",
+      "scenario": "Enable one switch output to feed video to stitching, disable others for selective processing."
+    },
+    {
+      "from": "gemini.text",
+      "to": "switch.input",
+      "scenario": "Route LLM output to multiple named channels (e.g., 'log', 'display', 'api'). Toggle which channels are active."
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

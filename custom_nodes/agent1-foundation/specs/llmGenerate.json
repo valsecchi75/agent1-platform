@@ -1,0 +1,76 @@
+{
+  "nodeType": "llmGenerate",
+  "name": "LLM Text Generation & Analysis",
+  "version": "1.0.0",
+  "category": "generation",
+  "tags": ["llm", "text", "generation", "analysis", "vision", "multi-provider", "prompt-engineering"],
+  "summary": "Versatile multi-provider LLM node supporting text generation, image analysis, prompt engineering, and content transformation. Supports Gemini 2.5 Pro/Flash, Claude, GPT-4, and other providers with vision capabilities, generating coherent text outputs with fine-grained control over temperature, token limits, and system prompts in 1-10 seconds.",
+  "inputs": [
+    {
+      "id": "text",
+      "type": "text",
+      "required": true,
+      "description": "Text input for the LLM. Can be a direct prompt, instruction template, question, content to transform, or system/user message combination. Supports Markdown and structured text for complex reasoning tasks.",
+      "default": "Generate a creative description"
+    },
+    {
+      "id": "image",
+      "type": "image",
+      "required": false,
+      "description": "Optional image(s) for vision-based analysis. Enables image description, style extraction, object detection, scene understanding, and visual question answering when provided to models with vision capabilities.",
+      "default": null
+    }
+  ],
+  "outputs": [
+    {
+      "id": "text",
+      "type": "text",
+      "description": "Generated text output from the LLM. Can be creative writing, analysis, structured data (JSON/CSV), code snippets, or transformed content depending on input prompt."
+    },
+    {
+      "id": "metadata",
+      "type": "object",
+      "description": "Generation metadata including model used, tokens generated, tokens consumed (for prompt), temperature applied, stop reason, provider, and cost estimation for billing and performance tracking."
+    }
+  ],
+  "executionNotes": "This node provides a unified abstraction over multiple LLM providers (Gemini 2.5 Pro/Flash, Claude, GPT-4, Llama 2/3, and others). The provider and model fields control routing at execution time. Advanced parameters include temperature (0-2, controlling randomness), maxTokens (output length limit), top_p (diversity control), frequency_penalty, and presence_penalty. Vision-enabled models (Gemini, Claude, GPT-4) accept optional images for analysis. Supports system prompts for behavior control, few-shot examples for in-context learning, and structured output modes (JSON, YAML) when supported. Used extensively in the pipeline for prompt enhancement (expanding vague text into detailed image/video prompts), image analysis (extracting style attributes, object lists, composition notes), and content classification (determining media type, theme, mood). Typical latency: 1-10 seconds depending on model and output length.",
+  "exampleConnections": [
+    {
+      "from": "textInput.output",
+      "to": "llmGenerate.text",
+      "scenario": "Prompt enhancement: Transform a simple user query ('a cool robot') into a detailed, stylized image prompt suitable for nanoBanana generation."
+    },
+    {
+      "from": "nanoBanana.image",
+      "to": "llmGenerate.image",
+      "scenario": "Image analysis and description: Analyze generated images to extract style descriptors, composition details, and mood for quality assurance or iterative refinement."
+    },
+    {
+      "from": "llmGenerate.text",
+      "to": "nanoBanana.text",
+      "scenario": "Iterative image generation: Use LLM to refine image prompts based on generation history and user feedback, enabling goal-directed creative optimization."
+    },
+    {
+      "from": "llmGenerate.text",
+      "to": "generateVideo.text",
+      "scenario": "Video prompt engineering: Expand still image descriptions into narrative prompts with camera directions and motion cues for video generation."
+    },
+    {
+      "from": "llmGenerate.text",
+      "to": "generateAudio.text",
+      "scenario": "Audio description generation: Create music or narration descriptions from image/video context, bridging visual and audio modalities."
+    },
+    {
+      "from": "textInput.output",
+      "to": "llmGenerate.text",
+      "scenario": "Content transformation: Rewrite, summarize, translate, or stylistically transform text (e.g., marketing copy → technical documentation, English → emoji descriptions)."
+    },
+    {
+      "from": "llmGenerate.text",
+      "to": "llmGenerate.text",
+      "scenario": "Multi-step reasoning: Chain multiple LLM calls for complex reasoning, each refining output of the previous for hierarchical problem-solving and validation."
+    }
+  ],
+  "apiProvider": "multi",
+  "requiresApiKey": true
+}

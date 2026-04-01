@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "name": "Background Swap",
+  "edgeStyle": "curved",
+  "nodes": [
+    {
+      "id": "imageInput-1",
+      "type": "imageInput",
+      "position": {
+        "x": 50,
+        "y": 150
+      },
+      "data": {
+        "image": null,
+        "filename": null,
+        "dimensions": null
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      }
+    },
+    {
+      "id": "prompt-1",
+      "type": "prompt",
+      "position": {
+        "x": 50,
+        "y": 480
+      },
+      "data": {
+        "prompt": "Replace the background with a luxury studio setting"
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      }
+    },
+    {
+      "id": "nanoBanana-1",
+      "type": "nanoBanana",
+      "position": {
+        "x": 450,
+        "y": 250
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": null,
+        "outputImage": null,
+        "aspectRatio": "1:1",
+        "resolution": "1K",
+        "model": "nano-banana-2",
+        "useGoogleSearch": false,
+        "useImageSearch": false,
+        "status": "idle",
+        "error": null,
+        "imageHistory": [],
+        "selectedHistoryIndex": -1
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      }
+    },
+    {
+      "id": "output-1",
+      "type": "output",
+      "position": {
+        "x": 850,
+        "y": 240
+      },
+      "data": {
+        "image": null
+      },
+      "style": {
+        "width": 320,
+        "height": 320
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "imageInput-1",
+      "sourceHandle": "image",
+      "target": "nanoBanana-1",
+      "targetHandle": "image"
+    },
+    {
+      "id": "e2",
+      "source": "prompt-1",
+      "sourceHandle": "text",
+      "target": "nanoBanana-1",
+      "targetHandle": "text"
+    },
+    {
+      "id": "e3",
+      "source": "nanoBanana-1",
+      "sourceHandle": "image",
+      "target": "output-1",
+      "targetHandle": "image"
+    }
+  ],
+  "description": "Replace image background with a new scene",
+  "category": "simple",
+  "tags": [
+    "Gemini"
+  ],
+  "author": "AGENT 1 Preset",
+  "createdAt": "2026-03-21T05:38:50.172Z",
+  "thumbnailUrl": "/workflows/images/background-swap.jpg"
+}

@@ -1,0 +1,60 @@
+{
+  "nodeType": "naRecolor",
+  "name": "Garment Recolor",
+  "version": "1.0.0",
+  "category": "image/editing",
+  "tags": ["fashion", "recolor", "pantone", "color"],
+  "summary": "Recolors garments to a target Pantone color or reference image color while preserving texture and lighting",
+  "inputs": [
+    {
+      "id": "garmentPhoto",
+      "type": "image",
+      "required": true,
+      "description": "Photo of the garment to recolor"
+    },
+    {
+      "id": "targetColor",
+      "type": "text",
+      "required": false,
+      "description": "Target color specified as Pantone code (e.g., 'Pantone 18-1546') or color name (e.g., 'navy blue', 'emerald green')"
+    },
+    {
+      "id": "colorReference",
+      "type": "image",
+      "required": false,
+      "description": "Reference image containing the target color to match"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "recoloredGarment",
+      "type": "image",
+      "description": "Photo of the garment recolored to the target color"
+    }
+  ],
+  "executionNotes": "This node uses Gemini to identify the garment region and color zones, then Nano Banana applies the new color while intelligently preserving texture, shadows, highlights, and lighting. Provide either targetColor (text) or colorReference (image), or both for best results. Works best with uniform fabric garments.",
+  "exampleConnections": [
+    {
+      "from": "imageInput.image",
+      "to": "naRecolor.garmentPhoto",
+      "scenario": "Connect an image input node containing a garment photo"
+    },
+    {
+      "from": "textInput.text",
+      "to": "naRecolor.targetColor",
+      "scenario": "Connect a text input with Pantone code or color name"
+    },
+    {
+      "from": "imageInput.image",
+      "to": "naRecolor.colorReference",
+      "scenario": "Connect a reference image with the desired color"
+    },
+    {
+      "from": "naRecolor.recoloredGarment",
+      "to": "imageOutput.image",
+      "scenario": "Export the recolored garment image"
+    }
+  ],
+  "apiProvider": "Gemini + Nano Banana",
+  "requiresApiKey": true
+}

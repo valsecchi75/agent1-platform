@@ -1,0 +1,25 @@
+{
+  "slug": "street-rebellion",
+  "name": "Street rebellion",
+  "description": "Generates bold street-fashion portraits with rebellious attitude, poster-wall energy, strong styling identity, and a raw urban editorial look.",
+  "author": "SV75",
+  "createdAt": "2026-03-26T17:19:11.581Z",
+  "updatedAt": "2026-03-26T17:19:11.581Z",
+  "source": "local",
+  "sourceUrl": null,
+  "registryVersion": null,
+  "category": "simple",
+  "tags": [
+    "Nano Banana"
+  ],
+  "techTags": [
+    "Custom: morpheusModelManagement",
+    "Nano Banana"
+  ],
+  "nodeCount": 4,
+  "previewFrames": [
+    "agent1_0033.jpg",
+    "agent1_0034.jpg",
+    "agent1_0035.jpg"
+  ]
+}

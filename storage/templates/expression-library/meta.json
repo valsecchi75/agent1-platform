@@ -1,0 +1,26 @@
+{
+  "slug": "expression-library",
+  "name": "Expression library",
+  "description": "Generates a black-and-white expression grid that explores the same talent across multiple emotions, gestures, and facial attitudes while preserving strong identity consistency.",
+  "author": "SV75",
+  "createdAt": "2026-03-26T17:51:40.852Z",
+  "updatedAt": "2026-03-26T17:51:40.852Z",
+  "source": "local",
+  "sourceUrl": null,
+  "registryVersion": null,
+  "category": "simple",
+  "tags": [
+    "Nano Banana",
+    "Talent"
+  ],
+  "techTags": [
+    "Custom: morpheusModelManagement",
+    "Nano Banana"
+  ],
+  "nodeCount": 4,
+  "previewFrames": [
+    "agent1_0048.jpg",
+    "agent1_0049.jpg",
+    "agent1_0050.jpg"
+  ]
+}

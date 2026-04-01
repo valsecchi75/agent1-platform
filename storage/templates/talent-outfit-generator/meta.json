@@ -1,0 +1,30 @@
+{
+  "slug": "talent-outfit-generator",
+  "name": "Talent Outfit Generator",
+  "description": "Combines a talent reference and an outfit reference to generate clean, professional fashion-editorial portraits with consistent identity and styled visual direction.",
+  "author": "SV75",
+  "createdAt": "2026-03-26T14:28:46.906Z",
+  "updatedAt": "2026-03-26T14:28:46.906Z",
+  "source": "local",
+  "sourceUrl": null,
+  "registryVersion": null,
+  "category": "simple",
+  "tags": [
+    "Gemini",
+    "LLM",
+    "Nano Banana",
+    "Try-on"
+  ],
+  "techTags": [
+    "LLM",
+    "Nano Banana"
+  ],
+  "nodeCount": 6,
+  "previewFrames": [
+    "agent1_0024.jpg",
+    "agent1_0025.png",
+    "agent1_0026.jpg",
+    "agent1_0028.jpg",
+    "agent1_0029.jpg"
+  ]
+}

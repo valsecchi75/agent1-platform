@@ -1,0 +1,26 @@
+{
+  "slug": "pop-culture-parody",
+  "name": "Pop-culture parody",
+  "description": "Generates themed mirror-selfie group portraits with strong squad energy, pop-culture storytelling, character-driven styling, and a playful cinematic vibe.",
+  "author": "SV75",
+  "createdAt": "2026-03-26T17:25:56.592Z",
+  "updatedAt": "2026-03-26T17:25:56.592Z",
+  "source": "local",
+  "sourceUrl": null,
+  "registryVersion": null,
+  "category": "simple",
+  "tags": [
+    "Nano Banana",
+    "Talent"
+  ],
+  "techTags": [
+    "Custom: morpheusModelManagement",
+    "Nano Banana"
+  ],
+  "nodeCount": 7,
+  "previewFrames": [
+    "agent1_0037.jpg",
+    "agent1_0038.jpg",
+    "agent1_0039.jpg"
+  ]
+}

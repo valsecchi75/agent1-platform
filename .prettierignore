@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next/
+out/
+dist/
+
+# Production
+build/
+
+# Misc
+.DS_Store
+*.pem
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Lock files (optional - uncomment if you want prettier to skip these)
+# pnpm-lock.yaml
+# yarn.lock
+# package-lock.json

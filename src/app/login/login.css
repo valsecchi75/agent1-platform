@@ -1,0 +1,249 @@
+/* ══════════════════════════════════════════════════
+   AGENT 1 — Immersive Login
+   ══════════════════════════════════════════════════ */
+
+/* ── Base ── */
+body {
+  background: #0a0e14;
+}
+
+/* ── Color scheme variables — aligned to platform skins (globals.css) ── */
+:root {
+  --login-accent: #c5a44e;
+  --login-accent-rgb: 197, 164, 78;
+  --login-glow: rgba(197, 164, 78, 0.4);
+  --login-glow-soft: rgba(197, 164, 78, 0.12);
+}
+
+/* Aurora — gold */
+[data-login-scheme="aurora"] {
+  --login-accent: #c5a44e;
+  --login-accent-rgb: 197, 164, 78;
+  --login-glow: rgba(197, 164, 78, 0.4);
+  --login-glow-soft: rgba(197, 164, 78, 0.12);
+}
+
+/* Ember — red */
+[data-login-scheme="ember"] {
+  --login-accent: #D31920;
+  --login-accent-rgb: 211, 25, 32;
+  --login-glow: rgba(211, 25, 32, 0.4);
+  --login-glow-soft: rgba(211, 25, 32, 0.12);
+}
+
+/* Matrix — tech green */
+[data-login-scheme="matrix"] {
+  --login-accent: #4CAF50;
+  --login-accent-rgb: 76, 175, 80;
+  --login-glow: rgba(76, 175, 80, 0.4);
+  --login-glow-soft: rgba(76, 175, 80, 0.12);
+}
+
+/* Sienna — brown/amber */
+[data-login-scheme="sienna"] {
+  --login-accent: #8B572A;
+  --login-accent-rgb: 139, 87, 42;
+  --login-glow: rgba(139, 87, 42, 0.4);
+  --login-glow-soft: rgba(139, 87, 42, 0.12);
+}
+
+/* Sage — olive/sage */
+[data-login-scheme="sage"] {
+  --login-accent: #6B705C;
+  --login-accent-rgb: 107, 112, 92;
+  --login-glow: rgba(107, 112, 92, 0.4);
+  --login-glow-soft: rgba(107, 112, 92, 0.12);
+}
+
+/* Orchid — purple */
+[data-login-scheme="orchid"] {
+  --login-accent: #7B2D8E;
+  --login-accent-rgb: 123, 45, 142;
+  --login-glow: rgba(123, 45, 142, 0.4);
+  --login-glow-soft: rgba(123, 45, 142, 0.12);
+}
+
+/* Platinum — platinum */
+[data-login-scheme="platinum"] {
+  --login-accent: #A0A0A8;
+  --login-accent-rgb: 160, 160, 168;
+  --login-glow: rgba(160, 160, 168, 0.4);
+  --login-glow-soft: rgba(160, 160, 168, 0.12);
+}
+
+/* Abyss — deep navy */
+[data-login-scheme="abyss"] {
+  --login-accent: #1B3A5C;
+  --login-accent-rgb: 27, 58, 92;
+  --login-glow: rgba(27, 58, 92, 0.5);
+  --login-glow-soft: rgba(27, 58, 92, 0.15);
+}
+
+/* Amber — heritage tan */
+[data-login-scheme="amber"] {
+  --login-accent: #B8860B;
+  --login-accent-rgb: 184, 134, 11;
+  --login-glow: rgba(184, 134, 11, 0.4);
+  --login-glow-soft: rgba(184, 134, 11, 0.12);
+}
+
+/* Ocean — ocean teal */
+[data-login-scheme="ocean"] {
+  --login-accent: #008B8B;
+  --login-accent-rgb: 0, 139, 139;
+  --login-glow: rgba(0, 139, 139, 0.4);
+  --login-glow-soft: rgba(0, 139, 139, 0.12);
+}
+
+
+/* ══════════════════════════════════════════════════
+   Form glow border — thick, colorful, no edge artifacts
+   ══════════════════════════════════════════════════ */
+
+.login-glow {
+  position: relative;
+  border-radius: 16px;
+}
+
+/*
+ * Rotating gradient border — sits flush against the form edge.
+ * Uses inset: 0 so the pseudo starts at the exact form boundary,
+ * with a 2px padding that the mask-composite reveals as the visible line.
+ */
+/* Rotating border — 3px thick, wraps around form from outside */
+.login-glow::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 19px;
+  padding: 3px;
+  background: conic-gradient(
+    from var(--glow-angle, 0deg),
+    transparent 0%,
+    transparent 20%,
+    color-mix(in srgb, var(--login-accent) 50%, #3366ff) 28%,
+    color-mix(in srgb, var(--login-accent) 80%, #66ddff) 36%,
+    var(--login-accent) 44%,
+    color-mix(in srgb, var(--login-accent) 90%, #ffaa66) 52%,
+    color-mix(in srgb, var(--login-accent) 70%, #ff66aa) 60%,
+    color-mix(in srgb, var(--login-accent) 50%, #cc44ff) 68%,
+    color-mix(in srgb, var(--login-accent) 35%, #6644ff) 76%,
+    transparent 86%,
+    transparent 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: node-glow-rotate 8s linear infinite;
+  filter: blur(0.5px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Glow halo — soft colored light around the form */
+.login-glow::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 19px;
+  box-shadow: 0 0 15px 4px var(--login-glow-soft),
+              0 0 40px 12px color-mix(in srgb, var(--login-accent) 12%, transparent),
+              0 0 80px 25px color-mix(in srgb, var(--login-accent) 6%, transparent),
+              0 0 160px 50px color-mix(in srgb, var(--login-accent) 2%, transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Success: fast white glow */
+.login-glow.glow-fast::before {
+  animation-duration: 0.3s;
+  background: conic-gradient(
+    from var(--glow-angle, 0deg),
+    transparent 0%, transparent 25%,
+    #ffffff 40%, rgba(255,255,255,0.8) 55%,
+    rgba(255,255,255,0.4) 70%,
+    transparent 85%
+  );
+}
+
+/* Error: red glow */
+.login-glow.glow-error::before {
+  background: conic-gradient(
+    from var(--glow-angle, 0deg),
+    transparent 0%, transparent 40%,
+    #ef4444 55%, rgba(239,68,68,0.6) 68%,
+    transparent 82%
+  );
+}
+
+.login-glow.glow-error::after {
+  box-shadow: 0 0 50px 10px rgba(239, 68, 68, 0.2),
+              0 0 100px 30px rgba(239, 68, 68, 0.08);
+}
+
+/* ══════════════════════════════════════════════════
+   UI animations
+   ══════════════════════════════════════════════════ */
+
+/* Shake */
+@keyframes login-shake {
+  0%, 100% { transform: translateX(0); }
+  15%, 55% { transform: translateX(-8px); }
+  35%, 75% { transform: translateX(8px); }
+}
+.login-shake { animation: login-shake 0.4s ease-in-out; }
+
+/* Flash */
+@keyframes login-flash {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 1; }
+}
+.login-flash { animation: login-flash 0.5s ease-out forwards; }
+
+/* Flicker */
+@keyframes login-flicker {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+.login-flicker {
+  animation: login-flicker 3s ease-in-out infinite;
+  animation-delay: var(--flicker-delay, 0s);
+}
+
+/* ══════════════════════════════════════════════════
+   Audio
+   ══════════════════════════════════════════════════ */
+
+.audio-bar {
+  background: var(--login-accent);
+  transform-origin: bottom;
+  transition: height 80ms ease-out, width 300ms, opacity 300ms, border-radius 300ms;
+  box-shadow: 0 0 4px 1px var(--login-glow-soft);
+}
+
+/* (sound prompt removed — music auto-starts on first click) */
+
+/* ══════════════════════════════════════════════════
+   Contact popup
+   ══════════════════════════════════════════════════ */
+
+@keyframes contact-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.contact-entering {
+  animation: contact-in 0.3s ease-out forwards;
+}
+
+/* ══════════════════════════════════════════════════
+   Post-login dissolve
+   ══════════════════════════════════════════════════ */
+
+/* Login fades to dark */
+@keyframes login-fade-out {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}

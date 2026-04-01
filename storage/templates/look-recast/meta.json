@@ -1,0 +1,30 @@
+{
+  "slug": "look-recast",
+  "name": "Look Recast",
+  "description": "Recreates a reference image with the same environment, pose, and visual structure, while replacing the original subject with a selected talent and a custom outfit.",
+  "author": "User",
+  "createdAt": "2026-03-29T05:53:15.957Z",
+  "updatedAt": "2026-03-29T05:53:15.957Z",
+  "source": "local",
+  "sourceUrl": null,
+  "registryVersion": null,
+  "category": "simple",
+  "tags": [
+    "Gemini",
+    "LLM",
+    "Nano Banana",
+    "Talent",
+    "Try-on"
+  ],
+  "techTags": [
+    "Custom: morpheusModelManagement",
+    "LLM",
+    "Nano Banana"
+  ],
+  "nodeCount": 12,
+  "previewFrames": [
+    "agent1_0079.jpg",
+    "agent1_0080.jpg",
+    "agent1_0081.jpg"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "slug": "beverly-hills-rodeo-drive-energy",
+  "name": "Beverly Hills / Rodeo Drive energy",
+  "description": "Generates polished luxury-street portraits with upscale retail storefronts, refined styling, designer-accessory energy, and a clean aspirational fashion-campaign look.",
+  "author": "SV75",
+  "createdAt": "2026-03-26T17:46:56.761Z",
+  "updatedAt": "2026-03-26T17:46:56.761Z",
+  "source": "local",
+  "sourceUrl": null,
+  "registryVersion": null,
+  "category": "simple",
+  "tags": [
+    "Nano Banana",
+    "Talent"
+  ],
+  "techTags": [
+    "Custom: morpheusModelManagement",
+    "Nano Banana"
+  ],
+  "nodeCount": 4,
+  "previewFrames": [
+    "agent1_0044.jpg",
+    "agent1_0045.jpg",
+    "agent1_0046.jpg",
+    "agent1_0047.jpg"
+  ]
+}

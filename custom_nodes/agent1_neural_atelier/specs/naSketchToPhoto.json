@@ -1,0 +1,38 @@
+{
+  "nodeType": "naSketchToPhoto",
+  "name": "Sketch to Photo",
+  "version": "1.0.0",
+  "category": "image/generation",
+  "tags": ["fashion", "sketch", "photorealistic", "render", "design"],
+  "summary": "Converts 2D fashion sketches to photorealistic renders using Gemini analysis and Nano Banana rendering",
+  "inputs": [
+    {
+      "id": "sketch",
+      "type": "image",
+      "required": true,
+      "description": "2D fashion sketch to convert to photorealistic render"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "photorealisticRender",
+      "type": "image",
+      "description": "Photorealistic render of the fashion sketch"
+    }
+  ],
+  "executionNotes": "This node uses a 2-step pipeline: (1) Gemini Flash analyzes the sketch and generates a detailed description, (2) Nano Banana renders a photorealistic image from that description using the sketch as reference. Processing time varies based on sketch complexity and API response times.",
+  "exampleConnections": [
+    {
+      "from": "imageInput.image",
+      "to": "naSketchToPhoto.sketch",
+      "scenario": "Connect an image input node containing a fashion sketch"
+    },
+    {
+      "from": "naSketchToPhoto.photorealisticRender",
+      "to": "imageOutput.image",
+      "scenario": "Export the rendered photorealistic image"
+    }
+  ],
+  "apiProvider": "Gemini + Nano Banana",
+  "requiresApiKey": true
+}

@@ -1,0 +1,26 @@
+{
+  "slug": "purple-tiled-corner",
+  "name": "Purple tiled corner",
+  "description": "Generates a bold fashion-editorial scene built around a crouched talent pose, a purple tiled corner, graffiti-style wall text, plush styling elements, and cinematic image control.",
+  "author": "User",
+  "createdAt": "2026-03-26T17:11:38.531Z",
+  "updatedAt": "2026-03-26T17:11:38.531Z",
+  "source": "local",
+  "sourceUrl": null,
+  "registryVersion": null,
+  "category": "simple",
+  "tags": [
+    "Nano Banana",
+    "Talent"
+  ],
+  "techTags": [
+    "Custom: morpheusModelManagement",
+    "Nano Banana"
+  ],
+  "nodeCount": 4,
+  "previewFrames": [
+    "agent1_0030.jpg",
+    "agent1_0031.jpg",
+    "agent1_0032.jpg"
+  ]
+}

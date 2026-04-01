@@ -1,0 +1,27 @@
+{
+  "nodeType": "splitGrid",
+  "name": "Split Grid",
+  "version": "1.0.0",
+  "category": "Orchestration",
+  "tags": ["image", "grid", "parallel", "orchestration", "batch"],
+  "summary": "Splits an image into a grid of cells for parallel processing. Automatically creates child imageInput, prompt, and nanoBanana nodes for each cell.",
+  "inputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "required": true,
+      "description": "Source image to split into grid cells"
+    }
+  ],
+  "outputs": [],
+  "executionNotes": "Complex orchestration node that divides the source image into targetCount cells (4, 6, 8, 9, or 10 supported). For each cell, automatically generates child nodes: imageInput (cell image), prompt (using defaultPrompt), and nanoBanana (generation node with generateSettings). Can store aspectRatio, resolution, and model settings that apply to all child generation nodes. Creates internal node orchestration structure.",
+  "exampleConnections": [
+    {
+      "from": "imageInput.image",
+      "to": "splitGrid.image",
+      "scenario": "Split a reference image into a 3x3 grid for parallel AI-enhanced variations"
+    }
+  ],
+  "apiProvider": "nanoBanana",
+  "requiresApiKey": true
+}

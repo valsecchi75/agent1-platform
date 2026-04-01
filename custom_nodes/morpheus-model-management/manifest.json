@@ -1,0 +1,15 @@
+{
+  "name": "Morpheus Model Management",
+  "version": "1.0.0",
+  "author": "Morpheus Creative Lab",
+  "description": "Digital talent model management system with browsable catalog, Patreon authentication, and variable output for workflow integration",
+  "category": "Morpheus",
+  "nodes": [
+    {
+      "id": "morpheusModelManagement",
+      "label": "Morpheus Model Management",
+      "description": "Browse and select digital talent models with filtering by gender, age, ethnicity. Outputs talent image, description, and metadata as workflow variables.",
+      "configDir": "configs/morpheus_model_management/"
+    }
+  ]
+}

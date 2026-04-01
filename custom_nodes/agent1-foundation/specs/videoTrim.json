@@ -1,0 +1,38 @@
+{
+  "nodeType": "videoTrim",
+  "name": "Video Trim",
+  "version": "1.0.0",
+  "category": "video-processing",
+  "tags": ["video", "cutting", "time-range", "browser-native"],
+  "summary": "Trims a video clip to a user-defined start and end time range. Auto-detects source duration and outputs the specified segment.",
+  "inputs": [
+    {
+      "id": "video",
+      "type": "video",
+      "required": true,
+      "description": "Input video clip to trim."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "video",
+      "type": "video",
+      "description": "Trimmed video segment."
+    }
+  ],
+  "executionNotes": "Extracts a subsegment of video from startTime to endTime (both in seconds). Duration is auto-detected from the source video metadata and displayed in the node UI. Processing is entirely browser-based using MediaSource API and canvas rendering. Progress (0-100) tracks the encoding operation. encoderSupported flag indicates codec compatibility. Preserves original video resolution and bitrate where possible.",
+  "exampleConnections": [
+    {
+      "from": "veo.video",
+      "to": "videoTrim.video",
+      "scenario": "Trim generated Veo video to a specific 30-second segment."
+    },
+    {
+      "from": "videoTrim.video",
+      "to": "videoStitch.video",
+      "scenario": "Feed trimmed clips into a video stitching node for sequencing."
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

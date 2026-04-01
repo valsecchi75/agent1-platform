@@ -1,0 +1,78 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# User content (generated files — not committed, but directory structure is)
+/storage/input/*
+!/storage/input/.gitkeep
+/storage/output/images/*
+!/storage/output/images/.gitkeep
+/storage/output/videos/*
+!/storage/output/videos/.gitkeep
+/storage/output/audio/*
+!/storage/output/audio/.gitkeep
+/storage/workflows/*
+!/storage/workflows/.gitkeep
+
+# renders
+renders/
+
+# logs
+logs/*.json
+
+# .claude
+.claude/
+
+# planning docs
+.planning/
+
+# agents
+.agents/
+
+.superset/
+# database
+agent1.db
+agent1.db-wal
+agent1.db-shm
+data/
+
+# Release artifacts
+agent1-v*.zip
+release/logs/
+release/release-notes.tmp
+.release-staging/
+
+# Large template files (contain base64 images, exceed GitHub 50MB warning)
+storage/templates/*/template.json

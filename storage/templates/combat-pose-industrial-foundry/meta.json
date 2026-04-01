@@ -1,0 +1,29 @@
+{
+  "slug": "combat-pose-industrial-foundry",
+  "name": "Combat pose - industrial foundry",
+  "description": "Generates cinematic action-editorial portraits set inside an industrial foundry, combining armed combat poses, molten-metal atmosphere, smoke, sparks, and high-intensity dystopian character styling.",
+  "author": "SV75",
+  "createdAt": "2026-03-28T05:23:17.579Z",
+  "updatedAt": "2026-03-28T05:23:17.579Z",
+  "source": "local",
+  "sourceUrl": null,
+  "registryVersion": null,
+  "category": "simple",
+  "tags": [
+    "Nano Banana",
+    "Talent"
+  ],
+  "techTags": [
+    "Custom: morpheusModelManagement",
+    "Nano Banana"
+  ],
+  "nodeCount": 4,
+  "previewFrames": [
+    "agent1_0056.jpg",
+    "agent1_0057.jpg",
+    "agent1_0058.jpg",
+    "agent1_0059.jpg",
+    "agent1_0060.jpg",
+    "agent1_0061.jpg"
+  ]
+}

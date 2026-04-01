@@ -1,0 +1,25 @@
+{
+  "slug": "eyewear-hero-shot",
+  "name": "Eyewear hero shot",
+  "description": "Generates bold eyewear-focused editorial portraits using forced perspective, with the glasses pushed into the foreground and the talent supporting the product through clean studio fashion posing.",
+  "author": "SV75",
+  "createdAt": "2026-03-26T17:39:26.373Z",
+  "updatedAt": "2026-03-26T17:39:26.373Z",
+  "source": "local",
+  "sourceUrl": null,
+  "registryVersion": null,
+  "category": "simple",
+  "tags": [
+    "Nano Banana",
+    "Talent"
+  ],
+  "techTags": [
+    "Custom: morpheusModelManagement",
+    "Nano Banana"
+  ],
+  "nodeCount": 6,
+  "previewFrames": [
+    "agent1_0042.jpg",
+    "agent1_0043.jpg"
+  ]
+}

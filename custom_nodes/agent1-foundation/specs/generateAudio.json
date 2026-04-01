@@ -1,0 +1,59 @@
+{
+  "nodeType": "generateAudio",
+  "name": "AI Audio & Music Generation",
+  "version": "1.0.0",
+  "category": "generation",
+  "tags": ["audio", "music", "tts", "generation", "ai", "voice", "sound-design"],
+  "summary": "Multi-provider AI audio generation supporting text-to-music, TTS, sound design, and voice synthesis workflows. Supports providers including WaveSpeed, fal.ai, and Replicate, generating high-fidelity audio clips with customizable voice, tempo, and style in 3-20 seconds.",
+  "inputs": [
+    {
+      "id": "text",
+      "type": "text",
+      "required": true,
+      "description": "Text input for audio generation. Can be a music description (e.g., 'upbeat electronic dance track'), speech/narration text for TTS, or sound design prompt (e.g., 'ambient rain with distant thunder').",
+      "default": "generate a peaceful ambient track"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "audio",
+      "type": "audio",
+      "description": "Generated audio output as data URL (embedded) or streaming URL. Encoded in MP3, WAV, or OGG format depending on provider and configuration."
+    },
+    {
+      "id": "metadata",
+      "type": "object",
+      "description": "Audio metadata including duration (seconds), sample rate (Hz), format (MP3/WAV/OGG), bit rate, generation time, model, and voice/style parameters used for asset management and downstream processing."
+    }
+  ],
+  "executionNotes": "This node abstracts multiple audio generation and TTS providers, with WaveSpeed as primary voice/music engine and fal.ai as fallback for specialized sound design. The selectedModel field routes to appropriate provider at runtime. Parameters are dynamically exposed via inputSchema and include: for TTS/voice (voice_id, speaking_rate, pitch, emotion), for music generation (genre, tempo, duration, instrumentation, energy_level), and for sound design (environmental_type, intensity, effect_chain). AudioHistory carousel maintains recent generations for quick reference and style matching. Duration range varies by model (TTS: 1-300 seconds, music: 10-120 seconds, sound design: 1-60 seconds). Output is stored as data URL for immediate playback or embedded in video workflows. Typical latency: 3-20 seconds depending on duration and provider.",
+  "exampleConnections": [
+    {
+      "from": "textInput.output",
+      "to": "generateAudio.text",
+      "scenario": "Direct TTS: Convert simple text prompts into narration or voice-over for video content, presentations, or accessibility."
+    },
+    {
+      "from": "llmGenerate.text",
+      "to": "generateAudio.text",
+      "scenario": "LLM-generated narration: Generate story text with an LLM, then synthesize into professional voice-over or character dialogue with chosen voice personality."
+    },
+    {
+      "from": "generateVideo.video",
+      "to": "generateAudio.text",
+      "scenario": "Video soundtrack generation: After creating video, generate matched background music or ambient soundscape based on video description and mood."
+    },
+    {
+      "from": "generateAudio.audio",
+      "to": "compositeOutput.component",
+      "scenario": "Multi-modal assembly: Combine generated audio with video, images, and text into a complete media package for publication."
+    },
+    {
+      "from": "llmGenerate.text",
+      "to": "generateAudio.text",
+      "scenario": "Iterative voice refinement: Use LLM to adjust narrative tone (e.g., 'make this more dramatic'), regenerate narration with different voice parameters for optimal performance."
+    }
+  ],
+  "apiProvider": "multi",
+  "requiresApiKey": true
+}

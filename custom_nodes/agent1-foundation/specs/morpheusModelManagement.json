@@ -1,0 +1,51 @@
+{
+  "nodeType": "morpheusModelManagement",
+  "name": "Morpheus Model Management",
+  "version": "1.0.0",
+  "category": "custom/morpheus",
+  "tags": ["morpheus", "talent", "model", "catalog", "agency", "patreon", "physiognomic", "portrait"],
+  "summary": "Browsable digital talent catalog node. Displays a paginated 4-column grid of AI-generated model portraits with filtering by gender, age group, ethnicity, and tags. Outputs the selected talent's image, physiognomic description, and full metadata via three output handles. Supports Patreon authentication for the full online catalog, with a local demo catalog when logged out. Ported from the ComfyUI comfyui_morpheus_model_management custom node.",
+  "inputs": [],
+  "outputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "description": "The selected talent's portrait image (URL or base64)."
+    },
+    {
+      "id": "description",
+      "type": "text",
+      "description": "Rich physiognomic description of the selected talent — includes name, physical traits (gender, age, ethnicity, skin tone, hair, eyes, body type). Used as @variable value in downstream Prompt Constructor nodes."
+    },
+    {
+      "id": "metadata",
+      "type": "text",
+      "description": "Full JSON metadata for the selected talent — includes id, name, all physical attributes, tags, copyright info, and the @variable name."
+    }
+  ],
+  "executionNotes": "On execution, the node loads the talent catalog (remote Supabase storage when Patreon-authenticated, local demo otherwise), finds the selected talent by ID, builds a rich text description from physiognomic attributes, and outputs image + description + metadata JSON. The description output is registered as a @variable (e.g., @amara_sol_) that can be referenced in Prompt Constructor nodes. Patreon OAuth is handled via Supabase Edge Functions with a wake-up ping to handle Replit dormancy. The node is fixed at 560x720px with resize disabled. Catalog is paginated at 8 talents per page with lazy image URL resolution (only visible page images are fetched).",
+  "exampleConnections": [
+    {
+      "from": "morpheusModelManagement.image",
+      "to": "nanoBanana.sourceImage",
+      "scenario": "Use the selected talent's portrait as a reference image for AI generation."
+    },
+    {
+      "from": "morpheusModelManagement.description",
+      "to": "promptConstructor.text",
+      "scenario": "Feed the talent's physiognomic description into a prompt template as @variable."
+    },
+    {
+      "from": "morpheusModelManagement.metadata",
+      "to": "showAnything.anything",
+      "scenario": "View the full talent metadata JSON in a Show Anything debug node."
+    },
+    {
+      "from": "morpheusModelManagement.image",
+      "to": "previewImage.image",
+      "scenario": "Preview the talent portrait in a separate Preview Image node."
+    }
+  ],
+  "apiProvider": "supabase",
+  "requiresApiKey": false
+}

@@ -1,0 +1,43 @@
+{
+  "nodeType": "conditionalSwitch",
+  "name": "Conditional Switch",
+  "version": "1.0.0",
+  "category": "routing",
+  "tags": ["routing", "text-matching", "conditional-logic", "multi-mode"],
+  "summary": "Text-based routing with multi-mode pattern matching. Routes incoming text to the first matching rule output or a default output if no match.",
+  "inputs": [
+    {
+      "id": "text",
+      "type": "text",
+      "required": true,
+      "description": "Incoming text string to match against rules."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "output",
+      "type": "text",
+      "description": "Multiple outputs: one per rule plus a default. Matched rule output receives the input text; others receive null."
+    }
+  ],
+  "executionNotes": "Maintains a rules array of {id, value, mode, label, isMatched} objects. value is a comma-separated list of match patterns. mode supports 'exact', 'contains', 'starts-with', 'ends-with' matching. incomingText is tested against each rule in order. The first rule with isMatched: true sends data to its corresponding output. Rules not matching do not flow. evaluationPaused flag allows pausing rule evaluation without disconnecting edges. A default output always exists and receives text when no rules match.",
+  "exampleConnections": [
+    {
+      "from": "gemini.text",
+      "to": "conditionalSwitch.text",
+      "scenario": "Route LLM output by checking if text contains 'error', 'success', or other keywords to separate results."
+    },
+    {
+      "from": "conditionalSwitch.output",
+      "to": "output.text",
+      "scenario": "Send matched text to final output node for logging or export."
+    },
+    {
+      "from": "conditionalSwitch.output",
+      "to": "router.input",
+      "scenario": "Fan out matched text to multiple downstream analysis nodes."
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

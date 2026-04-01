@@ -1,0 +1,31 @@
+{
+  "nodeType": "prompt",
+  "name": "Prompt",
+  "version": "1.0.0",
+  "category": "Input",
+  "tags": ["text", "prompt", "ai-generation"],
+  "summary": "Text input node for AI generation prompts. Can optionally define a variable name for use in PromptConstructor templates.",
+  "inputs": [],
+  "outputs": [
+    {
+      "id": "text",
+      "type": "text",
+      "description": "The prompt text string, optionally tagged with a variableName for template substitution"
+    }
+  ],
+  "executionNotes": "A data source node that stores a text prompt and optional variable name. When a variableName is set, the output can be interpolated into PromptConstructor templates using @variableName syntax.",
+  "exampleConnections": [
+    {
+      "from": "prompt.text",
+      "to": "nanoBanana.prompt",
+      "scenario": "Connect prompt directly to image generation node"
+    },
+    {
+      "from": "prompt.text",
+      "to": "promptConstructor.text",
+      "scenario": "Use prompt with a variableName as input to a template-based prompt builder"
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

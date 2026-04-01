@@ -1,0 +1,66 @@
+{
+  "nodeType": "nanoBanana",
+  "name": "AI Image Generation",
+  "version": "1.0.0",
+  "category": "generation",
+  "tags": ["image", "generation", "ai", "multi-provider", "style-transfer", "img2img"],
+  "summary": "Multi-provider AI image generation supporting text-to-image, image-to-image, and style transfer workflows. Dynamically adapts input schema and parameters based on selected model (Nano Banana, fal.ai, Replicate, etc.) and generates high-quality images in 5-15 seconds.",
+  "inputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "required": false,
+      "description": "Optional input image(s) for img2img, style transfer, or inpainting workflows. Supports multiple images for batch operations or style reference.",
+      "default": null
+    },
+    {
+      "id": "text",
+      "type": "text",
+      "required": true,
+      "description": "Text prompt describing the desired image. Can include style directions, compositional details, artist references, or technical rendering parameters.",
+      "default": "a professional photograph"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "description": "Generated image output as base64-encoded image data or public URL."
+    },
+    {
+      "id": "metadata",
+      "type": "object",
+      "description": "Generation metadata including model name, seed, resolution, generation time, parameters used, and provider information for reproducibility."
+    }
+  ],
+  "executionNotes": "This node implements a multi-provider abstraction layer that routes requests to the user's selected model at runtime. Supported providers include Nano Banana (standard, HD, ultra models), fal.ai (various text-to-image and img2img models), Replicate (open-source diffusion models), and others. The inputSchema is dynamically populated per model, allowing each provider's unique parameters (guidance scale, steps, scheduler, LoRA adapters, etc.) to be exposed to the user. Image history carousel stores recent generations for quick reference and style matching. AspectRatio and resolution are constrained by model capabilities (e.g., 1024x1024 native, 768x1024 upscaled). Uses Google Search and Image Search integration for prompt enhancement when enabled. Typical generation latency: 5-15 seconds depending on model and resolution.",
+  "exampleConnections": [
+    {
+      "from": "imageInput.output",
+      "to": "nanoBanana.image",
+      "scenario": "Style transfer: Load a reference image (e.g., van Gogh painting) and combine with descriptive text prompt to generate new images in that artistic style."
+    },
+    {
+      "from": "textInput.output",
+      "to": "nanoBanana.text",
+      "scenario": "Text-to-image foundation: Connect a text generation node (e.g., llmGenerate with prompt enhancement) to nanoBanana for fully parameterized image creation."
+    },
+    {
+      "from": "nanoBanana.image",
+      "to": "generateVideo.image",
+      "scenario": "Image-to-video continuation: Use the generated image as a keyframe for video generation (Veo 3.1), extending the narrative or motion."
+    },
+    {
+      "from": "nanoBanana.image",
+      "to": "generate3d.image",
+      "scenario": "Image-to-3D conversion: Feed generated images into 3D generation node for mesh creation or volumetric rendering based on visual style."
+    },
+    {
+      "from": "nanoBanana.image",
+      "to": "llmGenerate.image",
+      "scenario": "Image analysis and refinement: Analyze generated image with Gemini vision to extract style attributes, then regenerate with refined prompts."
+    }
+  ],
+  "apiProvider": "multi",
+  "requiresApiKey": true
+}

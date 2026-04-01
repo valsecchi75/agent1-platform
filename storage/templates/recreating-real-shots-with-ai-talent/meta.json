@@ -1,0 +1,33 @@
+{
+  "slug": "recreating-real-shots-with-ai-talent",
+  "name": "Recreating real shots with AI talent",
+  "description": "Replicates the composition, pose, styling, and visual structure of an original photograph, then replaces the subject with a consistent AI influencer while preserving the realism and editorial feel of the source image.",
+  "author": "User",
+  "createdAt": "2026-03-28T06:04:19.576Z",
+  "updatedAt": "2026-03-28T06:04:19.576Z",
+  "source": "local",
+  "sourceUrl": null,
+  "registryVersion": null,
+  "category": "simple",
+  "tags": [
+    "Gemini",
+    "LLM",
+    "Nano Banana",
+    "Talent"
+  ],
+  "techTags": [
+    "Custom: morpheusModelManagement",
+    "LLM",
+    "Nano Banana"
+  ],
+  "nodeCount": 8,
+  "previewFrames": [
+    "agent1_0067.jpg",
+    "agent1_0068.jpg",
+    "agent1_0069.jpg",
+    "agent1_0070.jpg",
+    "agent1_0071.jpg",
+    "agent1_0073.jpg",
+    "agent1_0074.jpg"
+  ]
+}

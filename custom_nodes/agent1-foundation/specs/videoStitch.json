@@ -1,0 +1,39 @@
+{
+  "nodeType": "videoStitch",
+  "name": "Video Stitch",
+  "version": "1.0.0",
+  "category": "video-processing",
+  "tags": ["video", "concatenation", "compositing", "browser-native"],
+  "summary": "Concatenates multiple video clips into a single sequential output. Supports clip reordering via drag handles and loop repetition.",
+  "inputs": [
+    {
+      "id": "video",
+      "type": "video",
+      "required": true,
+      "description": "Dynamic video input handles (video-0, video-1, ...). Clips are concatenated in edge-defined order.",
+      "default": null
+    }
+  ],
+  "outputs": [
+    {
+      "id": "video",
+      "type": "video",
+      "description": "Stitched video file combining all input clips in sequence."
+    }
+  ],
+  "executionNotes": "Processes video concatenation entirely in the browser using the Web Audio API and Canvas API. Clips are reordered via clipOrder array (references edge IDs). Each clip is tracked with sourceNodeId, edgeId, thumbnail, duration, and handleId. loopCount (1, 2, or 3) repeats the final stitched sequence. Progress tracks encoding (0-100). encoderSupported flag indicates browser compatibility (VP9/H.264). Output filename auto-generated with timestamp.",
+  "exampleConnections": [
+    {
+      "from": "videoTrim.video",
+      "to": "videoStitch.video",
+      "scenario": "Stitch trimmed clips from multiple video trim nodes into a single sequence."
+    },
+    {
+      "from": "veo.video",
+      "to": "videoStitch.video",
+      "scenario": "Combine multiple generated videos from Veo into one continuous clip."
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

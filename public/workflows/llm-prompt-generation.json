@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "name": "LLM Prompt Generation",
+  "edgeStyle": "curved",
+  "nodes": [
+    {
+      "id": "prompt-1",
+      "type": "prompt",
+      "position": {
+        "x": 50,
+        "y": 150
+      },
+      "data": {
+        "prompt": "Write a detailed editorial prompt for a luxury eyewear product shot"
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      }
+    },
+    {
+      "id": "llm-1",
+      "type": "llmGenerate",
+      "position": {
+        "x": 450,
+        "y": 100
+      },
+      "data": {
+        "inputPrompt": "",
+        "inputImages": [],
+        "outputText": null,
+        "provider": "google",
+        "model": "gemini-3-flash",
+        "temperature": 0.7,
+        "maxTokens": 1024,
+        "status": "idle",
+        "error": null
+      },
+      "style": {
+        "width": 320,
+        "height": 360
+      }
+    },
+    {
+      "id": "nanoBanana-1",
+      "type": "nanoBanana",
+      "position": {
+        "x": 850,
+        "y": 150
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": null,
+        "outputImage": null,
+        "aspectRatio": "1:1",
+        "resolution": "1K",
+        "model": "nano-banana-2",
+        "useGoogleSearch": false,
+        "useImageSearch": false,
+        "status": "idle",
+        "error": null,
+        "imageHistory": [],
+        "selectedHistoryIndex": -1
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      }
+    },
+    {
+      "id": "output-1",
+      "type": "output",
+      "position": {
+        "x": 1250,
+        "y": 140
+      },
+      "data": {
+        "image": null
+      },
+      "style": {
+        "width": 320,
+        "height": 320
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "prompt-1",
+      "sourceHandle": "text",
+      "target": "llm-1",
+      "targetHandle": "text"
+    },
+    {
+      "id": "e2",
+      "source": "llm-1",
+      "sourceHandle": "text",
+      "target": "nanoBanana-1",
+      "targetHandle": "text"
+    },
+    {
+      "id": "e3",
+      "source": "nanoBanana-1",
+      "sourceHandle": "image",
+      "target": "output-1",
+      "targetHandle": "image"
+    }
+  ],
+  "description": "Use Gemini to write the prompt, then generate image",
+  "category": "advanced",
+  "tags": [
+    "Gemini",
+    "LLM"
+  ],
+  "author": "AGENT 1 Preset",
+  "createdAt": "2026-03-21T05:38:50.196Z"
+}
