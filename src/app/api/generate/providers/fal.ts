@@ -220,7 +220,7 @@ export async function uploadImageToFal(base64DataUrl: string, apiKey: string | n
   const putResponse = await fetch(uploadUrl, {
     method: "PUT",
     headers: { "Content-Type": contentType },
-    body: new Blob([binaryData], { type: contentType }),
+    body: new Blob([new Uint8Array(binaryData)], { type: contentType }),
   });
 
   if (!putResponse.ok) {

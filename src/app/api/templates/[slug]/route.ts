@@ -77,8 +77,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           // Prepend the wrapper
           controller.enqueue(new TextEncoder().encode('{"success":true,"template":'));
 
-          fileStream.on("data", (chunk: string) => {
-            controller.enqueue(new TextEncoder().encode(chunk));
+          fileStream.on("data", (chunk: Buffer | string) => {
+            controller.enqueue(new TextEncoder().encode(chunk.toString()));
           });
 
           fileStream.on("end", () => {
