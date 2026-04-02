@@ -9,7 +9,7 @@ echo "   / /_\  / /__ / /___/   V /  / /\/ /"
 echo "  / /   _/ /__ / /___/ /V \ \ / / / /"
 echo " /_/   /______/______/_/ \_\ \/  /_/"
 echo ""
-echo "  From Vision to Form              v0.9.3-alpha
+echo "  From Vision to Form              v0.9.4-alpha
 echo ""
 echo "  +--------------------------------------+"
 echo "  :                                      :"
