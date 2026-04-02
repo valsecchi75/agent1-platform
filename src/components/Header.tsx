@@ -17,6 +17,7 @@ import {
   Heart,
   BarChart3,
   ChevronDown,
+  Puzzle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
@@ -38,6 +39,7 @@ import {
 import { useTabStore } from "@/store/tabStore";
 import { useWorkflowStore, WorkflowFile } from "@/store/workflowStore";
 import { SaveAsTemplateModal } from "./SaveAsTemplateModal";
+import { NodePackManager } from "@/components/node-packs";
 import { formatVersion } from "@/lib/appVersion";
 
 function CommentsNavigationIcon() {
@@ -135,6 +137,9 @@ export function Header() {
   const [showCredits, setShowCredits] = useState(false);
   const [showSaveMenu, setShowSaveMenu] = useState(false);
   const [showSaveAsTemplateModal, setShowSaveAsTemplateModal] = useState(false);
+  const [nodePackManagerOpen, setNodePackManagerOpen] = useState(false);
+  const nodePackBadge = useWorkflowStore((s) => s.nodePackBadgeActive);
+  const setNodePackBadge = useWorkflowStore((s) => s.setNodePackBadge);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const saveMenuRef = useRef<HTMLDivElement>(null);
 
@@ -482,6 +487,25 @@ export function Header() {
               </TooltipTrigger>
               <TooltipContent>Reports</TooltipContent>
             </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => {
+                    setNodePackManagerOpen(true);
+                    setNodePackBadge(false);
+                  }}
+                  className="relative"
+                >
+                  <Puzzle className="w-4 h-4" />
+                  {nodePackBadge && (
+                    <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-orange-500" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Node Pack Manager</TooltipContent>
+            </Tooltip>
           </div>
           <span style={{ color: "var(--text-muted)" }}>·</span>
           <CommentsNavigationIcon />
@@ -550,6 +574,7 @@ export function Header() {
           currentWorkflowName={workflowName}
         />
       )}
+      <NodePackManager open={nodePackManagerOpen} onOpenChange={setNodePackManagerOpen} />
     </TooltipProvider>
   );
 }
