@@ -230,29 +230,12 @@ export function WorkflowCanvas() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [edgesHidden, setEdgesHidden] = useState(false);
 
-  // R9.2: Fetch active node types from API and build dynamic nodeTypes
-  const [activeNodeTypes, setActiveNodeTypes] = useState<string[]>([]);
+  // R9.2: nodeTypes built dynamically from installed packs (hydrated by NodePackChecker)
+  const activeNodeTypes = useWorkflowStore((s) => s.activeNodeTypes);
   const nodeTypes = useMemo(() => {
     const dynamic = buildNodeTypes(activeNodeTypes);
     return { ...dynamic, ...GLB_ENTRY };
   }, [activeNodeTypes]);
-
-  // Fetch active node types on mount
-  useEffect(() => {
-    const fetchActiveNodeTypes = async () => {
-      try {
-        const response = await fetch("/api/node-registry/active-types");
-        const data = await response.json();
-        setActiveNodeTypes(data.nodeTypes || []);
-      } catch (error) {
-        console.error("[WorkflowCanvas] Failed to fetch active node types:", error);
-        // Fallback: use empty list (no custom packs installed yet)
-        setActiveNodeTypes([]);
-      }
-    };
-
-    fetchActiveNodeTypes();
-  }, []);
 
   // Listen for toolbar events (cursor mode, toggle links)
   useEffect(() => {
