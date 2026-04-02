@@ -263,6 +263,25 @@ export function Header() {
         </TooltipTrigger>
         <TooltipContent>Project settings</TooltipContent>
       </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setNodePackManagerOpen(true);
+              setNodePackBadge(false);
+            }}
+            className="relative"
+          >
+            <Puzzle className="w-4 h-4" />
+            {nodePackBadge && (
+              <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-orange-500" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Node Pack Manager</TooltipContent>
+      </Tooltip>
     </div>
   );
 
@@ -486,25 +505,6 @@ export function Header() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Reports</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => {
-                    setNodePackManagerOpen(true);
-                    setNodePackBadge(false);
-                  }}
-                  className="relative"
-                >
-                  <Puzzle className="w-4 h-4" />
-                  {nodePackBadge && (
-                    <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-orange-500" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Node Pack Manager</TooltipContent>
             </Tooltip>
           </div>
           <span style={{ color: "var(--text-muted)" }}>·</span>
