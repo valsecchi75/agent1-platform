@@ -270,7 +270,7 @@ describe("executeGenerateVideo", () => {
     const completeCall = calls.find(
       (c: unknown[]) => (c[1] as Record<string, unknown>).status === "complete"
     );
-    const videoHistory = (completeCall![1] as Record<string, unknown>).videoHistory as unknown[];
+    const videoHistory = (completeCall![1] as Record<string, unknown>).videoHistory as Array<unknown>;
     expect(videoHistory.length).toBe(50); // capped at 50
   });
 });

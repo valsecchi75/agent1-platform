@@ -399,8 +399,8 @@ export function BaseNode({
           {isBypassed && (
             <>
               <div className="node-bypassed-overlay" />
-              <div className="absolute inset-x-0 top-0 z-[60] flex justify-center pointer-events-none">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 bg-neutral-900/90 px-2 py-[2px] rounded-b select-none">
+              <div className="absolute inset-0 z-[60] flex items-center justify-center pointer-events-none">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 bg-neutral-900/90 px-2 py-[2px] rounded select-none">
                   bypass
                 </span>
               </div>

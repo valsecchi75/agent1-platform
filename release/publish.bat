@@ -150,14 +150,18 @@ if "!NEW_VERSION!"=="" (
 )
 
 echo.
-echo  Nuova versione: !NEW_VERSION!
-echo [INFO] Nuova versione: !NEW_VERSION!>> "!LOG_FILE!"
+echo  Versione suggerita: !NEW_VERSION!
 echo.
-set /p "CONFIRM_VER=  Confermi questa versione? (s/n): "
-if /i not "!CONFIRM_VER!"=="s" (
-    echo  Annullato.
-    pause & exit /b 0
-)
+set /p "OVERRIDE_VERSION=  Premi INVIO per confermare, oppure scrivi una versione diversa: "
+if not "!OVERRIDE_VERSION!"=="" set "NEW_VERSION=!OVERRIDE_VERSION!"
+echo  [OK] Versione finale: !NEW_VERSION!
+echo [INFO] Versione finale: !NEW_VERSION!>> "!LOG_FILE!"
+echo.
+
+REM -- Aggiorna badge versione nei file sorgente UI --
+node -e "var fs=require('fs');function toDisplay(v){var a=v.match(/^(\d+\.\d+\.\d+)-alpha/);var b=v.match(/^(\d+\.\d+\.\d+)-beta/);var s=v.match(/^(\d+\.\d+\.\d+)$/);if(a)return 'Alpha '+a[1];if(b)return 'Beta '+b[1];if(s)return 'v'+s[1];return v.charAt(0).toUpperCase()+v.slice(1)}var oldL=toDisplay('!CURRENT_VERSION!');var newL=toDisplay('!NEW_VERSION!');if(oldL===newL){process.stdout.write('  [INFO] Badge gia aggiornato ('+newL+')\n');process.exit(0)}var files=['src/app/credits/page.tsx','src/components/settings/CreditsModal.tsx'];var re=new RegExp('(>\\s*)'+oldL.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(\\s*<)','g');var updated=0;files.forEach(function(f){if(!fs.existsSync(f))return;var c=fs.readFileSync(f,'utf8');var n=c.replace(re,'$1'+newL+'$2');if(n!==c){fs.writeFileSync(f,n);updated++;process.stdout.write('  [OK] Badge aggiornato: '+f+'\n')}});if(!updated)process.stdout.write('  [AVVISO] Nessun badge trovato - aggiornamento manuale necessario\n');" 2>nul
+echo  [OK] Badge UI aggiornati
+echo [OK] Badge UI aggiornati>> "!LOG_FILE!"
 
 REM -- Aggiorna package.json --
 node -e "var fs=require('fs');var p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version='!NEW_VERSION!';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
@@ -249,7 +253,7 @@ REM  Delega TUTTA la creazione staging a Node.js
 REM  Node scrive il risultato in un file temp per batch
 REM ================================================================
 
-node -e "var fs=require('fs'),path=require('path');var RELEASE_TYPE='!RELEASE_TYPE!',LAST_TAG='!LAST_TAG!',NEW_VERSION='!NEW_VERSION!',PREV_VERSION='!PREVIOUS_VERSION!';var result={type:RELEASE_TYPE,files:0,deleted:0,error:null};try{var wl=fs.readFileSync('release/.releaseinclude','utf8').split('\n').map(function(l){return l.trim()}).filter(function(l){return l&&!l.startsWith('#')});function matchWl(f){return wl.some(function(w){var w2=w.endsWith('/')?w.slice(0,-1):w;return w.endsWith('/')?f.startsWith(w2+'/'):f===w2})}var td='.release-staging';if(fs.existsSync(td))fs.rmSync(td,{recursive:true,force:true});fs.mkdirSync(td,{recursive:true});if(RELEASE_TYPE==='full'){wl.forEach(function(item){var clean=item.endsWith('/')?item.slice(0,-1):item;if(!fs.existsSync(clean))return;var dest=path.join(td,clean);fs.mkdirSync(path.dirname(dest),{recursive:true});var st=fs.statSync(clean);if(st.isDirectory()){fs.cpSync(clean,dest,{recursive:true})}else{fs.copyFileSync(clean,dest)}});var manifest={version:NEW_VERSION,previousVersion:PREV_VERSION,type:'full',files:[],deleted:[],timestamp:new Date().toISOString()};fs.writeFileSync(path.join(td,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');var allFiles=[];function countFiles(d){fs.readdirSync(d).forEach(function(f){var fp=path.join(d,f);if(fs.statSync(fp).isDirectory())countFiles(fp);else allFiles.push(fp)})}countFiles(td);result.files=allFiles.length;result.type='full'}else{var execSync=require('child_process').execSync;var changed=execSync('git diff --name-only '+LAST_TAG+' HEAD',{encoding:'utf8'}).split('\n').filter(Boolean);var deleted=execSync('git diff --diff-filter=D --name-only '+LAST_TAG+' HEAD',{encoding:'utf8'}).split('\n').filter(Boolean);var included=changed.filter(matchWl);var deletedIncl=deleted.filter(matchWl);if(included.length===0){result.error='NO_CHANGES';fs.writeFileSync(process.env.TEMP+'/a1_build_result.txt',JSON.stringify(result));process.exit(0)}var copied=0;included.forEach(function(f){if(!fs.existsSync(f))return;var dest=path.join(td,f);fs.mkdirSync(path.dirname(dest),{recursive:true});var st=fs.statSync(f);if(st.isDirectory()){fs.cpSync(f,dest,{recursive:true})}else{fs.copyFileSync(f,dest)}copied++});if(!fs.existsSync(path.join(td,'package.json'))&&fs.existsSync('package.json')){fs.copyFileSync('package.json',path.join(td,'package.json'));copied++}var manifest={version:NEW_VERSION,previousVersion:PREV_VERSION,type:'delta',files:included,deleted:deletedIncl,timestamp:new Date().toISOString()};fs.writeFileSync(path.join(td,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');result.files=copied;result.deleted=deletedIncl.length;result.type='delta';result.fileList=included.join('\n');result.deletedList=deletedIncl.join('\n')}}catch(e){result.error=e.message}fs.writeFileSync(process.env.TEMP+'/a1_build_result.txt',JSON.stringify(result));" 2>nul
+node -e "var fs=require('fs'),path=require('path');var RELEASE_TYPE='!RELEASE_TYPE!',LAST_TAG='!LAST_TAG!',NEW_VERSION='!NEW_VERSION!',PREV_VERSION='!PREVIOUS_VERSION!';var result={type:RELEASE_TYPE,files:0,deleted:0,error:null};try{var wl=fs.readFileSync('release/.releaseinclude','utf8').split('\n').map(function(l){return l.trim()}).filter(function(l){return l&&l.startsWith('#')===false});function matchWl(f){return wl.some(function(w){var w2=w.endsWith('/')?w.slice(0,-1):w;return w.endsWith('/')?f.startsWith(w2+'/'):f===w2})}var td='.release-staging';if(fs.existsSync(td))fs.rmSync(td,{recursive:true,force:true});fs.mkdirSync(td,{recursive:true});if(RELEASE_TYPE==='full'){wl.forEach(function(item){var clean=item.endsWith('/')?item.slice(0,-1):item;if(fs.existsSync(clean)===false)return;var dest=path.join(td,clean);fs.mkdirSync(path.dirname(dest),{recursive:true});var st=fs.statSync(clean);if(st.isDirectory()){fs.cpSync(clean,dest,{recursive:true})}else{fs.copyFileSync(clean,dest)}});var manifest={version:NEW_VERSION,previousVersion:PREV_VERSION,type:'full',files:[],deleted:[],timestamp:new Date().toISOString()};fs.writeFileSync(path.join(td,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');var allFiles=[];function countFiles(d){fs.readdirSync(d).forEach(function(f){var fp=path.join(d,f);if(fs.statSync(fp).isDirectory())countFiles(fp);else allFiles.push(fp)})}countFiles(td);result.files=allFiles.length;result.type='full'}else{var execSync=require('child_process').execSync;var changed=execSync('git diff --name-only '+LAST_TAG+' HEAD',{encoding:'utf8'}).split('\n').filter(Boolean);var deleted=execSync('git diff --diff-filter=D --name-only '+LAST_TAG+' HEAD',{encoding:'utf8'}).split('\n').filter(Boolean);var included=changed.filter(matchWl);var deletedIncl=deleted.filter(matchWl);if(included.length===0){result.error='NO_CHANGES';fs.writeFileSync(process.env.TEMP+'/a1_build_result.txt',JSON.stringify(result));process.exit(0)}var copied=0;included.forEach(function(f){if(fs.existsSync(f)===false)return;var dest=path.join(td,f);fs.mkdirSync(path.dirname(dest),{recursive:true});var st=fs.statSync(f);if(st.isDirectory()){fs.cpSync(f,dest,{recursive:true})}else{fs.copyFileSync(f,dest)}copied++});if(fs.existsSync(path.join(td,'package.json'))===false&&fs.existsSync('package.json')){fs.copyFileSync('package.json',path.join(td,'package.json'));copied++}var manifest={version:NEW_VERSION,previousVersion:PREV_VERSION,type:'delta',files:included,deleted:deletedIncl,timestamp:new Date().toISOString()};fs.writeFileSync(path.join(td,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');result.files=copied;result.deleted=deletedIncl.length;result.type='delta';result.fileList=included.join('\n');result.deletedList=deletedIncl.join('\n')}}catch(e){result.error=e.message}fs.writeFileSync(process.env.TEMP+'/a1_build_result.txt',JSON.stringify(result));" 2>nul
 
 REM Leggi risultato da Node
 if not exist "%TEMP%\a1_build_result.txt" (
@@ -332,7 +336,7 @@ echo.
 set /p "CONFIRM_COMMIT=  Confermi commit e push? (s/n): "
 if /i not "!CONFIRM_COMMIT!"=="s" goto :abort_cleanup
 
-git add package.json start.bat start.sh 2>nul
+git add package.json start.bat start.sh src/app/credits/page.tsx src/components/settings/CreditsModal.tsx 2>nul
 git commit -m "release: v!NEW_VERSION!" 2>nul
 echo  [OK] Commit creato
 
@@ -482,10 +486,52 @@ echo  URL: https://github.com/valsecchi75/agent1-platform/releases/tag/v!NEW_VER
 echo.
 echo [OK] Release v!NEW_VERSION! pubblicata>> "!LOG_FILE!"
 
+REM ================================================================
+REM  STEP 8 - Candidate Release ZIP (clean, senza DB/dati)
+REM ================================================================
+echo  ----------------------------------------
+echo   STEP 8: Candidate Release ZIP
+echo  ----------------------------------------
+echo.
+
+set "CANDIDATE_DIR=..\Candidate Release"
+set "CANDIDATE_ZIP=!CANDIDATE_DIR!\agent1-candidate-v!NEW_VERSION!.zip"
+set "CANDIDATE_STAGING=.candidate-staging"
+
+if exist "!CANDIDATE_STAGING!" rmdir /s /q "!CANDIDATE_STAGING!" 2>nul
+if not exist "!CANDIDATE_DIR!" mkdir "!CANDIDATE_DIR!" 2>nul
+
+echo  Creo staging pulito (esclusi: storage, .db, .env, Token.txt)...
+
+node -e "var fs=require('fs'),path=require('path');var td='.candidate-staging';if(fs.existsSync(td))fs.rmSync(td,{recursive:true,force:true});fs.mkdirSync(td,{recursive:true});function shouldExclude(fp){var n=fp.replace(/\\\\/g,'/');if(/^storage\//.test(n)||/\/storage\//.test(n))return true;if(/\.(db|sqlite|sqlite3)$/i.test(n))return true;var base=path.basename(n);if(/^\.env/.test(base))return true;if(base.toLowerCase()==='token.txt')return true;return false}function copyRec(src,dest){if(!fs.existsSync(src))return 0;var st=fs.statSync(src);if(st.isFile()){if(shouldExclude(src))return 0;fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(src,dest);return 1}var count=0;try{fs.readdirSync(src).forEach(function(f){count+=copyRec(path.join(src,f),path.join(dest,f))})}catch(e){}return count}var wl=fs.readFileSync('release/.releaseinclude','utf8').split('\n').map(function(l){return l.trim()}).filter(function(l){return l&&!l.startsWith('#')});var total=0;wl.forEach(function(item){var clean=item.endsWith('/')?item.slice(0,-1):item;if(shouldExclude(clean))return;total+=copyRec(clean,path.join(td,clean))});process.stdout.write('  [OK] Staging: '+total+' file copiati\n');" 2>nul
+
+if !ERRORLEVEL! NEQ 0 (
+    echo  [AVVISO] Staging Candidate fallito - ZIP non creato
+    echo [AVVISO] Candidate staging fallito>> "!LOG_FILE!"
+    goto :after_candidate
+)
+
+if exist "!CANDIDATE_ZIP!" del "!CANDIDATE_ZIP!" 2>nul
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try{$td='.candidate-staging';Compress-Archive -Path (Join-Path $td '*') -DestinationPath '!CANDIDATE_ZIP!' -Force;$sz=[math]::Round((Get-Item '!CANDIDATE_ZIP!').Length/1MB,2);Write-Host('  [OK] Candidate: agent1-candidate-v!NEW_VERSION!.zip ('+$sz+' MB)')}catch{Write-Host('  [AVVISO] Candidate ZIP fallito: '+$_.Exception.Message);exit 1}"
+
+if not exist "!CANDIDATE_ZIP!" (
+    echo  [AVVISO] Candidate ZIP non creato
+    echo [AVVISO] Candidate ZIP non creato>> "!LOG_FILE!"
+) else (
+    echo  [OK] Salvato in: Candidate Release\agent1-candidate-v!NEW_VERSION!.zip
+    echo [OK] Candidate Release ZIP creato>> "!LOG_FILE!"
+)
+
+:after_candidate
+if exist "!CANDIDATE_STAGING!" rmdir /s /q "!CANDIDATE_STAGING!" 2>nul
+echo.
+
 :final_cleanup
 if exist "release\release-notes.tmp" del "release\release-notes.tmp" 2>nul
 if exist "!ZIP_NAME!" del "!ZIP_NAME!" 2>nul
 if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
+if exist ".candidate-staging" rmdir /s /q ".candidate-staging" 2>nul
 
 REM -- Prune old logs (keep last 20) --
 node -e "var fs=require('fs'),p=require('path'),d='release/logs';try{var ls=fs.readdirSync(d).filter(function(f){return f.startsWith('publish-')&&f.endsWith('.log')}).sort().reverse();for(var i=20;i<ls.length;i++){try{fs.unlinkSync(p.join(d,ls[i]))}catch(e){}}}catch(e){}" 2>nul
@@ -500,8 +546,9 @@ echo  Operazione annullata.
 if exist "release\release-notes.tmp" del "release\release-notes.tmp" 2>nul
 if exist "!ZIP_NAME!" del "!ZIP_NAME!" 2>nul
 if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
+if exist ".candidate-staging" rmdir /s /q ".candidate-staging" 2>nul
 echo  [INFO] package.json e' gia aggiornato a v!NEW_VERSION!.
-echo  [INFO] Per annullare: git checkout package.json start.bat start.sh
+echo  [INFO] Per annullare: git checkout package.json start.bat start.sh src/app/credits/page.tsx src/components/settings/CreditsModal.tsx
 echo.
 pause
 exit /b 0
