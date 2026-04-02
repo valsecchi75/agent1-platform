@@ -1,7 +1,7 @@
 "use client";
 
 import { Handle, Node, NodeProps, Position, useReactFlow } from "@xyflow/react";
-import { GitBranch, ChevronRight } from "lucide-react";
+import { GitBranch, ChevronRight, Layers } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
 import { BaseNode } from "./BaseNode";
 import { getConnectedInputsPure } from "@/store/utils/connectedInputs";
@@ -205,6 +205,19 @@ function ArrayNodeComponent({ id, data, selected }: NodeProps<ArrayNodeType>) {
         Items
       </div>
 
+      {/* Batch mode toggle - floating absolute positioned */}
+      <button
+        type="button"
+        onClick={() => updateNodeData(id, { batchMode: !nodeData.batchMode })}
+        className={`nodrag nopan absolute top-2 right-10 z-10 shrink-0 p-1 rounded-md transition-colors ${
+          nodeData.batchMode
+            ? "bg-[var(--accent-subtle)] text-[var(--accent)] ring-1 ring-[var(--accent)]/60"
+            : "bg-[#1a1a1a] text-neutral-400 hover:text-neutral-100"
+        }`}
+        title={nodeData.batchMode ? "Batch mode ON: runs downstream once per item (click to disable)" : "Batch mode OFF: click to run downstream once per item sequentially"}
+      >
+        <Layers className="w-3.5 h-3.5" strokeWidth={2} />
+      </button>
       {/* Auto-route button - floating absolute positioned */}
       <button
         type="button"
