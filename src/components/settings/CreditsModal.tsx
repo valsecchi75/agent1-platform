@@ -30,7 +30,7 @@ export function CreditsModal({ onClose }: CreditsModalProps) {
             <div className="flex items-center gap-2">
               <BrandLogo variant="wordmark" height="h-4" />
               <span className="text-[8px] font-medium tracking-wider uppercase px-1.5 py-0.5 rounded" style={{ background: "var(--accent-subtle)", color: "var(--accent)" }} >
-                Alpha 0.9
+                Alpha 1.0
               </span>
             </div>
           </div>
@@ -112,9 +112,29 @@ export function CreditsModal({ onClose }: CreditsModalProps) {
             <div className="space-y-3">
               <div className="p-4 rounded-lg" style={{ background: 'var(--surface-2)', border: '1px solid var(--accent)' }}>
                 <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Alpha 1.0</span>
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>April 2026</span>
+                  <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: "var(--accent-subtle)", color: "var(--accent)" }} >Current</span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                  {[
+                    "Node bypass (Ctrl+B) — ComfyUI-style skip with stripe overlay",
+                    "Audio handle on GenerateVideoNode — video+audio sync",
+                    "Array batch mode — sequential per-item downstream execution",
+                    "Optional inputs — isOptional flag on ImageInput, Audio, Prompt",
+                    "PreviewImage node — responsive, unified fullBleed design",
+                    "ShowAnything node — responsive, color-coded type badge",
+                  ].map((item, i) => (
+                    <span key={i} className="text-[11px] flex gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+                      <span style={{ color: 'var(--accent)' }}>+</span>{item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="p-4 rounded-lg" style={{ background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
+                <div className="flex items-center gap-2 mb-3">
                   <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Alpha 0.9</span>
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>March 2026</span>
-                  <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: "var(--accent-subtle)", color: "var(--accent)" }} >Current</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                   {[

@@ -33,7 +33,7 @@ export default function CreditsPage() {
               <div className="flex items-center gap-2">
                 <BrandLogo variant="wordmark" height="h-7" />
                 <span className="text-[9px] font-medium tracking-wider uppercase px-2 py-1 rounded" style={{ background: "var(--accent-subtle)", color: "var(--accent)" }} >
-                  Alpha 0.9
+                  Alpha 1.0
                 </span>
               </div>
               <p className="text-xs tracking-widest uppercase mt-1" style={{ color: 'var(--text-muted)' }}>From Vision to Form</p>
@@ -123,9 +123,21 @@ export default function CreditsPage() {
         <Section title="Release History">
           <div className="space-y-4">
             <ReleaseEntry
+              version="Alpha 1.0"
+              date="April 2026"
+              current
+              changes={[
+                "Node bypass (Ctrl+B) — ComfyUI-style skip with diagonal stripe overlay and centered badge",
+                "Audio handle on GenerateVideoNode — connect audio output to video generation for synchronized video+audio",
+                "Array batch mode — batchMode toggle runs sequential per-item downstream execution",
+                "Optional inputs — isOptional flag on ImageInput, AudioInput, Prompt nodes to allow empty pass-through",
+                "PreviewImage node redesigned — fully responsive, unified fullBleed layout, aspectFitMedia support",
+                "ShowAnything node redesigned — responsive layout, neutral palette, color-coded content-type badge",
+              ]}
+            />
+            <ReleaseEntry
               version="Alpha 0.9"
               date="March 2026"
-              current
               changes={[
                 "Morpheus Model Management node — talent catalog with Patreon auth + Supabase Edge Functions",
                 "Preview Image utility node — inline image preview with pass-through output",
