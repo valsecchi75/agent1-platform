@@ -170,11 +170,11 @@ echo [OK] package.json aggiornato>> "!LOG_FILE!"
 
 REM -- Aggiorna start scripts --
 if exist "start.bat" (
-    node -e "var fs=require('fs');var c=fs.readFileSync('start.bat','utf8');c=c.replace(/v\d+\.\d+\.\d+[^\s]*/,'v!NEW_VERSION!');fs.writeFileSync('start.bat',c);"
+    node -e "var fs=require('fs');var c=fs.readFileSync('start.bat','utf8');c=c.replace(/v\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)*/,'v!NEW_VERSION!');fs.writeFileSync('start.bat',c);"
     echo  [OK] start.bat aggiornato
 )
 if exist "start.sh" (
-    node -e "var fs=require('fs');var c=fs.readFileSync('start.sh','utf8');c=c.replace(/v\d+\.\d+\.\d+[^\s]*/,'v!NEW_VERSION!');fs.writeFileSync('start.sh',c);"
+    node -e "var fs=require('fs');var c=fs.readFileSync('start.sh','utf8');c=c.replace(/v\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)*/,'v!NEW_VERSION!');fs.writeFileSync('start.sh',c);"
     echo  [OK] start.sh aggiornato
 )
 

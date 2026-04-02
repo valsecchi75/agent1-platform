@@ -10,7 +10,7 @@ echo   / /_\  / /__ / /___/   V /  / /\/ /
 echo  / /   _/ /__ / /___/ /V \ \ / / / /
 echo /_/   /______/______/_/ \_\ \/  /_/
 echo.
-echo  From Vision to Form              v0.9.2-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha
+echo  From Vision to Form              v0.9.2-alpha
 echo.
 echo  +--------------------------------------+
 echo  :                                      :
