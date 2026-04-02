@@ -23,37 +23,7 @@ import { AnnotationModal } from "./AnnotationModal";
 import { ChatPanel } from "./ChatPanel";
 import { ConnectionDropMenu, MenuAction } from "./ConnectionDropMenu";
 import { EditableEdge, ReferenceEdge, SharedEdgeGradients } from "./edges";
-import {
-  ImageInputNode,
-  AudioInputNode,
-  VideoInputNode,
-  AnnotationNode,
-  PromptNode,
-  ArrayNode,
-  PromptConstructorNode,
-  GenerateImageNode,
-  GenerateVideoNode,
-  Generate3DNode,
-  GenerateAudioNode,
-  LLMGenerateNode,
-  SplitGridNode,
-  OutputNode,
-  OutputGalleryNode,
-  ImageCompareNode,
-  VideoStitchNode,
-  EaseCurveNode,
-  VideoTrimNode,
-  VideoFrameGrabNode,
-  RouterNode,
-  SwitchNode,
-  ConditionalSwitchNode,
-  NASketchToPhotoNode,
-  NAStylingDetailNode,
-  NARecolorNode,
-  MorpheusModelManagementNode,
-  PreviewImageNode,
-  ShowAnythingNode,
-} from "./nodes";
+import { buildNodeTypes } from "@/lib/nodePacks/nodeRegistry";
 import { useToast } from "@/components/Toast";
 import { useWorkflowStore, WorkflowFile } from "@/store/workflowStore";
 
@@ -88,43 +58,9 @@ function getNodeDataProp<T = unknown>(data: Record<string, unknown>, key: string
   return (data as Record<string, unknown>)[key] as T | undefined;
 }
 
-// R9.2: nodeTypes and edgeTypes defined outside component (stable across renders)
-// This prevents ReactFlow from re-mounting all nodes on every render
-const nodeTypes: NodeTypes = {
-  imageInput: ImageInputNode,
-  audioInput: AudioInputNode,
-  videoInput: VideoInputNode,
-  annotation: AnnotationNode,
-  prompt: PromptNode,
-  array: ArrayNode,
-  promptConstructor: PromptConstructorNode,
-  nanoBanana: GenerateImageNode,
-  generateVideo: GenerateVideoNode,
-  generate3d: Generate3DNode,
-  generateAudio: GenerateAudioNode,
-  llmGenerate: LLMGenerateNode,
-  splitGrid: SplitGridNode,
-  output: OutputNode,
-  outputGallery: OutputGalleryNode,
-  imageCompare: ImageCompareNode,
-  videoStitch: VideoStitchNode,
-  easeCurve: EaseCurveNode,
-  videoTrim: VideoTrimNode,
-  videoFrameGrab: VideoFrameGrabNode,
-  router: RouterNode,
-  switch: SwitchNode,
-  conditionalSwitch: ConditionalSwitchNode,
-  glbViewer: GLBViewerNode,
-  // Neural Atelier custom nodes
-  naSketchToPhoto: NASketchToPhotoNode,
-  naStylingDetail: NAStylingDetailNode,
-  naRecolor: NARecolorNode,
-  // Morpheus custom nodes
-  morpheusModelManagement: MorpheusModelManagementNode,
-  // Foundation utility nodes
-  previewImage: PreviewImageNode,
-  showAnything: ShowAnythingNode,
-};
+// R9.2: nodeTypes built dynamically from installed packs
+// GLBViewerNode must be added separately as it's lazy-loaded
+const GLB_ENTRY = { glbViewer: GLBViewerNode };
 
 const edgeTypes: EdgeTypes = {
   editable: EditableEdge,
@@ -293,6 +229,30 @@ export function WorkflowCanvas() {
   const [expandingNode, setExpandingNode] = useState<{ id: string; type: string } | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [edgesHidden, setEdgesHidden] = useState(false);
+
+  // R9.2: Fetch active node types from API and build dynamic nodeTypes
+  const [activeNodeTypes, setActiveNodeTypes] = useState<string[]>([]);
+  const nodeTypes = useMemo(() => {
+    const dynamic = buildNodeTypes(activeNodeTypes);
+    return { ...dynamic, ...GLB_ENTRY };
+  }, [activeNodeTypes]);
+
+  // Fetch active node types on mount
+  useEffect(() => {
+    const fetchActiveNodeTypes = async () => {
+      try {
+        const response = await fetch("/api/node-registry/active-types");
+        const data = await response.json();
+        setActiveNodeTypes(data.nodeTypes || []);
+      } catch (error) {
+        console.error("[WorkflowCanvas] Failed to fetch active node types:", error);
+        // Fallback: use empty list (no custom packs installed yet)
+        setActiveNodeTypes([]);
+      }
+    };
+
+    fetchActiveNodeTypes();
+  }, []);
 
   // Listen for toolbar events (cursor mode, toggle links)
   useEffect(() => {
