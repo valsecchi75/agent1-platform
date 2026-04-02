@@ -31,6 +31,15 @@ function detectContentType(value: string | null): ShowAnythingData["contentType"
   return "text";
 }
 
+/** Per-type badge color pair */
+const TYPE_BADGE: Record<string, { bg: string; text: string }> = {
+  image: { bg: "bg-emerald-900/60", text: "text-emerald-300" },
+  video: { bg: "bg-blue-900/60",    text: "text-blue-300"    },
+  audio: { bg: "bg-violet-900/60",  text: "text-violet-300"  },
+  text:  { bg: "bg-neutral-700/60", text: "text-neutral-300" },
+  json:  { bg: "bg-amber-900/60",   text: "text-amber-300"   },
+};
+
 export function ShowAnythingNode({ id, data, selected }: NodeProps<ShowAnythingNodeType>) {
   const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
   const edges = useWorkflowStore((s) => s.edges);
@@ -61,78 +70,70 @@ export function ShowAnythingNode({ id, data, selected }: NodeProps<ShowAnythingN
 
   // Pass-through: output whatever came in
   const outputHandle = data.contentType === "image" ? "image" : "text";
+  const badge = TYPE_BADGE[data.contentType];
 
   return (
-    <BaseNode id={id} selected={selected}>
+    <BaseNode
+      id={id}
+      selected={selected}
+      contentClassName="flex-1 min-h-0 relative"
+    >
       {/* Input handle — anything */}
       <Handle
         type="target"
         position={Position.Left}
         id="anything"
-        style={{ top: "50%" }}
+        style={{ top: "50%", zIndex: 10 }}
       />
-
       {/* Output handle — pass-through */}
       <Handle
         type="source"
         position={Position.Right}
         id={outputHandle}
-        style={{ top: "50%" }}
         data-handletype={outputHandle}
+        style={{ top: "50%", zIndex: 10 }}
       />
 
-      <div className="flex flex-col gap-2 p-3" style={{ width: 350 }}>
-        {/* Content type badge */}
-        {data.contentType !== "unknown" && (
-          <div className="flex justify-center">
-            <span className="text-[9px] bg-purple-900/50 text-purple-300 px-1.5 py-0.5 rounded">
-              {data.contentType}
-            </span>
-          </div>
-        )}
-
-        {/* Content display */}
-        <div
-          className="relative w-full rounded-lg overflow-hidden"
-          style={{
-            minHeight: 100,
-            background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
-            border: "1px solid rgba(139, 92, 246, 0.2)",
-          }}
-        >
+      <div className="w-full h-full flex flex-col overflow-hidden rounded-lg">
+        {/* Content area — fills remaining space */}
+        <div className="flex-1 min-h-0 relative overflow-hidden bg-neutral-900/40">
           {!data.content ? (
-            <div className="flex flex-col items-center justify-center py-10 text-neutral-600">
-              <Eye className="w-8 h-8 mb-2 opacity-40" />
-              <span className="text-[11px]">Connect anything</span>
+            <div className="w-full h-full flex flex-col items-center justify-center">
+              <Eye className="w-8 h-8 text-neutral-600 opacity-50" />
+              <span className="text-xs text-neutral-500 mt-2">Connect anything</span>
             </div>
           ) : data.contentType === "image" ? (
             <img
               src={data.content}
               alt="Preview"
-              className="w-full h-auto object-contain"
-              style={{ maxHeight: 400 }}
+              className="w-full h-full object-cover"
             />
           ) : data.contentType === "video" ? (
             <video
               src={data.content}
               controls
-              className="w-full h-auto"
-              style={{ maxHeight: 300 }}
+              className="w-full h-full"
             />
           ) : data.contentType === "audio" ? (
-            <div className="p-4">
-              <audio src={data.content} controls className="w-full" />
+            <div className="w-full h-full flex items-center justify-center p-4">
+              <audio src={data.content} controls className="w-full rounded" />
             </div>
           ) : (
             /* text or json */
-            <div
-              className="p-3 text-[11px] text-neutral-200 whitespace-pre-wrap break-words overflow-y-auto font-mono nodrag nopan"
-              style={{ maxHeight: 400 }}
-            >
+            <div className="p-3 text-[11px] text-neutral-200 whitespace-pre-wrap break-words overflow-y-auto font-mono nodrag nopan nowheel h-full">
               {displayContent}
             </div>
           )}
         </div>
+
+        {/* Bottom status bar — content-type badge */}
+        {badge && (
+          <div className="shrink-0 px-2 py-1 border-t border-neutral-700/40 bg-neutral-800/80 flex items-center gap-1.5">
+            <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${badge.bg} ${badge.text}`}>
+              {data.contentType}
+            </span>
+          </div>
+        )}
       </div>
     </BaseNode>
   );

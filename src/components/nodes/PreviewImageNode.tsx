@@ -13,7 +13,7 @@ import { ImageIcon } from "lucide-react";
 import { BaseNode } from "./BaseNode";
 import { useWorkflowStore } from "@/store/workflowStore";
 import type { PreviewImageData } from "@/types/customNodes";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type PreviewImageNodeType = Node<PreviewImageData, "previewImage">;
 
@@ -42,54 +42,56 @@ export function PreviewImageNode({ id, data, selected }: NodeProps<PreviewImageN
   );
 
   return (
-    <BaseNode id={id} selected={selected}>
+    <BaseNode
+      id={id}
+      selected={selected}
+      contentClassName="flex-1 min-h-0 relative"
+      aspectFitMedia={data.image}
+    >
       {/* Input handle — image */}
       <Handle
         type="target"
         position={Position.Left}
         id="image"
-        style={{ top: "50%" }}
         data-handletype="image"
+        style={{ top: "50%", zIndex: 10 }}
       />
-
       {/* Output handle — pass-through */}
       <Handle
         type="source"
         position={Position.Right}
         id="image"
-        style={{ top: "50%" }}
         data-handletype="image"
+        style={{ top: "50%", zIndex: 10 }}
       />
 
-      <div className="flex flex-col gap-2 p-3" style={{ width: 290 }}>
-        {/* Image display */}
-        <div
-          className="relative w-full rounded-lg bg-neutral-900/60 overflow-hidden flex items-center justify-center"
-          style={{ minHeight: 200 }}
-        >
+      <div className="w-full h-full flex flex-col overflow-hidden rounded-lg">
+        {/* Image area — fills remaining space */}
+        <div className="flex-1 min-h-0 relative overflow-hidden">
           {data.image ? (
             <img
               src={data.image}
               alt={localLabel || "Preview"}
-              className="w-full h-auto object-contain rounded-lg"
-              style={{ maxHeight: 400 }}
+              className="w-full h-full object-cover"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-neutral-600">
-              <ImageIcon className="w-10 h-10 mb-2" />
-              <span className="text-[11px]">Connect an image</span>
+            <div className="w-full h-full bg-neutral-900/40 flex flex-col items-center justify-center">
+              <ImageIcon className="w-8 h-8 text-neutral-600" />
+              <span className="text-xs text-neutral-500 mt-2">Connect an image</span>
             </div>
           )}
         </div>
 
-        {/* Optional label */}
-        <input
-          type="text"
-          value={localLabel}
-          onChange={handleLabelChange}
-          placeholder="Label (optional)"
-          className="nodrag nopan w-full text-[11px] bg-neutral-800/60 border border-neutral-700/40 rounded px-2 py-1 text-neutral-200 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500 text-center"
-        />
+        {/* Label input — thin bottom bar */}
+        <div className="shrink-0 px-2 py-1.5 border-t border-neutral-700/40 bg-neutral-800/80">
+          <input
+            type="text"
+            value={localLabel}
+            onChange={handleLabelChange}
+            placeholder="Label (optional)"
+            className="nodrag nopan w-full text-[11px] bg-transparent border-none rounded px-1 py-0 text-neutral-200 placeholder:text-neutral-500 focus:outline-none text-center"
+          />
+        </div>
       </div>
     </BaseNode>
   );
