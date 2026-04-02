@@ -33,7 +33,7 @@ export default function CreditsPage() {
               <div className="flex items-center gap-2">
                 <BrandLogo variant="wordmark" height="h-7" />
                 <span className="text-[9px] font-medium tracking-wider uppercase px-2 py-1 rounded" style={{ background: "var(--accent-subtle)", color: "var(--accent)" }} >
-                  Alpha 1.0
+                  Alpha 0.9.1
                 </span>
               </div>
               <p className="text-xs tracking-widest uppercase mt-1" style={{ color: 'var(--text-muted)' }}>From Vision to Form</p>
@@ -123,7 +123,7 @@ export default function CreditsPage() {
         <Section title="Release History">
           <div className="space-y-4">
             <ReleaseEntry
-              version="Alpha 1.0"
+              version="Alpha 0.9.1"
               date="April 2026"
               current
               changes={[
