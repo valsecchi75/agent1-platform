@@ -53,6 +53,12 @@ export interface UISlice {
   setUpdateProgress: (progress: Partial<UISlice['updateProgress']>) => void;
   dismissUpdate: () => void;
   updateDismissed: boolean;
+
+  // Node Pack Manager
+  nodePackBadgeActive: boolean;
+  activeNodeTypes: string[];
+  setNodePackBadge: (active: boolean) => void;
+  setActiveNodeTypes: (types: string[]) => void;
 }
 
 /** Read persisted node design mode from localStorage (client-side only) */
@@ -75,6 +81,8 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set, get) 
   updateInfo: null,
   updateProgress: { step: null, status: null, isUpdating: false, error: null },
   updateDismissed: false,
+  nodePackBadgeActive: false,
+  activeNodeTypes: [],
 
   incrementModalCount: () => {
     set((state) => {
@@ -137,4 +145,7 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set, get) 
       updateProgress: { ...state.updateProgress, ...progress },
     })),
   dismissUpdate: () => set({ updateDismissed: true }),
+
+  setNodePackBadge: (active: boolean) => set({ nodePackBadgeActive: active }),
+  setActiveNodeTypes: (types: string[]) => set({ activeNodeTypes: types }),
 });
