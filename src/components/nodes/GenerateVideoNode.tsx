@@ -530,6 +530,27 @@ export function GenerateVideoNode({ id, data, selected }: NodeProps<GenerateVide
           </div>
         </>
       )}
+      {/* Audio input handle - always present, optional */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="audio"
+        data-handletype="audio"
+        style={{ top: "85%", zIndex: 10 }}
+        isConnectable={true}
+        title="Audio input (optional)"
+      />
+      <div
+        className="handle-label absolute text-[10px] font-medium whitespace-nowrap pointer-events-none text-right"
+        style={{
+          right: `calc(100% + 8px)`,
+          top: "calc(85% - 18px)",
+          color: "var(--handle-color-audio, #a78bfa)",
+          zIndex: 10,
+        }}
+      >
+        Audio
+      </div>
       {/* Video output */}
       <Handle
         type="source"

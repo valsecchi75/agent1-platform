@@ -35,7 +35,7 @@ export async function executeGenerateVideo(
 
   const { useStoredFallback = false } = options;
 
-  const { images: connectedImages, text: connectedText, dynamicInputs } = getConnectedInputs(node.id);
+  const { images: connectedImages, text: connectedText, audio: connectedAudio, dynamicInputs } = getConnectedInputs(node.id);
 
   // Get fresh node data from store
   const freshNode = getFreshNode(node.id);
@@ -79,9 +79,11 @@ export async function executeGenerateVideo(
     throw new Error("No model selected");
   }
 
+  const inputAudio = connectedAudio.length > 0 ? connectedAudio[0] : null;
   updateNodeData(node.id, {
     inputImages: images,
     inputPrompt: text,
+    inputAudio,
     status: "loading",
     error: null,
   });
@@ -92,6 +94,7 @@ export async function executeGenerateVideo(
   const requestPayload = {
     images,
     prompt: text,
+    audio: inputAudio,
     selectedModel: nodeData.selectedModel,
     parameters: nodeData.parameters,
     dynamicInputs,
