@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { DashboardEntrance } from "@/components/DashboardEntrance";
 import { Toast } from "@/components/Toast";
+import { NodePackChecker } from "@/components/node-packs/NodePackChecker";
 
 export const metadata: Metadata = {
   title: "AGENT 1 — From Vision to Form",
@@ -34,6 +35,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <DashboardEntrance />
+        <NodePackChecker />
         {children}
         <Toast />
       </body>
