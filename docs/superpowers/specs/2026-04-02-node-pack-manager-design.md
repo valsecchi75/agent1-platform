@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-02
 **Author:** SV75 + Claude
-**Status:** Draft
+**Status:** Reviewed
 **Approach:** Registry-Driven Activation
 
 ## Problem Statement
@@ -137,7 +137,7 @@ Identical to the existing manifest format in `custom_nodes/agent1-foundation/man
 
 ### `GET /api/node-packs/registry`
 
-Fetches `node-packs.json` from the remote registry with 10s timeout. Falls back to local copy at `../agent1-registry/node-packs.json`. For each pack, compares with local `custom_nodes/` to determine status:
+Fetches `node-packs.json` from the remote registry with 10s timeout. Falls back to local copy resolved via `path.resolve(process.cwd(), '..', 'agent1-registry', 'node-packs.json')`. For each pack, compares with local `custom_nodes/` to determine status:
 
 - `available` — pack not in local `custom_nodes/`
 - `installed` — pack exists locally, version matches registry
@@ -170,18 +170,23 @@ Request body:
 
 Flow:
 1. Fetch `node-packs.json` from registry to get pack entry
-2. Validate `minAppVersion` against current app version from `package.json`
+2. Validate `minAppVersion` against current app version from `package.json` using `semver.gte()` from the `semver` npm package. Pre-release versions follow semver precedence: `0.9.7-alpha < 0.9.7-beta < 0.9.7`
 3. Download `manifest.json` from `{baseUrl}/{manifestPath}`
-4. Validate manifest structure (required fields: `id`, `name`, `version`, `nodes[]`)
-5. Download all spec files declared in manifest nodes
-6. Download preview files (if any)
-7. Write all files to `custom_nodes/{packId}/`
-8. Return `{ success: true, restartRequired: true }`
+4. Validate manifest structure using Zod schema:
+   - Required: `id` (non-empty string), `name`, `version` (valid semver), `nodes[]` (non-empty array)
+   - Each `nodes[]` entry: `type` (alphanumeric + underscore, no spaces), `name`, `specFile`
+   - Reject if any `nodes[].type` collides with core node types from `agent1-foundation`
+5. Validate component availability: check that all declared `nodes[].type` exist in the app's `COMPONENT_REGISTRY`. If missing, return 400 with list of unsupported node types and message "Update AGENT 1 to the latest version first"
+6. Download all to a temp directory (`custom_nodes/.tmp-{packId}/`) first — atomic transaction
+7. Download all spec files declared in manifest nodes. Verify every `specFile` referenced exists
+8. Download preview files (JPG, max 500KB each). If preview fails, log warning and continue (non-blocking)
+9. On success: rename temp dir to `custom_nodes/{packId}/`. On any failure: delete temp dir, return error
+10. Return `{ success: true, restartRequired: true }`
 
 Error cases:
-- 400: Invalid manifest, missing required fields
-- 409: `minAppVersion` not met (include required version in response)
-- 502: Registry or file download failed
+- 400: Invalid manifest (with specific field errors), unsupported node types (with list), or missing spec files
+- 409: `minAppVersion` not met (include required version and current version in response)
+- 502: Registry or file download failed (with retry suggestion)
 
 ### `POST /api/node-packs/uninstall`
 
@@ -194,14 +199,24 @@ Request body:
 ```
 
 Flow:
-1. Read manifest from `custom_nodes/{packId}/manifest.json`
-2. Reject if `isCore: true` or `removable: false`
-3. Remove directory `custom_nodes/{packId}/`
-4. Return `{ success: true, restartRequired: true }`
+1. Reject if `packId` is in hardcoded protected list: `['agent1-foundation']`. This check is by ID, not by manifest flag, to prevent accidental uninstall if manifest is corrupted
+2. Read manifest from `custom_nodes/{packId}/manifest.json`
+3. Additionally reject if `isCore: true` or `removable: false`
+4. Remove directory `custom_nodes/{packId}/`
+5. Return `{ success: true, restartRequired: true }`
 
 ### `POST /api/restart`
 
-Triggers `process.exit(0)`. The external process manager (`start.bat`/`start.sh`) restarts the server. If no process manager is detected, returns a message suggesting manual restart.
+Flow:
+1. Returns `{ success: true, message: "Restarting..." }` immediately (non-blocking)
+2. Schedules `process.exit(0)` after 500ms via `setTimeout` to allow response delivery
+3. The external process manager (`start.bat`/`start.sh`) wraps the server in a restart loop and relaunches automatically
+4. Frontend behavior after calling restart:
+   - Shows "Restarting..." overlay
+   - Polls `GET /api/health` every 2 seconds (max 30s timeout)
+   - When health endpoint responds, reloads the page (`window.location.reload()`)
+   - If 30s timeout exceeded, shows "Server did not restart. Please close and reopen the app manually"
+5. Requires a new `GET /api/health` endpoint that returns `{ status: "ok", version: "0.9.7-alpha" }`
 
 ## Dynamic Node Registration
 
@@ -230,11 +245,13 @@ const COMPONENT_REGISTRY: Record<string, React.ComponentType> = {
   // ... all known components
 };
 
-// Called at app startup (server-side)
+// Called via API endpoint GET /api/node-registry/active-types
+// Returns the list of active node types based on installed packs
 function getActiveNodeTypes(): string[] {
   // 1. Always include core nodes (agent1-foundation)
   const coreManifest = readManifest('custom_nodes/agent1-foundation/manifest.json');
   const activeTypes = coreManifest.nodes.map(n => n.type);
+  const seenTypes = new Set(activeTypes);
 
   // 2. Scan custom_nodes/ for installed non-core packs
   const packDirs = scanCustomNodes();
@@ -242,10 +259,17 @@ function getActiveNodeTypes(): string[] {
     const manifest = readManifest(dir + '/manifest.json');
     if (manifest && manifest.id !== 'agent1-foundation') {
       for (const node of manifest.nodes) {
+        // Duplicate detection: first pack wins, log conflict
+        if (seenTypes.has(node.type)) {
+          console.warn(`[nodeRegistry] Duplicate node type "${node.type}" in pack "${manifest.id}" — skipped`);
+          continue;
+        }
         if (COMPONENT_REGISTRY[node.type]) {
           activeTypes.push(node.type);
+          seenTypes.add(node.type);
+        } else {
+          console.warn(`[nodeRegistry] Node type "${node.type}" from pack "${manifest.id}" not in bundle — skipped`);
         }
-        // else: code not in bundle yet, skip silently
       }
     }
   }
@@ -264,14 +288,18 @@ function buildNodeTypes(activeTypes: string[]): NodeTypes {
 }
 ```
 
-`WorkflowCanvas.tsx` changes from:
+### Hydration Flow
+
+1. New API endpoint: `GET /api/node-registry/active-types` — calls `getActiveNodeTypes()` server-side, returns `{ nodeTypes: string[] }`
+2. App layout fetches this once on mount, stores result in Zustand `uiSlice` as `activeNodeTypes: string[]`
+3. `WorkflowCanvas.tsx` reads from Zustand and builds nodeTypes:
+
 ```typescript
-const nodeTypes: NodeTypes = { /* hardcoded */ };
-```
-to:
-```typescript
+const activeNodeTypes = useWorkflowStore(s => s.activeNodeTypes);
 const nodeTypes: NodeTypes = useMemo(() => buildNodeTypes(activeNodeTypes), [activeNodeTypes]);
 ```
+
+4. Current app version is read from `package.json` via a server-side utility: `JSON.parse(fs.readFileSync('package.json')).version` with fallback to `"0.0.0"`
 
 ### `useAvailableNodes()` Hook
 
@@ -331,9 +359,18 @@ Component mounted once in the app layout. On mount:
 
 1. Fetch `GET /api/node-packs/registry`
 2. Read `localStorage` key `agent1-node-packs-lastSeen` (ISO timestamp)
-3. Filter packs where `updatedAt > lastSeen`
-4. If any found: set badge state (stored in Zustand UI slice)
-5. When user opens manager dialog: update `lastSeen` to current timestamp
+3. Filter packs where `updatedAt > lastSeen` (these are "new" to this user)
+4. If any found: call Zustand action `setNodePackBadge(true)` in `uiSlice`
+5. Update `lastSeen` to current fetch timestamp (so next boot compares fresh)
+6. When user opens manager dialog: call `setNodePackBadge(false)` to clear badge
+
+Zustand `uiSlice` additions:
+```typescript
+nodePackBadgeActive: boolean;
+activeNodeTypes: string[];
+setNodePackBadge: (active: boolean) => void;
+setActiveNodeTypes: (types: string[]) => void;
+```
 
 ### Components
 
@@ -379,6 +416,10 @@ The existing script is extended to:
 | Manifest validation fails | API returns 400 with specific error. UI shows error message on card. |
 | Restart endpoint fails | Banner shows "Or close and reopen the app manually" |
 | Corrupt local manifest | Pack ignored during scan. Logged to console. Does not block other packs. |
+| Partial download (network cut mid-install) | Temp dir `.tmp-{packId}` cleaned up on next install attempt or app startup. No corrupt state. |
+| Duplicate node type across packs | First pack wins, conflict logged. Second pack's duplicate nodes skipped. |
+| Workflow uses nodes from uninstalled pack | Workflow loads but missing nodes show error placeholder. User must reinstall pack. |
+| App update does not remove installed packs | Packs survive delta releases. Manifests re-scanned at boot to detect incompatibilities. |
 
 ## Testing Strategy
 
@@ -399,6 +440,13 @@ The existing script is extended to:
 - Offline graceful degradation
 - `minAppVersion` blocking
 
+**Negative tests:**
+- Network timeout during manifest download (verify temp dir cleanup)
+- Disk write failure (verify error message and no partial state)
+- Concurrent install of two packs (verify no race conditions)
+- Uninstall while install is in progress (verify locking or rejection)
+- Corrupt JSON in registry response (verify graceful fallback)
+
 ## localStorage Keys
 
 | Key | Purpose |
@@ -410,4 +458,4 @@ The existing script is extended to:
 - **Template unification:** The manager dialog can add a "Templates" tab using the existing template registry, creating a unified discovery experience
 - **Third-party packs:** The registry schema supports multiple authors; future versions could accept external contributions via PR to the registry repo
 - **Auto-update:** Optional setting to auto-install updates on restart (opt-in)
-- **Pack dependencies:** The manifest already has a `dependencies` field for inter-pack dependencies
+- **Pack dependencies:** The manifest already has a `dependencies` field for inter-pack dependencies. For MVP, packs with non-empty `dependencies` are accepted but dependencies are not auto-installed — the UI shows a warning "This pack depends on: X, Y" and the user must install them manually
