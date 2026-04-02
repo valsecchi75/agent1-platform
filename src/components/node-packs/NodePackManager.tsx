@@ -8,11 +8,13 @@ import type { NodePackEntryWithStatus } from '@/types/nodePacks';
 interface NodePackManagerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Dev only: pass mock mode to registry API (?mock=with-packs|empty|error|new-packs) */
+  mockMode?: string | null;
 }
 
 type Tab = 'available' | 'installed';
 
-export function NodePackManager({ open, onOpenChange }: NodePackManagerProps) {
+export function NodePackManager({ open, onOpenChange, mockMode }: NodePackManagerProps) {
   const [tab, setTab] = useState<Tab>('available');
   const [packs, setPacks] = useState<NodePackEntryWithStatus[]>([]);
   const [loading, setLoading] = useState(false);
@@ -25,7 +27,10 @@ export function NodePackManager({ open, onOpenChange }: NodePackManagerProps) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/node-packs/registry');
+      const url = mockMode
+        ? `/api/node-packs/registry?mock=${encodeURIComponent(mockMode)}`
+        : '/api/node-packs/registry';
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setPacks(data.packs || []);

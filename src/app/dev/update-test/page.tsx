@@ -26,6 +26,13 @@ const DEV_URLS: { label: string; param: string; desc: string }[] = [
   { param: 'uptodate',       label: 'App aggiornata',             desc: 'Nessun banner (situazione normale)' },
 ];
 
+const NODEPACK_DEV_URLS: { label: string; param: string; desc: string }[] = [
+  { param: 'with-packs',  label: 'Dialog con 4 pack mock',    desc: 'Apre il Node Pack Manager con 4 pack: 1 installed, 1 update-available, 2 available' },
+  { param: 'empty',        label: 'Dialog vuoto',              desc: 'Registry vuoto — nessun pack disponibile' },
+  { param: 'error',        label: 'Errore registry',           desc: 'Simula errore 502 — messaggio "Cannot reach registry"' },
+  { param: 'new-packs',    label: 'Pack nuovi (trigger badge)', desc: 'Tutti i pack con updatedAt freschissimo — utile per testare il badge arancione' },
+];
+
 type MockMode = 'available' | 'error' | 'uptodate';
 
 const MOCK_API: Record<MockMode, string> = {
@@ -135,11 +142,11 @@ export default function UpdateTestPage() {
             <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(197,164,78,0.12)', border: '1px solid rgba(197,164,78,0.2)', color: '#c5a44e' }}>DEV ONLY</span>
           </div>
           <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
-            Sezione <strong style={{ color: '#9ca3af' }}>A</strong>: vedi il banner nell&apos;app reale aprendo
+            <strong style={{ color: '#9ca3af' }}>Update</strong>: Sezione A (app reale) + B (debug)
+            — <strong style={{ color: '#9ca3af' }}>Node Pack Manager</strong>: Sezione A (app reale con
             <code style={{ background: '#1a1e2c', padding: '1px 6px', borderRadius: 3, color: '#c5a44e', fontSize: 11, margin: '0 4px' }}>
-              /?dev-update=&lt;mode&gt;
-            </code>
-            — Sezione <strong style={{ color: '#9ca3af' }}>B</strong>: inietta lo stato in questa pagina per debug tecnico.
+              ?dev-nodepacks=
+            </code>) + B (debug tecnico)
           </p>
         </div>
 
@@ -275,8 +282,74 @@ export default function UpdateTestPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* ── SECTION C: Node Pack Manager Test ────────────────────── */}
+        {/* ── NODE PACK MANAGER — SECTION A: View in real app ─────── */}
         <div style={{ marginTop: '3rem', borderTop: '1px solid #2a3040', paddingTop: '2rem' }}>
+          <SectionHeader label="A" title="Node Pack Manager — Vedi nell'app reale" subtitle="Apre localhost:3000 con ?dev-nodepacks= — il dialog si apre automaticamente con dati mock" />
+          <div style={{ display: 'grid', gap: '0.5rem', marginBottom: '2rem' }}>
+            {NODEPACK_DEV_URLS.map(({ param, label, desc }) => (
+              <div key={param} style={{
+                display: 'flex', alignItems: 'center', gap: '1rem',
+                background: '#181c25', border: '1px solid #2a3040',
+                borderRadius: 8, padding: '0.75rem 1rem',
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#e8e6e3', marginBottom: '2px' }}>
+                    <Puzzle className="w-3 h-3" style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
+                    {label}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#6b7280' }}>{desc}</div>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                  <a
+                    href={`/?dev-nodepacks=${param}`}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.4rem',
+                      padding: '0.4rem 0.75rem', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                      background: 'rgba(197,164,78,0.1)', border: '1px solid rgba(197,164,78,0.25)',
+                      color: '#c5a44e', textDecoration: 'none', transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(197,164,78,0.2)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(197,164,78,0.1)'; }}
+                  >
+                    <Eye className="w-3 h-3" />
+                    Apri
+                  </a>
+                  <a
+                    href={`/?dev-nodepacks=${param}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.4rem',
+                      padding: '0.4rem 0.75rem', borderRadius: 6, fontSize: 11, fontWeight: 500,
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      color: '#9ca3af', textDecoration: 'none', transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.color = '#e8e6e3'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = '#9ca3af'; }}
+                    title="Apri in nuova scheda"
+                  >
+                    <ArrowUpRight className="w-3 h-3" />
+                    Nuova scheda
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* URL quick reference */}
+          <div style={{ background: '#0e1118', border: '1px solid #1e2435', borderRadius: 6, padding: '0.75rem 1rem', marginBottom: '2rem', fontSize: 11 }}>
+            <span style={{ color: '#4b5563', marginRight: '0.5rem' }}>URLs:</span>
+            {NODEPACK_DEV_URLS.map(({ param }, i) => (
+              <span key={param}>
+                <code style={{ color: '#c5a44e' }}>{`/?dev-nodepacks=${param}`}</code>
+                {i < NODEPACK_DEV_URLS.length - 1 && <span style={{ color: '#374151' }}> · </span>}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* ── NODE PACK MANAGER — SECTION B: Debug controls ──────── */}
+        <div style={{ marginTop: '1rem' }}>
           <NodePackTestSection addLog={addLog} />
         </div>
 
@@ -453,7 +526,7 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
 
   return (
     <>
-      <SectionHeader label="C" title="Node Pack Manager" subtitle="Test completo: registry, install, uninstall, restart, badge" />
+      <SectionHeader label="B" title="Node Pack Manager — Debug tecnico" subtitle="Test completo: registry, install, uninstall, restart, badge" />
 
       {/* State readout */}
       <div style={{ background: '#181c25', border: '1px solid #2a3040', borderRadius: 8, padding: '1rem', marginBottom: '1rem', fontSize: 12 }}>

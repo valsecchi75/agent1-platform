@@ -29,14 +29,79 @@ function getInstalledVersion(packId: string): string | null {
   }
 }
 
+/** Mock packs for dev testing — ?mock=<mode> */
+function getMockResponse(mock: string) {
+  const now = new Date().toISOString();
+  const mockPacks: NodePackEntryWithStatus[] = [
+    {
+      id: 'agent1-neural-atelier', name: 'Neural Atelier', description: 'Professional photo-to-render pipeline with sketch, styling, and recolor nodes',
+      author: 'AGENT 1 Team', version: '1.2.0', category: 'image', tags: ['photo', 'render', 'sketch'],
+      nodeCount: 3, minAppVersion: '0.9.0', manifestPath: 'custom_nodes/agent1-neural-atelier/manifest.json',
+      previewPath: '', createdAt: '2026-03-15T10:00:00Z', updatedAt: '2026-04-01T14:00:00Z', changelog: 'Added recolor node',
+      status: 'installed', installedVersion: '1.2.0',
+    },
+    {
+      id: 'agent1-video-toolkit', name: 'Video Toolkit', description: 'Advanced video processing: stitch, trim, frame grab, and ease curves',
+      author: 'AGENT 1 Team', version: '2.0.0', category: 'video', tags: ['video', 'editing', 'motion'],
+      nodeCount: 4, minAppVersion: '0.9.0', manifestPath: 'custom_nodes/agent1-video-toolkit/manifest.json',
+      previewPath: '', createdAt: '2026-02-20T09:00:00Z', updatedAt: '2026-04-02T08:00:00Z', changelog: 'Major rewrite with new trim node',
+      status: 'update-available', installedVersion: '1.5.0',
+    },
+    {
+      id: 'agent1-3d-viewer', name: '3D Viewer Pack', description: 'GLB model viewer and 3D-to-image renderer for product visualization',
+      author: 'Community', version: '0.3.0', category: '3d', tags: ['3d', 'glb', 'product'],
+      nodeCount: 1, minAppVersion: '0.9.0', manifestPath: 'custom_nodes/agent1-3d-viewer/manifest.json',
+      previewPath: '', createdAt: '2026-03-28T16:00:00Z', updatedAt: '2026-03-30T11:00:00Z', changelog: 'Initial release',
+      status: 'available', installedVersion: null,
+    },
+    {
+      id: 'agent1-audio-suite', name: 'Audio Suite', description: 'TTS generation, audio input, and audio mixing nodes',
+      author: 'Community', version: '1.0.0', category: 'audio', tags: ['audio', 'tts', 'music'],
+      nodeCount: 2, minAppVersion: '1.0.0', manifestPath: 'custom_nodes/agent1-audio-suite/manifest.json',
+      previewPath: '', createdAt: '2026-04-01T12:00:00Z', updatedAt: '2026-04-02T09:00:00Z', changelog: 'First release',
+      status: 'available', installedVersion: null,
+    },
+  ];
+
+  if (mock === 'with-packs') {
+    return { success: true, packs: mockPacks, source: 'mock', lastChecked: now };
+  }
+  if (mock === 'empty') {
+    return { success: true, packs: [], source: 'mock', lastChecked: now };
+  }
+  if (mock === 'error') {
+    return null; // will be handled as 502
+  }
+  if (mock === 'new-packs') {
+    // All packs have very recent updatedAt — will trigger badge
+    const fresh = mockPacks.map(p => ({ ...p, updatedAt: now }));
+    return { success: true, packs: fresh, source: 'mock', lastChecked: now };
+  }
+  return null;
+}
+
 /**
  * GET /api/node-packs/registry
  * Fetch remote node pack registry, enriched with local install status.
+ * Dev: ?mock=with-packs|empty|error|new-packs for testing
  */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const registryUrl = searchParams.get('url');
+    const mock = searchParams.get('mock');
+
+    // Dev mock mode
+    if (mock) {
+      const mockResult = getMockResponse(mock);
+      if (!mockResult) {
+        return NextResponse.json(
+          { success: false, error: 'Registry unavailable (mock error mode)' },
+          { status: 502 }
+        );
+      }
+      return NextResponse.json(mockResult);
+    }
 
     let registry: NodePackRegistry | null = null;
     let source = 'local-fallback';

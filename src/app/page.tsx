@@ -6,6 +6,7 @@ import { AnnotationModal } from "@/components/AnnotationModal";
 import { FloatingActionBar } from "@/components/FloatingActionBar";
 import { Header } from "@/components/Header";
 import { UpdateBanner } from "@/components/UpdateBanner";
+import { DevNodePackOpener } from "@/components/node-packs/DevNodePackOpener";
 import { WorkflowCanvas } from "@/components/WorkflowCanvas";
 import { WorkflowTabs } from "@/components/WorkflowTabs";
 import { useTabStore } from "@/store/tabStore";
@@ -97,6 +98,7 @@ export default function Home() {
         <WorkflowCanvas />
         <FloatingActionBar />
         <AnnotationModal />
+        <DevNodePackOpener />
       </div>
     </ReactFlowProvider>
   );
