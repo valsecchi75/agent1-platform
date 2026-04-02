@@ -9,7 +9,7 @@ import { CubicBezierEditor } from "@/components/CubicBezierEditor";
 import { ModelSearchDialog } from "@/components/modals/ModelSearchDialog";
 import { useInlineParameters } from "@/hooks/useInlineParameters";
 import { getAllEasingNames, getEasingFunction } from "@/lib/easing-functions";
-import { EASING_PRESETS, getPresetBezier, getEasingBezier } from "@/lib/easing-presets";
+import { EASING_PRESETS, getPresetBezier, getEasingBezier, EasingPresetName } from "@/lib/easing-presets";
 import { ProviderModel, ModelCapability } from "@/lib/providers/types";
 import { evaluateRule } from "@/store/utils/ruleEvaluation";
 import { useWorkflowStore, saveNanoBananaDefaults, useProviderApiKeys } from "@/store/workflowStore";
@@ -973,7 +973,7 @@ function EaseCurveControls({ node }: { node: Node }) {
     return ALL_EASING_NAMES.map((name) => ({
       name,
       polyline: generateEasingPolyline(name, 36, 36),
-      isPreset: PRESET_NAMES.has(name),
+      isPreset: PRESET_NAMES.has(name as EasingPresetName),
     }));
   }, []);
 
