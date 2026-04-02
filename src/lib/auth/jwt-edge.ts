@@ -4,7 +4,7 @@
  * Uses only `jose` (Web Crypto) and process.env.
  * No Node.js APIs (fs, path, crypto, process.cwd) — safe for Next.js middleware.
  *
- * Used by: src/middleware.ts
+ * Used by: src/proxy.ts
  * Server-side signing still uses: src/lib/auth/jwt.ts
  */
 import * as jose from 'jose';

@@ -17,11 +17,20 @@ app.prepare().then(() => {
     await handle(req, res);
   });
 
-  // Handle WebSocket upgrade for Next.js HMR (Hot Module Replacement) in dev mode.
-  // Without this, the browser gets a 404 on /_next/webpack-hmr and live reload breaks.
-  server.on('upgrade', (req, socket, head) => {
-    handle(req, socket, head);
-  });
+  // Handle WebSocket upgrade for Next.js HMR in dev mode.
+  // Use getUpgradeHandler() (Next.js 16+) if available — it correctly handles
+  // the WebSocket handshake. The plain request handler must NOT be used here
+  // (socket lacks getHeader/end/write methods and will crash).
+  const upgradeHandler = app.getUpgradeHandler?.();
+  if (upgradeHandler) {
+    server.on('upgrade', async (req, socket, head) => {
+      try {
+        await upgradeHandler(req, socket, head);
+      } catch {
+        // Ignore upgrade errors (e.g. empty URL during browser connect/reconnect)
+      }
+    });
+  }
 
   // Increase timeout to 10 minutes for long-running video generation
   server.requestTimeout = 600000; // 10 minutes
