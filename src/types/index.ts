@@ -16,3 +16,4 @@ export * from "./quickstart";
 export * from "./chat";
 export * from "./canvas";
 export * from "./customNodes";
+export * from "./nodePacks";
