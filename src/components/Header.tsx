@@ -38,6 +38,7 @@ import {
 import { useTabStore } from "@/store/tabStore";
 import { useWorkflowStore, WorkflowFile } from "@/store/workflowStore";
 import { SaveAsTemplateModal } from "./SaveAsTemplateModal";
+import { formatVersion } from "@/lib/appVersion";
 
 function CommentsNavigationIcon() {
   const nodes = useWorkflowStore((state) => state.nodes);
@@ -293,7 +294,7 @@ export function Header() {
               className="text-[8px] font-medium tracking-wider uppercase px-1 py-0.5 rounded ml-1.5"
               style={{ background: "var(--accent-subtle)", color: "var(--accent)" }}
             >
-              Alpha 0.9
+              {formatVersion()}
             </span>
           </button>
 

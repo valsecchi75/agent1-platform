@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { BrandLogo } from "./BrandLogo";
+import { formatVersion } from "@/lib/appVersion";
 
 interface CreditsModalProps {
   onClose: () => void;
@@ -30,7 +31,7 @@ export function CreditsModal({ onClose }: CreditsModalProps) {
             <div className="flex items-center gap-2">
               <BrandLogo variant="wordmark" height="h-4" />
               <span className="text-[8px] font-medium tracking-wider uppercase px-1.5 py-0.5 rounded" style={{ background: "var(--accent-subtle)", color: "var(--accent)" }} >
-                Alpha 0.9.1
+                {formatVersion()}
               </span>
             </div>
           </div>
@@ -112,7 +113,7 @@ export function CreditsModal({ onClose }: CreditsModalProps) {
             <div className="space-y-3">
               <div className="p-4 rounded-lg" style={{ background: 'var(--surface-2)', border: '1px solid var(--accent)' }}>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Alpha 0.9.1</span>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{formatVersion()}</span>
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>April 2026</span>
                   <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: "var(--accent-subtle)", color: "var(--accent)" }} >Current</span>
                 </div>
