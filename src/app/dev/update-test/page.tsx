@@ -13,7 +13,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { useWorkflowStore } from '@/store/workflowStore';
 import { useUpdateCheck } from '@/hooks/useUpdateCheck';
-import { RefreshCw, CheckCircle2, AlertCircle, Play, Square, ExternalLink, ArrowUpRight, Eye } from 'lucide-react';
+import { RefreshCw, CheckCircle2, AlertCircle, Play, Square, ExternalLink, ArrowUpRight, Eye, Puzzle, Download, Trash2, RotateCcw, Package } from 'lucide-react';
+import type { NodePackEntryWithStatus } from '@/types/nodePacks';
 
 // ── URL helpers ───────────────────────────────────────────────────────────────
 const APP_URL = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : 'http://localhost:3000';
@@ -273,8 +274,298 @@ export default function UpdateTestPage() {
           </div>
         </div>
 
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* ── SECTION C: Node Pack Manager Test ────────────────────── */}
+        <div style={{ marginTop: '3rem', borderTop: '1px solid #2a3040', paddingTop: '2rem' }}>
+          <NodePackTestSection addLog={addLog} />
+        </div>
+
       </div>
     </div>
+  );
+}
+
+// ── Node Pack Manager Test Section ────────────────────────────────────────────
+
+function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' | 'ok' | 'err' | 'data') => void }) {
+  const [packs, setPacks] = useState<NodePackEntryWithStatus[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [restartRequired, setRestartRequired] = useState(false);
+  const [restarting, setRestarting] = useState(false);
+  const [healthStatus, setHealthStatus] = useState<string>('—');
+  const [activeTypes, setActiveTypes] = useState<string[]>([]);
+
+  const nodePackBadge = useWorkflowStore((s) => s.nodePackBadgeActive);
+  const setNodePackBadge = useWorkflowStore((s) => s.setNodePackBadge);
+  const storeActiveTypes = useWorkflowStore((s) => s.activeNodeTypes);
+
+  // Fetch registry
+  const fetchRegistry = useCallback(async () => {
+    setLoading(true);
+    addLog('Fetch registry /api/node-packs/registry…', 'info');
+    try {
+      const res = await fetch('/api/node-packs/registry');
+      const data = await res.json();
+      addLog(`Registry response: success=${data.success}, source=${data.source}, packs=${data.packs?.length ?? 0}`, 'data');
+      if (data.success && data.packs) {
+        setPacks(data.packs);
+        addLog(`✓ ${data.packs.length} pack(s) trovati — source: ${data.source}`, 'ok');
+      } else {
+        addLog(`✗ ${data.error || 'Unknown error'}`, 'err');
+      }
+    } catch (e) { addLog(`✗ Fetch fallito: ${String(e)}`, 'err'); }
+    finally { setLoading(false); }
+  }, [addLog]);
+
+  // Fetch active types
+  const fetchActiveTypes = useCallback(async () => {
+    addLog('Fetch /api/node-registry/active-types…', 'info');
+    try {
+      const res = await fetch('/api/node-registry/active-types');
+      const data = await res.json();
+      setActiveTypes(data.nodeTypes || []);
+      addLog(`✓ ${data.nodeTypes?.length ?? 0} tipi attivi, ${data.packCount ?? 0} pack(s)`, 'ok');
+    } catch (e) { addLog(`✗ ${String(e)}`, 'err'); }
+  }, [addLog]);
+
+  // Health check
+  const checkHealth = useCallback(async () => {
+    addLog('Health check /api/health…', 'info');
+    try {
+      const res = await fetch('/api/health');
+      const data = await res.json();
+      setHealthStatus(`${data.status} — v${data.version}`);
+      addLog(`✓ status=${data.status}, version=${data.version}`, 'ok');
+    } catch (e) {
+      setHealthStatus('offline');
+      addLog(`✗ Server offline: ${String(e)}`, 'err');
+    }
+  }, [addLog]);
+
+  // Install pack
+  const installPack = useCallback(async (packId: string) => {
+    addLog(`Installazione pack: ${packId}…`, 'info');
+    try {
+      const res = await fetch('/api/node-packs/install', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        addLog(`✓ Pack ${packId} installato (v${data.version}) — restart richiesto`, 'ok');
+        setRestartRequired(true);
+        await fetchRegistry();
+      } else {
+        addLog(`✗ Install fallito: ${data.error}`, 'err');
+      }
+    } catch (e) { addLog(`✗ ${String(e)}`, 'err'); }
+  }, [addLog, fetchRegistry]);
+
+  // Uninstall pack
+  const uninstallPack = useCallback(async (packId: string) => {
+    addLog(`Disinstallazione pack: ${packId}…`, 'info');
+    try {
+      const res = await fetch('/api/node-packs/uninstall', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        addLog(`✓ Pack ${packId} rimosso — restart richiesto`, 'ok');
+        setRestartRequired(true);
+        await fetchRegistry();
+      } else {
+        addLog(`✗ Uninstall fallito: ${data.error}`, 'err');
+      }
+    } catch (e) { addLog(`✗ ${String(e)}`, 'err'); }
+  }, [addLog, fetchRegistry]);
+
+  // Try uninstall core (should fail)
+  const tryUninstallCore = useCallback(async () => {
+    addLog('Test protezione core: uninstall agent1-foundation…', 'info');
+    try {
+      const res = await fetch('/api/node-packs/uninstall', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packId: 'agent1-foundation' }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        addLog(`✓ Correttamente rifiutato: "${data.error}" (HTTP ${res.status})`, 'ok');
+      } else {
+        addLog('✗ ERRORE: core pack eliminato! Non dovrebbe succedere!', 'err');
+      }
+    } catch (e) { addLog(`✗ ${String(e)}`, 'err'); }
+  }, [addLog]);
+
+  // Restart server
+  const triggerRestart = useCallback(async () => {
+    addLog('Invio POST /api/restart…', 'info');
+    setRestarting(true);
+    try {
+      await fetch('/api/restart', { method: 'POST' });
+      addLog('✓ Restart richiesto — polling health ogni 2s…', 'ok');
+      const maxWait = 30000;
+      const interval = 2000;
+      const start = Date.now();
+      const poll = () => {
+        if (Date.now() - start > maxWait) {
+          setRestarting(false);
+          setHealthStatus('timeout');
+          addLog('✗ Server non ha risposto entro 30s', 'err');
+          return;
+        }
+        fetch('/api/health')
+          .then((res) => {
+            if (res.ok) {
+              setRestarting(false);
+              setRestartRequired(false);
+              setHealthStatus('online (restarted)');
+              addLog('✓ Server riavviato con successo!', 'ok');
+            } else {
+              setTimeout(poll, interval);
+            }
+          })
+          .catch(() => {
+            addLog(`… server offline, retry (${Math.round((Date.now() - start) / 1000)}s)…`, 'info');
+            setTimeout(poll, interval);
+          });
+      };
+      setTimeout(poll, interval);
+    } catch (e) {
+      setRestarting(false);
+      addLog(`✗ Restart fallito: ${String(e)}`, 'err');
+    }
+  }, [addLog]);
+
+  // Toggle badge
+  const toggleBadge = useCallback(() => {
+    const next = !nodePackBadge;
+    setNodePackBadge(next);
+    addLog(`Badge → ${next ? 'ATTIVO (arancione)' : 'spento'}`, next ? 'ok' : 'info');
+  }, [addLog, nodePackBadge, setNodePackBadge]);
+
+  const available = packs.filter(p => p.status === 'available');
+  const installed = packs.filter(p => p.status === 'installed' || p.status === 'update-available');
+  const updatable = packs.filter(p => p.status === 'update-available');
+
+  return (
+    <>
+      <SectionHeader label="C" title="Node Pack Manager" subtitle="Test completo: registry, install, uninstall, restart, badge" />
+
+      {/* State readout */}
+      <div style={{ background: '#181c25', border: '1px solid #2a3040', borderRadius: 8, padding: '1rem', marginBottom: '1rem', fontSize: 12 }}>
+        <div style={{ fontWeight: 600, marginBottom: '0.5rem', color: '#c5a44e', fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Stato Node Pack Manager</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
+          <StateRow label="packs (registry)" value={packs.length > 0 ? `${packs.length} (${available.length} available, ${installed.length} installed, ${updatable.length} updates)` : '—'} />
+          <StateRow label="health" value={healthStatus} warn={healthStatus === 'offline' || healthStatus === 'timeout'} />
+          <StateRow label="restartRequired" value={String(restartRequired)} warn={restartRequired} />
+          <StateRow label="restarting" value={String(restarting)} />
+          <StateRow label="badge (Zustand)" value={String(nodePackBadge)} />
+          <StateRow label="activeNodeTypes" value={storeActiveTypes.length > 0 ? `${storeActiveTypes.length} tipi` : '—'} />
+          <StateRow label="activeTypes (API)" value={activeTypes.length > 0 ? `${activeTypes.length} tipi` : '—'} />
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+        {/* Registry & Health */}
+        <Section title="Registry & Health">
+          <BtnGroup>
+            <Btn onClick={fetchRegistry} disabled={loading} accent><Package className="w-3 h-3" />Fetch Registry</Btn>
+            <Btn onClick={fetchActiveTypes} disabled={loading}><Puzzle className="w-3 h-3" />Fetch Active Types</Btn>
+            <Btn onClick={checkHealth} disabled={loading}><CheckCircle2 className="w-3 h-3" />Health Check</Btn>
+          </BtnGroup>
+        </Section>
+
+        {/* Badge & UI */}
+        <Section title="Badge & UI">
+          <BtnGroup>
+            <Btn onClick={toggleBadge} accent><Eye className="w-3 h-3" />{nodePackBadge ? 'Spegni badge' : 'Accendi badge'}</Btn>
+            <Btn onClick={() => {
+              addLog('Nota: il Node Pack Manager dialog è accessibile dal bottone Puzzle nell\'header (vicino a Settings)', 'info');
+            }}><Puzzle className="w-3 h-3" />Info: apri dal Header</Btn>
+          </BtnGroup>
+        </Section>
+
+        {/* Install/Uninstall */}
+        <Section title="Install / Uninstall">
+          <BtnGroup>
+            {available.length > 0 ? (
+              available.map(p => (
+                <Btn key={p.id} onClick={() => installPack(p.id)} disabled={loading} accent>
+                  <Download className="w-3 h-3" />Install: {p.name} (v{p.version})
+                </Btn>
+              ))
+            ) : (
+              <Btn onClick={() => addLog('Nessun pack disponibile per install — prima fai "Fetch Registry"', 'info')} disabled={loading}>
+                <Download className="w-3 h-3" />Nessun pack disponibile
+              </Btn>
+            )}
+            {installed.filter(p => p.id !== 'agent1-foundation').length > 0 ? (
+              installed.filter(p => p.id !== 'agent1-foundation').map(p => (
+                <Btn key={`un-${p.id}`} onClick={() => uninstallPack(p.id)} disabled={loading}>
+                  <Trash2 className="w-3 h-3" />Uninstall: {p.name}
+                </Btn>
+              ))
+            ) : null}
+          </BtnGroup>
+        </Section>
+
+        {/* Safety & Restart */}
+        <Section title="Safety & Restart">
+          <BtnGroup>
+            <Btn onClick={tryUninstallCore}><AlertCircle className="w-3 h-3" />Test: uninstall core (deve fallire)</Btn>
+            <Btn onClick={triggerRestart} disabled={restarting} accent>
+              <RotateCcw className="w-3 h-3" />{restarting ? 'Restarting…' : 'Restart Server'}
+            </Btn>
+          </BtnGroup>
+        </Section>
+      </div>
+
+      {/* Pack list detail */}
+      {packs.length > 0 && (
+        <div style={{ background: '#181c25', border: '1px solid #2a3040', borderRadius: 8, padding: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ fontWeight: 600, marginBottom: '0.75rem', color: '#c5a44e', fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            Packs nel registry ({packs.length})
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {packs.map(p => (
+              <div key={p.id} style={{
+                display: 'flex', alignItems: 'center', gap: '1rem',
+                padding: '0.6rem 0.75rem', borderRadius: 6,
+                background: p.status === 'installed' ? 'rgba(134,239,172,0.05)' : p.status === 'update-available' ? 'rgba(147,197,253,0.05)' : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${p.status === 'installed' ? 'rgba(134,239,172,0.15)' : p.status === 'update-available' ? 'rgba(147,197,253,0.15)' : 'rgba(255,255,255,0.06)'}`,
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#e8e6e3' }}>
+                    {p.name}
+                    <span style={{
+                      marginLeft: 8, fontSize: 9, padding: '1px 6px', borderRadius: 3, fontWeight: 700,
+                      background: p.status === 'installed' ? 'rgba(134,239,172,0.15)' : p.status === 'update-available' ? 'rgba(147,197,253,0.15)' : 'rgba(197,164,78,0.15)',
+                      color: p.status === 'installed' ? '#86efac' : p.status === 'update-available' ? '#93c5fd' : '#c5a44e',
+                    }}>{p.status.toUpperCase()}</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: '#6b7280', marginTop: 2 }}>
+                    {p.id} · v{p.version} · {p.nodeCount} node(s) · by {p.author}
+                    {p.installedVersion && <span> · installed: v{p.installedVersion}</span>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Active types detail */}
+      {activeTypes.length > 0 && (
+        <div style={{ background: '#0e1118', border: '1px solid #1e2435', borderRadius: 6, padding: '0.75rem 1rem', fontSize: 11, marginBottom: '1.5rem' }}>
+          <span style={{ color: '#4b5563', marginRight: '0.5rem' }}>Active types ({activeTypes.length}):</span>
+          <span style={{ color: '#9ca3af', fontFamily: 'monospace' }}>{activeTypes.join(', ')}</span>
+        </div>
+      )}
+    </>
   );
 }
 
