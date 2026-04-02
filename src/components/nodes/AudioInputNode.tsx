@@ -1,7 +1,7 @@
 "use client";
 
 import { Handle, Position, NodeProps, Node } from "@xyflow/react";
-import { Play, Pause, X, Upload } from "lucide-react";
+import { Play, Pause, X, Upload, HelpCircle } from "lucide-react";
 import { useCallback, useRef, useState, useEffect } from "react";
 import { BaseNode } from "./BaseNode";
 import { useAudioPlayback } from "@/hooks/useAudioPlayback";
@@ -227,6 +227,19 @@ export function AudioInputNode({ id, data, selected }: NodeProps<AudioInputNodeT
         </div>
       )}
 
+      {/* Optional toggle button */}
+      <button
+        type="button"
+        onClick={() => updateNodeData(id, { isOptional: !nodeData.isOptional })}
+        className={`nodrag nopan absolute top-1 left-1 z-20 w-5 h-5 flex items-center justify-center rounded transition-colors ${
+          nodeData.isOptional
+            ? "text-amber-400 hover:text-amber-300"
+            : "text-neutral-600 hover:text-neutral-400"
+        }`}
+        title={nodeData.isOptional ? "Optional: empty is allowed (click to make required)" : "Required: click to mark as optional"}
+      >
+        <HelpCircle className="w-3.5 h-3.5" strokeWidth={2} />
+      </button>
       <Handle
         type="target"
         position={Position.Left}
