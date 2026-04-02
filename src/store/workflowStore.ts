@@ -344,6 +344,7 @@ interface WorkflowStore
   toggleGroupLock: (groupId: string) => void;
   moveGroupNodes: (groupId: string, delta: { x: number; y: number }) => void;
   setNodeGroupId: (nodeId: string, groupId: string | undefined) => void;
+  toggleBypassNodes: (nodeIds: string[]) => void;
 
   // Execution
   isRunning: boolean;
@@ -895,6 +896,19 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
     get: get as () => unknown,
   }),
 
+  toggleBypassNodes: (nodeIds: string[]) => {
+    const { nodes } = get();
+    const selectedSet = new Set(nodeIds);
+    // If ANY selected node is not bypassed, bypass all; otherwise un-bypass all
+    const anyNotBypassed = nodes.some(n => selectedSet.has(n.id) && !n.data?.bypassed);
+    set({
+      nodes: nodes.map(n => {
+        if (!selectedSet.has(n.id)) return n;
+        return { ...n, data: { ...n.data, bypassed: anyNotBypassed } };
+      }),
+    });
+  },
+
   // ── Execution: executeWorkflow ──────────────────────────────────────────
 
   executeWorkflow: async (startFromNodeId?: string) => {
@@ -934,6 +948,16 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
       const dimmedNodeIds = get().dimmedNodeIds;
       if (dimmedNodeIds.has(node.id)) {
         logger.info('node.execution', 'Node skipped (downstream of disabled Switch)', {
+          nodeId: node.id,
+          nodeType: node.type,
+        });
+        return;
+      }
+
+      // Skip bypassed nodes (Ctrl+B)
+      const freshNodeForBypass = get().nodes.find(n => n.id === node.id);
+      if (freshNodeForBypass?.data?.bypassed) {
+        logger.info('node.execution', 'Node skipped (bypassed)', {
           nodeId: node.id,
           nodeType: node.type,
         });

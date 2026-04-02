@@ -85,6 +85,7 @@ export function BaseNode({
   const nodeColor = (nodeData?.nodeColor as string) || undefined;
   const nodeColorMode = (nodeData?.nodeColorMode as "accent" | "tint") || "tint";
   const isMinimized = !!(nodeData?.isMinimized);
+  const isBypassed = !!(nodeData?.bypassed);
 
   // Propagate --node-custom-color and minimized class to the ReactFlow wrapper element
   // so the glow pseudo-elements (::before/::after on .react-flow__node) can use it
@@ -372,8 +373,9 @@ export function BaseNode({
           ${fullBleed
             ? `${settingsExpanded ? `${v2RoundTop} border-b-0` : v2Round} bg-neutral-800/50 border border-neutral-700/40`
             : `bg-neutral-800 ${settingsExpanded ? `${v2RoundTop} border-b-0` : v2Round} shadow-lg border`}
-          ${fullBleed ? "" : (isCurrentlyExecuting || isExecuting ? "border-[var(--accent)] ring-1 ring-[var(--accent)]/20" : "border-neutral-700/60")}
+          ${fullBleed ? "" : (isCurrentlyExecuting || isExecuting ? "border-[var(--accent)] ring-1 ring-[var(--accent)]/20" : isBypassed ? "border-neutral-600/50" : "border-neutral-700/60")}
           ${fullBleed ? "" : (hasError ? "border-red-500" : "")}
+          ${isBypassed ? "node-bypassed-border" : ""}
           ${colorStyle.className}
           ${className}
         `}
@@ -393,6 +395,17 @@ export function BaseNode({
           className={contentClassName ?? (fullBleed ? "flex-1 min-h-0 relative" : "px-3 pb-4 flex-1 min-h-0 overflow-visible flex flex-col")}
         >
           {children}
+          {/* Bypass overlay — rendered inside content to inherit border-radius */}
+          {isBypassed && (
+            <>
+              <div className="node-bypassed-overlay" />
+              <div className="absolute inset-x-0 top-0 z-[60] flex justify-center pointer-events-none">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 bg-neutral-900/90 px-2 py-[2px] rounded-b select-none">
+                  bypass
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </div>
       {settingsPanel && (

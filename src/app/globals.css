@@ -1988,3 +1988,24 @@ html .react-flow__node.selected .node-color-tint {
     ) !important;
   border-color: color-mix(in srgb, var(--node-custom-color) 35%, transparent) !important;
 }
+
+/* ── Bypass overlay (ComfyUI-style Ctrl+B) ── */
+.node-bypassed-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 5px,
+    rgba(0, 0, 0, 0.25) 5px,
+    rgba(0, 0, 0, 0.25) 6px
+  );
+}
+
+.node-bypassed-border {
+  border-color: #525252 !important;
+  box-shadow: none !important;
+}

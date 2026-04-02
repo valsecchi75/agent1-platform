@@ -67,6 +67,10 @@ function getSourceOutput(
   sourceHandle: string | null | undefined,
   edgeData?: Record<string, unknown>
 ): { type: "image" | "text" | "video" | "audio" | "3d"; value: string | null } {
+  // Bypassed nodes produce no output (Ctrl+B)
+  if ((sourceNode.data as { bypassed?: boolean })?.bypassed) {
+    return { type: "image", value: null };
+  }
   if (sourceNode.type === "imageInput") {
     const imgData = sourceNode.data as ImageInputNodeData;
     // Optional nodes with no data are treated as disconnected

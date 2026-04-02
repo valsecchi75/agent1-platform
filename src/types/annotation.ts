@@ -20,6 +20,8 @@ export interface BaseNodeData extends Record<string, unknown> {
   isMinimized?: boolean;
   preMinWidth?: number;  // original width before minimize
   preMinHeight?: number; // original height before minimize
+  // Bypass mode (like ComfyUI Ctrl+B) — node is skipped in execution
+  bypassed?: boolean;
   // Runtime-injected by execution engine
   isExecuting?: boolean;
   isInLockedGroup?: boolean;

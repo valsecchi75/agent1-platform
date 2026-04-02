@@ -24,6 +24,7 @@ export function useCanvasKeyboard({ onShortcutsDialogOpen }: UseCanvasKeyboardOp
   const clipboard = useWorkflowStore((state) => state.clipboard);
   const undo = useWorkflowStore((state) => state.undo);
   const redo = useWorkflowStore((state) => state.redo);
+  const toggleBypassNodes = useWorkflowStore((state) => state.toggleBypassNodes);
 
   const { getViewport } = useReactFlow();
 
@@ -33,6 +34,16 @@ export function useCanvasKeyboard({ onShortcutsDialogOpen }: UseCanvasKeyboardOp
       event.target instanceof HTMLInputElement ||
       event.target instanceof HTMLTextAreaElement
     ) {
+      return;
+    }
+
+    // Handle bypass toggle (Ctrl/Cmd + B) — like ComfyUI
+    if ((event.ctrlKey || event.metaKey) && event.key === "b") {
+      event.preventDefault();
+      const selectedIds = nodes.filter(n => n.selected).map(n => n.id);
+      if (selectedIds.length > 0) {
+        toggleBypassNodes(selectedIds);
+      }
       return;
     }
 
@@ -243,7 +254,7 @@ export function useCanvasKeyboard({ onShortcutsDialogOpen }: UseCanvasKeyboardOp
         }]);
       });
     }
-  }, [nodes, onNodesChange, copySelectedNodes, pasteNodes, clearClipboard, clipboard, getViewport, addNode, updateNodeData, executeWorkflow, onShortcutsDialogOpen, undo, redo]);
+  }, [nodes, onNodesChange, copySelectedNodes, pasteNodes, clearClipboard, clipboard, getViewport, addNode, updateNodeData, executeWorkflow, onShortcutsDialogOpen, undo, redo, toggleBypassNodes]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
