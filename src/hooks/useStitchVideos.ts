@@ -391,7 +391,7 @@ export async function stitchVideosAsync(
       throw new Error('Failed to generate output buffer');
     }
 
-    const outputBlob = new Blob([buffer], { type: 'video/mp4' });
+    const outputBlob = new Blob([new Uint8Array(buffer)], { type: 'video/mp4' });
 
     updateProgress(
       'complete',

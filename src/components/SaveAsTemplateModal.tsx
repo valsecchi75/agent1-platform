@@ -114,7 +114,7 @@ async function compressNodeImages(nodes: WorkflowNode[], maxDim = 512, quality =
       // Compress inputImages array
       if (Array.isArray(cleaned.inputImages)) {
         cleaned.inputImages = await Promise.all(
-          (cleaned.inputImages as unknown[]).map((img) => compress(img))
+          cleaned.inputImages.map((img: unknown) => compress(img))
         );
       }
 
@@ -136,7 +136,7 @@ async function compressNodeImages(nodes: WorkflowNode[], maxDim = 512, quality =
       // Compress outputGallery
       if (Array.isArray(cleaned.outputGallery)) {
         cleaned.outputGallery = await Promise.all(
-          (cleaned.outputGallery as unknown[]).map((img) => compress(img))
+          cleaned.outputGallery.map((img: unknown) => compress(img))
         );
       }
 

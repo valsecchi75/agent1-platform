@@ -4,7 +4,7 @@ import type {
   SaveTemplateInput,
 } from "@/types/templates";
 import type { WorkflowNode } from "@/types/nodes";
-import type { WorkflowEdge } from "@/types/workflow";
+import type { WorkflowEdge, NodeGroup } from "@/types/workflow";
 import {
   listTemplates,
   createTemplate,
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       nodes: WorkflowNode[];
       edges: WorkflowEdge[];
       edgeStyle?: string;
-      groups?: unknown[];
+      groups?: NodeGroup[];
       previewImages?: Array<{ filename: string; data: string }>;
     };
 

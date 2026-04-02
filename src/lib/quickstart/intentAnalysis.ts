@@ -155,9 +155,9 @@ function parseIntentResponse(text: string): IntentAnalysisResult {
           }))
       : [],
     missingCapabilities: Array.isArray(obj.missingCapabilities)
-      ? (obj.missingCapabilities as unknown[])
-          .filter((m) => typeof m === "string")
-          .map((m) => m as string)
+      ? obj.missingCapabilities
+          .filter((m: unknown) => typeof m === "string")
+          .map((m: unknown) => m as string)
       : [],
     suggestedName: typeof obj.suggestedName === "string" ? obj.suggestedName : "Generated Workflow",
   };

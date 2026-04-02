@@ -107,7 +107,7 @@ export function validateWorkflowJSON(workflow: unknown): ValidationResult {
   } else {
     const nodeIds = new Set<string>();
 
-    (wf.nodes as unknown[]).forEach((node: unknown, i: number) => {
+    wf.nodes.forEach((node: unknown, i: number) => {
       if (!node || typeof node !== "object") {
         errors.push({ path: `nodes[${i}]`, message: "Node must be an object" });
         return;
@@ -161,7 +161,7 @@ export function validateWorkflowJSON(workflow: unknown): ValidationResult {
       (Array.isArray(wf.nodes) ? wf.nodes : []).map((n: { id: string }) => n.id)
     );
 
-    (wf.edges as unknown[]).forEach((edge: unknown, i: number) => {
+    wf.edges.forEach((edge: unknown, i: number) => {
       if (!edge || typeof edge !== "object") {
         errors.push({ path: `edges[${i}]`, message: "Edge must be an object" });
         return;
