@@ -159,7 +159,7 @@ echo [INFO] Versione finale: !NEW_VERSION!>> "!LOG_FILE!"
 echo.
 
 REM -- Aggiorna badge versione nei file sorgente UI --
-node -e "var fs=require('fs');function toDisplay(v){var a=v.match(/^(\d+\.\d+\.\d+)-alpha/);var b=v.match(/^(\d+\.\d+\.\d+)-beta/);var s=v.match(/^(\d+\.\d+\.\d+)$/);if(a)return 'Alpha '+a[1];if(b)return 'Beta '+b[1];if(s)return 'v'+s[1];return v.charAt(0).toUpperCase()+v.slice(1)}var oldL=toDisplay('!CURRENT_VERSION!');var newL=toDisplay('!NEW_VERSION!');if(oldL===newL){process.stdout.write('  [INFO] Badge gia aggiornato ('+newL+')\n');process.exit(0)}var files=['src/app/credits/page.tsx','src/components/settings/CreditsModal.tsx'];var re=new RegExp('(>\\s*)'+oldL.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(\\s*<)','g');var updated=0;files.forEach(function(f){if(!fs.existsSync(f))return;var c=fs.readFileSync(f,'utf8');var n=c.replace(re,'$1'+newL+'$2');if(n!==c){fs.writeFileSync(f,n);updated++;process.stdout.write('  [OK] Badge aggiornato: '+f+'\n')}});if(!updated)process.stdout.write('  [AVVISO] Nessun badge trovato - aggiornamento manuale necessario\n');" 2>nul
+node -e "var fs=require('fs');function toDisplay(v){var a=v.match(/^(\d+\.\d+\.\d+)-alpha/);var b=v.match(/^(\d+\.\d+\.\d+)-beta/);var s=v.match(/^(\d+\.\d+\.\d+)$/);if(a)return 'Alpha '+a[1];if(b)return 'Beta '+b[1];if(s)return 'v'+s[1];return v.charAt(0).toUpperCase()+v.slice(1)}var oldL=toDisplay('!CURRENT_VERSION!');var newL=toDisplay('!NEW_VERSION!');if(oldL===newL){process.stdout.write('  [INFO] Badge gia aggiornato ('+newL+')\n');process.exit(0)}var files=['src/app/credits/page.tsx','src/components/settings/CreditsModal.tsx'];var re=new RegExp('(>\\s*)'+oldL.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(\\s*<)','g');var updated=0;files.forEach(function(f){if(fs.existsSync(f)===false)return;var c=fs.readFileSync(f,'utf8');var n=c.replace(re,'$1'+newL+'$2');if(n!==c){fs.writeFileSync(f,n);updated++;process.stdout.write('  [OK] Badge aggiornato: '+f+'\n')}});if(updated===0)process.stdout.write('  [AVVISO] Nessun badge trovato - aggiornamento manuale necessario\n');" 2>nul
 echo  [OK] Badge UI aggiornati
 echo [OK] Badge UI aggiornati>> "!LOG_FILE!"
 
@@ -503,7 +503,7 @@ if not exist "!CANDIDATE_DIR!" mkdir "!CANDIDATE_DIR!" 2>nul
 
 echo  Creo staging pulito (esclusi: storage, .db, .env, Token.txt)...
 
-node -e "var fs=require('fs'),path=require('path');var td='.candidate-staging';if(fs.existsSync(td))fs.rmSync(td,{recursive:true,force:true});fs.mkdirSync(td,{recursive:true});function shouldExclude(fp){var n=fp.replace(/\\\\/g,'/');if(/^storage\//.test(n)||/\/storage\//.test(n))return true;if(/\.(db|sqlite|sqlite3)$/i.test(n))return true;var base=path.basename(n);if(/^\.env/.test(base))return true;if(base.toLowerCase()==='token.txt')return true;return false}function copyRec(src,dest){if(!fs.existsSync(src))return 0;var st=fs.statSync(src);if(st.isFile()){if(shouldExclude(src))return 0;fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(src,dest);return 1}var count=0;try{fs.readdirSync(src).forEach(function(f){count+=copyRec(path.join(src,f),path.join(dest,f))})}catch(e){}return count}var wl=fs.readFileSync('release/.releaseinclude','utf8').split('\n').map(function(l){return l.trim()}).filter(function(l){return l&&!l.startsWith('#')});var total=0;wl.forEach(function(item){var clean=item.endsWith('/')?item.slice(0,-1):item;if(shouldExclude(clean))return;total+=copyRec(clean,path.join(td,clean))});process.stdout.write('  [OK] Staging: '+total+' file copiati\n');" 2>nul
+node -e "var fs=require('fs'),path=require('path');var td='.candidate-staging';if(fs.existsSync(td))fs.rmSync(td,{recursive:true,force:true});fs.mkdirSync(td,{recursive:true});function shouldExclude(fp){var n=fp.replace(/\\\\/g,'/');if(/^storage\//.test(n)||/\/storage\//.test(n))return true;if(/\.(db|sqlite|sqlite3)$/i.test(n))return true;var base=path.basename(n);if(/^\.env/.test(base))return true;if(base.toLowerCase()==='token.txt')return true;return false}function copyRec(src,dest){if(fs.existsSync(src)===false)return 0;var st=fs.statSync(src);if(st.isFile()){if(shouldExclude(src))return 0;fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(src,dest);return 1}var count=0;try{fs.readdirSync(src).forEach(function(f){count+=copyRec(path.join(src,f),path.join(dest,f))})}catch(e){}return count}var wl=fs.readFileSync('release/.releaseinclude','utf8').split('\n').map(function(l){return l.trim()}).filter(function(l){return l&&l.startsWith('#')===false});var total=0;wl.forEach(function(item){var clean=item.endsWith('/')?item.slice(0,-1):item;if(shouldExclude(clean))return;total+=copyRec(clean,path.join(td,clean))});process.stdout.write('  [OK] Staging: '+total+' file copiati\n');" 2>nul
 
 if !ERRORLEVEL! NEQ 0 (
     echo  [AVVISO] Staging Candidate fallito - ZIP non creato
@@ -527,6 +527,20 @@ if not exist "!CANDIDATE_ZIP!" (
 if exist "!CANDIDATE_STAGING!" rmdir /s /q "!CANDIDATE_STAGING!" 2>nul
 echo.
 
+:abort_cleanup
+echo.
+echo  Operazione annullata.
+echo [INFO] Operazione annullata dall'utente>> "!LOG_FILE!"
+if exist "release\release-notes.tmp" del "release\release-notes.tmp" 2>nul
+if exist "!ZIP_NAME!" del "!ZIP_NAME!" 2>nul
+if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
+if exist ".candidate-staging" rmdir /s /q ".candidate-staging" 2>nul
+echo  [INFO] Se il bump e' gia avvenuto, per annullare:
+echo  [INFO]   git checkout package.json start.bat start.sh src/app/credits/page.tsx src/components/settings/CreditsModal.tsx
+echo.
+pause
+exit /b 0
+
 :final_cleanup
 if exist "release\release-notes.tmp" del "release\release-notes.tmp" 2>nul
 if exist "!ZIP_NAME!" del "!ZIP_NAME!" 2>nul
@@ -537,18 +551,5 @@ REM -- Prune old logs (keep last 20) --
 node -e "var fs=require('fs'),p=require('path'),d='release/logs';try{var ls=fs.readdirSync(d).filter(function(f){return f.startsWith('publish-')&&f.endsWith('.log')}).sort().reverse();for(var i=20;i<ls.length;i++){try{fs.unlinkSync(p.join(d,ls[i]))}catch(e){}}}catch(e){}" 2>nul
 
 echo [INFO] Cleanup completato>> "!LOG_FILE!"
-pause
-exit /b 0
-
-:abort_cleanup
-echo.
-echo  Operazione annullata.
-if exist "release\release-notes.tmp" del "release\release-notes.tmp" 2>nul
-if exist "!ZIP_NAME!" del "!ZIP_NAME!" 2>nul
-if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
-if exist ".candidate-staging" rmdir /s /q ".candidate-staging" 2>nul
-echo  [INFO] package.json e' gia aggiornato a v!NEW_VERSION!.
-echo  [INFO] Per annullare: git checkout package.json start.bat start.sh src/app/credits/page.tsx src/components/settings/CreditsModal.tsx
-echo.
 pause
 exit /b 0
