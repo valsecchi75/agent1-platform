@@ -73,6 +73,10 @@ agent1-v*.zip
 release/logs/
 release/release-notes.tmp
 .release-staging/
+.candidate-staging/
+
+# Release secrets — NEVER commit plaintext tokens
+release/Token.txt
 
 # Large template files (contain base64 images, exceed GitHub 50MB warning)
 storage/templates/*/template.json

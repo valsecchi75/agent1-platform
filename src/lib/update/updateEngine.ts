@@ -17,6 +17,22 @@ import extractZip from 'extract-zip';
 import { decodeToken } from './token';
 import { parseWhitelist, shouldInclude } from './whitelist';
 
+// Files that must NEVER be overwritten by an update, regardless of whitelist.
+// Protects secrets and user-specific config from being stomped by a release ZIP.
+const NEVER_OVERWRITE: string[] = [
+  'release/Token.txt',  // plaintext GitHub PAT — must never ship or be applied
+  '.env',               // user secrets
+];
+
+function isNeverOverwrite(relPath: string): boolean {
+  const normalized = relPath.replace(/\\/g, '/');
+  const basename = normalized.split('/').pop()?.toLowerCase() ?? '';
+  if (NEVER_OVERWRITE.some(n => normalized === n || normalized.endsWith('/' + n))) return true;
+  if (basename === 'token.txt') return true;
+  if (basename === '.env') return true;
+  return false;
+}
+
 // Use same STORAGE_DIR pattern as fileNaming.ts
 const STORAGE_DIR = resolve(process.cwd(), 'storage');
 const UPDATE_TEMP_DIR = join(STORAGE_DIR, '.update-temp');
@@ -333,11 +349,13 @@ function replaceFiles(
         if (stat.isDirectory()) {
           copyRecursive(srcPath, relPath);
         } else {
-          // Only copy if in whitelist
-          if (shouldInclude(relPath, whitelist)) {
+          // Only copy if in whitelist and not a protected file
+          if (shouldInclude(relPath, whitelist) && !isNeverOverwrite(relPath)) {
             ensureDir(dirname(destPath));
             copyFileSync(srcPath, destPath);
             updateLog(`Updated: ${relPath}`);
+          } else if (isNeverOverwrite(relPath)) {
+            updateLog(`Skipped (protected): ${relPath}`);
           }
         }
       }
@@ -350,6 +368,10 @@ function replaceFiles(
       const destPath = join(APP_ROOT, entry.path);
 
       if (!existsSync(srcPath)) continue; // Skip if not in zip
+      if (isNeverOverwrite(entry.path)) {
+        updateLog(`Skipped (protected): ${entry.path}`);
+        continue;
+      }
 
       if (entry.isDirectory) {
         // Remove old directory, copy new
