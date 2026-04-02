@@ -12,7 +12,10 @@ import {
   Map,
   Scissors,
   Link2Off,
+  Puzzle,
 } from "lucide-react";
+import { NodePackManager } from "@/components/node-packs";
+import { useWorkflowStore } from "@/store/workflowStore";
 
 // ─── Types ───────────────────────────────────────────────────────
 interface CanvasToolbarProps {
@@ -51,6 +54,9 @@ export default function CanvasToolbar({ nodeColor }: CanvasToolbarProps) {
   const [cursorMode, setCursorMode] = useState<CursorMode>("select");
   const [showMinimap, setShowMinimap] = useState(true);
   const [linksVisible, setLinksVisible] = useState(true);
+  const [nodePackManagerOpen, setNodePackManagerOpen] = useState(false);
+  const nodePackBadge = useWorkflowStore((s) => s.nodePackBadgeActive);
+  const setNodePackBadge = useWorkflowStore((s) => s.setNodePackBadge);
 
   // Zoom input
   const [zoomInputValue, setZoomInputValue] = useState(String(zoomPercent));
@@ -243,6 +249,21 @@ export default function CanvasToolbar({ nodeColor }: CanvasToolbarProps) {
 
         <div className="w-px h-5 bg-[var(--controls-border)]" />
 
+        {/* ── Node Pack Manager ── */}
+        <button
+          onClick={() => {
+            setNodePackManagerOpen(true);
+            setNodePackBadge(false);
+          }}
+          className={`${btnBase} relative`}
+          title="Node Pack Manager"
+        >
+          <Puzzle className="w-3.5 h-3.5" />
+          {nodePackBadge && (
+            <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-orange-500" />
+          )}
+        </button>
+
         {/* ── Minimap toggle ── */}
         <button
           onClick={() => setShowMinimap((v) => !v)}
@@ -264,6 +285,8 @@ export default function CanvasToolbar({ nodeColor }: CanvasToolbarProps) {
           }
         </button>
       </div>
+
+      <NodePackManager open={nodePackManagerOpen} onOpenChange={setNodePackManagerOpen} />
     </div>
   );
 }
