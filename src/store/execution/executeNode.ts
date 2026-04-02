@@ -27,6 +27,7 @@ import {
   executeRouter,
   executeSwitch,
   executeConditionalSwitch,
+  executeVideoInput,
 } from "./simpleNodeExecutors";
 import { executeSplitGrid } from "./splitGridExecutor";
 import type { NodeExecutionContext } from "./types";
@@ -93,6 +94,14 @@ export async function executeNode(
         const audioInputs = ctx.getConnectedInputs(ctx.node.id);
         if (audioInputs.audio.length > 0 && audioInputs.audio[0]) {
           ctx.updateNodeData(ctx.node.id, { audioFile: audioInputs.audio[0] });
+        }
+        break;
+      }
+      case "videoInput": {
+        // If video is connected from upstream, use it (connection wins over upload)
+        const videoInputs = ctx.getConnectedInputs(ctx.node.id);
+        if (videoInputs.videos.length > 0 && videoInputs.videos[0]) {
+          ctx.updateNodeData(ctx.node.id, { video: videoInputs.videos[0] });
         }
         break;
       }

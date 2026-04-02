@@ -25,6 +25,7 @@ import type { LLMProvider, LLMModelType, SelectedModel, ProviderType } from "./p
 export type NodeType =
   | "imageInput"
   | "audioInput"
+  | "videoInput"
   | "annotation"
   | "prompt"
   | "array"
@@ -70,6 +71,19 @@ export interface ImageInputNodeData extends BaseNodeData {
   storagePath?: string; // Absolute path in storage/input/ (persisted across sessions)
   filename: string | null;
   dimensions: { width: number; height: number } | null;
+  isOptional?: boolean; // When true, empty node doesn't block downstream execution
+}
+
+/**
+ * Video input node - loads/uploads video files into the workflow
+ */
+export interface VideoInputNodeData extends BaseNodeData {
+  video: string | null;
+  videoRef?: string; // External video reference for storage optimization
+  filename: string | null;
+  duration: number | null;
+  dimensions: { width: number; height: number } | null;
+  format: string | null;
 }
 
 /**
@@ -80,6 +94,7 @@ export interface AudioInputNodeData extends BaseNodeData {
   filename: string | null;       // Original filename for display
   duration: number | null;       // Duration in seconds
   format: string | null;         // MIME type (audio/mp3, audio/wav, etc.)
+  isOptional?: boolean; // When true, empty node doesn't block downstream execution
 }
 
 /**
@@ -88,6 +103,7 @@ export interface AudioInputNodeData extends BaseNodeData {
 export interface PromptNodeData extends BaseNodeData {
   prompt: string;
   variableName?: string; // Optional variable name for use in PromptConstructor templates
+  isOptional?: boolean; // When true, empty prompt doesn't block downstream execution
 }
 
 export type ArraySplitMode = "delimiter" | "newline" | "regex";
@@ -106,6 +122,7 @@ export interface ArrayNodeData extends BaseNodeData {
   outputItems: string[];
   outputText: string | null; // JSON array string for the primary text output
   error: string | null;
+  batchMode?: boolean; // When true, executes downstream nodes once per item sequentially
 }
 
 /**
@@ -201,6 +218,7 @@ export interface GenerateVideoNodeData extends BaseNodeData {
   inputImages: string[];
   inputImageRefs?: string[]; // External image references for storage optimization
   inputPrompt: string | null;
+  inputAudio?: string | null; // Optional audio input for video generation
   outputVideo: string | null; // Video data URL or URL
   outputVideoRef?: string; // External video reference for storage optimization
   selectedModel?: SelectedModel; // Required for video generation (no legacy fallback)
@@ -454,6 +472,7 @@ export interface GLBViewerNodeData extends BaseNodeData {
 export type WorkflowNodeData =
   | ImageInputNodeData
   | AudioInputNodeData
+  | VideoInputNodeData
   | AnnotationNodeData
   | PromptNodeData
   | ArrayNodeData

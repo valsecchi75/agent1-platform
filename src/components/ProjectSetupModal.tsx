@@ -948,7 +948,7 @@ export function ProjectSetupModal({
                     </>
                   ) : (
                     <>
-                      <span className="text-xs text-neutral-400">System default (Gemini nano-banana-pro)</span>
+                      <span className="text-xs text-neutral-400">System default (Gemini nano-banana-2)</span>
                       <button
                         type="button"
                         onClick={() => setShowImageModelDialog(true)}
@@ -1029,7 +1029,7 @@ export function ProjectSetupModal({
                 </div>
 
                 {!localNodeDefaults.llm ? (
-                  <p className="text-xs text-neutral-400">Using system defaults (Google Gemini 3 Flash)</p>
+                  <p className="text-xs text-neutral-400">Using system defaults (Google Gemini 3.1 Pro)</p>
                 ) : null}
 
                 {/* Provider dropdown */}

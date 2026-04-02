@@ -35,7 +35,7 @@ export interface GenerateImageDefaults {
 const DEFAULT_GENERATE_IMAGE_SETTINGS: GenerateImageDefaults = {
   aspectRatio: "1:1",
   resolution: "1K",
-  model: "nano-banana-pro",
+  model: "nano-banana-2",
   useGoogleSearch: false,
   useImageSearch: false,
 };

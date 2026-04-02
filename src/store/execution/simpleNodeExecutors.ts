@@ -16,10 +16,19 @@ import type {
   LLMGenerateNodeData,
   OutputNodeData,
   OutputGalleryNodeData,
+  VideoInputNodeData,
   WorkflowNode,
 } from "@/types";
 import { parseTextToArray } from "@/utils/arrayParser";
 import { parseVarTags } from "@/utils/parseVarTags";
+
+/**
+ * Video Input node: just passes through the video data.
+ */
+export async function executeVideoInput(ctx: NodeExecutionContext): Promise<void> {
+  // Video input node is a source node — no processing needed.
+  // Its output is extracted via getConnectedInputs.
+}
 
 /**
  * Annotation node: receives upstream image as source, passes through if no annotations.

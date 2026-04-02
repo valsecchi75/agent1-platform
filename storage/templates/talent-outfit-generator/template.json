@@ -37,7 +37,7 @@
           "width": 800,
           "height": 800
         },
-        "storagePath": "C:\\Users\\sergio.v.LSVM\\Desktop\\Claude\\Luxottica\\AGENT 1 -  From Vision to Form\\app\\storage\\input\\agent1_0004.jpg"
+        "storagePath": "storage\\input\\agent1_0004.jpg"
       },
       "style": {
         "width": 300,
@@ -210,7 +210,7 @@
           "width": 1097,
           "height": 1441
         },
-        "storagePath": "C:\\Users\\sergio.v.LSVM\\Desktop\\Claude\\Luxottica\\AGENT 1 -  From Vision to Form\\app\\storage\\input\\agent1_0005.jpg"
+        "storagePath": "storage\\input\\agent1_0005.jpg"
       },
       "style": {
         "width": 300,

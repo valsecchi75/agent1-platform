@@ -22,6 +22,8 @@ export function useCanvasKeyboard({ onShortcutsDialogOpen }: UseCanvasKeyboardOp
   const pasteNodes = useWorkflowStore((state) => state.pasteNodes);
   const clearClipboard = useWorkflowStore((state) => state.clearClipboard);
   const clipboard = useWorkflowStore((state) => state.clipboard);
+  const undo = useWorkflowStore((state) => state.undo);
+  const redo = useWorkflowStore((state) => state.redo);
 
   const { getViewport } = useReactFlow();
 
@@ -31,6 +33,20 @@ export function useCanvasKeyboard({ onShortcutsDialogOpen }: UseCanvasKeyboardOp
       event.target instanceof HTMLInputElement ||
       event.target instanceof HTMLTextAreaElement
     ) {
+      return;
+    }
+
+    // Handle undo (Ctrl/Cmd + Z)
+    if ((event.ctrlKey || event.metaKey) && event.key === "z" && !event.shiftKey) {
+      event.preventDefault();
+      undo();
+      return;
+    }
+
+    // Handle redo (Ctrl/Cmd + Shift + Z)
+    if ((event.ctrlKey || event.metaKey) && event.key === "z" && event.shiftKey) {
+      event.preventDefault();
+      redo();
       return;
     }
 
@@ -227,7 +243,7 @@ export function useCanvasKeyboard({ onShortcutsDialogOpen }: UseCanvasKeyboardOp
         }]);
       });
     }
-  }, [nodes, onNodesChange, copySelectedNodes, pasteNodes, clearClipboard, clipboard, getViewport, addNode, updateNodeData, executeWorkflow, onShortcutsDialogOpen]);
+  }, [nodes, onNodesChange, copySelectedNodes, pasteNodes, clearClipboard, clipboard, getViewport, addNode, updateNodeData, executeWorkflow, onShortcutsDialogOpen, undo, redo]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);

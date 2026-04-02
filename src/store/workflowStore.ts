@@ -88,6 +88,7 @@ import {
   CanvasNavigationSettings,
   MatchMode,
   MODEL_DISPLAY_NAMES,
+  ArrayNodeData,
 } from "@/types";
 import { externalizeWorkflowImages, hydrateWorkflowImages } from "@/utils/imageStorage";
 import { logger } from "@/utils/logger";
@@ -95,6 +96,26 @@ import { EditOperation, applyEditOperations as executeEditOps } from "@/lib/chat
 
 export type { LevelGroup } from "./utils/executionUtils";
 export { CONCURRENCY_SETTINGS_KEY } from "./utils/executionUtils";
+
+// ─── Undo/Redo helper ──────────────────────────────────────────────────────
+
+/**
+ * Capture the current state as an undo entry using shallow cloning.
+ * This is more efficient than deep-cloning entire structures.
+ */
+function captureUndoState(state: {
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+  groups: Record<string, NodeGroup>;
+  edgeStyle: "angular" | "curved";
+}) {
+  return {
+    nodes: [...state.nodes],
+    edges: [...state.edges],
+    groups: { ...state.groups },
+    edgeStyle: state.edgeStyle,
+  };
+}
 
 // ─── Conditional switch helper ──────────────────────────────────────────────
 
@@ -423,6 +444,10 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
   // ── Node operations ─────────────────────────────────────────────────────
 
   addNode: (type: NodeType, position: XYPosition, initialData?: Partial<WorkflowNodeData>) => {
+    const state = get();
+    // Capture undo entry before mutation
+    get().pushUndoEntry(captureUndoState(state));
+
     const id = `${type}-${++nodeIdCounter}`;
     const { width, height } = defaultNodeDimensions[type];
     const defaultData = createDefaultNodeData(type);
@@ -466,6 +491,10 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
   },
 
   removeNode: (nodeId: string) => {
+    const state = get();
+    // Capture undo entry before mutation
+    get().pushUndoEntry(captureUndoState(state));
+
     set((state) => ({
       nodes: state.nodes.filter((node) => node.id !== nodeId),
       edges: state.edges.filter(
@@ -481,6 +510,13 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
       (c) => c.type !== "select" && c.type !== "dimensions"
     );
     const hasRemoveChange = changes.some((c) => c.type === "remove");
+    const hasPositionChange = changes.some((c) => c.type === "position");
+
+    // Capture undo entry for meaningful changes (like position moves)
+    if (hasMeaningfulChange || hasPositionChange) {
+      const state = get();
+      get().pushUndoEntry(captureUndoState(state));
+    }
 
     set((state) => ({
       nodes: applyNodeChanges(changes, state.nodes),
@@ -498,6 +534,12 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
     const hasMeaningfulChange = changes.some((c) => c.type !== "select");
     const hasRemoveChange = changes.some((c) => c.type === "remove");
     const hasAddOrRemove = changes.some((c) => c.type === "add" || c.type === "remove");
+
+    // Capture undo entry for add/remove operations
+    if (hasAddOrRemove) {
+      const state = get();
+      get().pushUndoEntry(captureUndoState(state));
+    }
 
     let removedEdges: WorkflowEdge[] = [];
     if (hasRemoveChange) {
@@ -523,6 +565,10 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
   },
 
   onConnect: (connection: Connection, edgeDataOverrides?: Record<string, unknown>) => {
+    const state = get();
+    // Capture undo entry before mutation
+    get().pushUndoEntry(captureUndoState(state));
+
     set((state) => {
       const baseData = buildConnectionEdgeData(connection, state.nodes, state.edges);
       const newEdge = {
@@ -556,6 +602,10 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
   },
 
   removeEdge: (edgeId: string) => {
+    const state = get();
+    // Capture undo entry before mutation
+    get().pushUndoEntry(captureUndoState(state));
+
     const removedEdge = get().edges.find((e) => e.id === edgeId);
     set((state) => ({
       edges: state.edges.filter((edge) => edge.id !== edgeId),
@@ -656,6 +706,10 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
   // ── Group operations ────────────────────────────────────────────────────
 
   createGroup: (nodeIds: string[]) => {
+    const state = get();
+    // Capture undo entry before mutation
+    get().pushUndoEntry(captureUndoState(state));
+
     const { nodes, groups } = get();
     if (nodeIds.length === 0) return "";
 
@@ -708,6 +762,10 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
   },
 
   deleteGroup: (groupId: string) => {
+    const state = get();
+    // Capture undo entry before mutation
+    get().pushUndoEntry(captureUndoState(state));
+
     set((state) => {
       const { [groupId]: _, ...remainingGroups } = state.groups;
       return {
@@ -967,6 +1025,71 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
               abortController.abort();
               throw r.reason;
             }
+          }
+        }
+
+        // ── Batch-mode Array node handling ─────────────────────────────────
+        // If a batch-mode Array node was in this level, execute all remaining
+        // levels once per item sequentially.
+        if (levelIdx < levels.length - 1 && !abortController.signal.aborted && get().isRunning) {
+          const batchArrayNode = levelNodes.find((n) => {
+            if (n.type !== "array") return false;
+            const freshN = get().nodes.find((fn) => fn.id === n.id);
+            const data = freshN?.data as ArrayNodeData | undefined;
+            return data?.batchMode === true && (data?.outputItems?.length ?? 0) > 0;
+          });
+
+          if (batchArrayNode) {
+            const freshBatch = get().nodes.find((n) => n.id === batchArrayNode.id);
+            const batchData = freshBatch?.data as ArrayNodeData | undefined;
+            const items = batchData?.outputItems ?? [];
+
+            const executeLevel = async (lvlNodes: WorkflowNode[]) => {
+              const lvlBatches = chunk(lvlNodes, maxConcurrentCalls);
+              for (const lvlBatch of lvlBatches) {
+                if (abortController.signal.aborted || !get().isRunning) break;
+                set({ currentNodeIds: lvlBatch.map((n) => n.id) });
+                const lvlResults = await Promise.allSettled(
+                  lvlBatch.map((node) => executeSingleNode(node, abortController.signal))
+                );
+                for (let i = 0; i < lvlResults.length; i++) {
+                  const r = lvlResults[i];
+                  if (r.status === 'rejected' &&
+                      !(r.reason instanceof DOMException && r.reason.name === 'AbortError')) {
+                    abortController.abort();
+                    throw r.reason;
+                  }
+                }
+              }
+            };
+
+            for (let itemIdx = 0; itemIdx < items.length; itemIdx++) {
+              if (abortController.signal.aborted || !get().isRunning) break;
+
+              logger.info('node.execution', `Array batch: executing item ${itemIdx + 1}/${items.length}`, {
+                nodeId: batchArrayNode.id,
+                item: items[itemIdx],
+              });
+
+              // Temporarily make the array node output only this item
+              get().updateNodeData(batchArrayNode.id, { outputText: items[itemIdx] });
+
+              // Execute all remaining levels for this item
+              for (let remainingIdx = levelIdx + 1; remainingIdx < levels.length; remainingIdx++) {
+                if (abortController.signal.aborted || !get().isRunning) break;
+                const remainingNodes = levels[remainingIdx].nodeIds
+                  .map((id) => get().nodes.find((n) => n.id === id))
+                  .filter((n): n is WorkflowNode => n !== undefined);
+                if (remainingNodes.length === 0) continue;
+                await executeLevel(remainingNodes);
+              }
+            }
+
+            // Restore full array output after batch completion
+            get().updateNodeData(batchArrayNode.id, { outputText: JSON.stringify(items) });
+
+            // Skip remaining levels (already handled in batch loop above)
+            break;
           }
         }
       }

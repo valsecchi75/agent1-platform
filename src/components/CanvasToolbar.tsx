@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { MiniMap, useReactFlow, useViewport } from "@xyflow/react";
 import {
-  MousePointer2,
+  Pointer,
   Hand,
   ChevronDown,
   ZoomIn,
@@ -166,7 +166,7 @@ export default function CanvasToolbar({ nodeColor }: CanvasToolbarProps) {
         <div ref={cursorDD.ref} className="relative">
           <button onClick={cursorDD.toggle} className={btnBase} title="Cursor mode">
             {cursorMode === "select"
-              ? <MousePointer2 className="w-3.5 h-3.5" />
+              ? <Pointer className="w-3.5 h-3.5" />
               : <Hand className="w-3.5 h-3.5" />
             }
             <ChevronDown className="w-2.5 h-2.5 opacity-50" />
@@ -177,7 +177,7 @@ export default function CanvasToolbar({ nodeColor }: CanvasToolbarProps) {
                 onClick={() => handleCursorChange("select")}
                 className={`${dropdownItem} ${cursorMode === "select" ? "text-[var(--text-primary)] bg-[var(--controls-hover)]" : ""}`}
               >
-                <MousePointer2 className="w-3.5 h-3.5" />
+                <Pointer className="w-3.5 h-3.5" />
                 <span className="flex-1 text-left">Select</span>
                 <kbd className="text-[var(--text-muted)] text-[10px]">V</kbd>
               </button>

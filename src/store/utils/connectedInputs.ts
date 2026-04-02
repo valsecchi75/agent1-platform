@@ -10,6 +10,7 @@ import {
   WorkflowEdge,
   ImageInputNodeData,
   AudioInputNodeData,
+  VideoInputNodeData,
   AnnotationNodeData,
   NanoBananaNodeData,
   GenerateVideoNodeData,
@@ -67,9 +68,16 @@ function getSourceOutput(
   edgeData?: Record<string, unknown>
 ): { type: "image" | "text" | "video" | "audio" | "3d"; value: string | null } {
   if (sourceNode.type === "imageInput") {
-    return { type: "image", value: (sourceNode.data as ImageInputNodeData).image };
+    const imgData = sourceNode.data as ImageInputNodeData;
+    // Optional nodes with no data are treated as disconnected
+    if (imgData.isOptional && !imgData.image) return { type: "image", value: null };
+    return { type: "image", value: imgData.image };
   } else if (sourceNode.type === "audioInput") {
-    return { type: "audio", value: (sourceNode.data as AudioInputNodeData).audioFile };
+    const audData = sourceNode.data as AudioInputNodeData;
+    if (audData.isOptional && !audData.audioFile) return { type: "audio", value: null };
+    return { type: "audio", value: audData.audioFile };
+  } else if (sourceNode.type === "videoInput") {
+    return { type: "video", value: (sourceNode.data as VideoInputNodeData).video };
   } else if (sourceNode.type === "annotation") {
     return { type: "image", value: (sourceNode.data as AnnotationNodeData).outputImage };
   } else if (sourceNode.type === "nanoBanana") {
@@ -89,7 +97,10 @@ function getSourceOutput(
   } else if (sourceNode.type === "videoTrim") {
     return { type: "video", value: (sourceNode.data as VideoTrimNodeData).outputVideo };
   } else if (sourceNode.type === "prompt") {
-    return { type: "text", value: (sourceNode.data as PromptNodeData).prompt };
+    const promptData = sourceNode.data as PromptNodeData;
+    // Optional empty prompts are treated as disconnected
+    if (promptData.isOptional && !promptData.prompt) return { type: "text", value: null };
+    return { type: "text", value: promptData.prompt };
   } else if (sourceNode.type === "array") {
     const arrayData = sourceNode.data as ArrayNodeData;
     const dataIndex = edgeData?.arrayItemIndex;

@@ -14,6 +14,7 @@ interface ValidationResult {
 const VALID_NODE_TYPES: NodeType[] = [
   "imageInput",
   "audioInput",
+  "videoInput",
   "annotation",
   "prompt",
   "array",
@@ -43,6 +44,7 @@ const VALID_HANDLE_TYPES = ["image", "text", "audio", "video", "easeCurve", "3d"
 const DEFAULT_DIMENSIONS: Record<NodeType, { width: number; height: number }> = {
   imageInput: { width: 300, height: 280 },
   audioInput: { width: 300, height: 200 },
+  videoInput: { width: 300, height: 240 },
   annotation: { width: 300, height: 280 },
   prompt: { width: 320, height: 220 },
   array: { width: 360, height: 360 },
@@ -68,6 +70,11 @@ const DEFAULT_DIMENSIONS: Record<NodeType, { width: number; height: number }> = 
   naSketchToPhoto: { width: 340, height: 520 },
   naStylingDetail: { width: 340, height: 560 },
   naRecolor: { width: 340, height: 480 },
+  // Morpheus custom nodes
+  morpheusModelManagement: { width: 560, height: 720 },
+  // Foundation utility nodes
+  previewImage: { width: 320, height: 320 },
+  showAnything: { width: 380, height: 300 },
 };
 
 /**

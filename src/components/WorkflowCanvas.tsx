@@ -26,6 +26,7 @@ import { EditableEdge, ReferenceEdge, SharedEdgeGradients } from "./edges";
 import {
   ImageInputNode,
   AudioInputNode,
+  VideoInputNode,
   AnnotationNode,
   PromptNode,
   ArrayNode,
@@ -92,6 +93,7 @@ function getNodeDataProp<T = unknown>(data: Record<string, unknown>, key: string
 const nodeTypes: NodeTypes = {
   imageInput: ImageInputNode,
   audioInput: AudioInputNode,
+  videoInput: VideoInputNode,
   annotation: AnnotationNode,
   prompt: PromptNode,
   array: ArrayNode,
@@ -255,6 +257,7 @@ export function WorkflowCanvas() {
     switch (node.type) {
       case "imageInput": return "#3b82f6";
       case "audioInput": return "#a78bfa";
+      case "videoInput": return "#14b8a6";
       case "annotation": return "#8b5cf6";
       case "prompt": return "#f97316";
       case "array": return "#a3e635";
@@ -299,6 +302,13 @@ export function WorkflowCanvas() {
       // When "hand" mode: panOnDrag everywhere. "select" mode: default behavior.
       // We store it and use it in the ReactFlow props below.
       setCursorModeFromToolbar(mode);
+      // Sync CSS cursor: add/remove canvas-hand-mode class on <html> so CSS can
+      // override the pane cursor to grab/grabbing without a React re-render.
+      if (mode === "hand") {
+        document.documentElement.classList.add("canvas-hand-mode");
+      } else {
+        document.documentElement.classList.remove("canvas-hand-mode");
+      }
     };
     window.addEventListener("canvas-toggle-links", onToggleLinks);
     window.addEventListener("canvas-cursor-mode", onCursorMode);
@@ -552,11 +562,11 @@ export function WorkflowCanvas() {
         return sourceType === "3d" && targetType === "3d";
       }
 
-      // Audio connections: audio handles connect to audio handles, plus output node (or router)
+      // Audio connections: audio handles connect to audio handles, plus output/generateVideo/router nodes
       if (sourceType === "audio" || targetType === "audio") {
         if (sourceType === "audio") {
           const targetNode = nodeMap.get(connection.target);
-          if (targetNode?.type === "output" || targetNode?.type === "router") return true;
+          if (targetNode?.type === "output" || targetNode?.type === "router" || targetNode?.type === "generateVideo") return true;
         }
         return sourceType === "audio" && targetType === "audio";
       }

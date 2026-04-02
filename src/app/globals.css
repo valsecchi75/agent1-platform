@@ -1561,6 +1561,15 @@ body {
   cursor: all-scroll !important;
 }
 
+/* Hand tool mode: grab cursor on canvas pane — signals "I can drag the canvas" */
+.canvas-hand-mode .react-flow__pane {
+  cursor: grab !important;
+}
+.canvas-hand-mode .react-flow__pane.dragging,
+.canvas-hand-mode .react-flow__pane:active {
+  cursor: grabbing !important;
+}
+
 /* Nodes: open hand on hover — signals "I can drag this" */
 .react-flow__node {
   cursor: grab !important;

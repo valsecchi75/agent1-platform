@@ -1,15 +1,15 @@
 # AGENT 1 — From Vision to Form
 
-AI-powered node-based workflow editor for eyewear design. Convert 2D sketches into professional 3D editorial renders using visual pipelines.
-
-Built for EssilorLuxottica internal design teams.
+Open-source, API-driven node-based platform for creative generation. Build visual pipelines connecting AI models for image, video, 3D, audio, and LLM workflows.
 
 ## Quick Start
 
 **Windows:** Double-click `start.bat`
 **macOS/Linux:** Run `./start.sh`
 
-The app opens at `http://localhost:3000`.
+The app opens at `http://localhost:3000`. On first launch, dependencies are installed automatically and the database is created fresh.
+
+This is a clean install: no pre-existing generations, workflows, or user data. The app auto-checks for updates from GitHub and notifies you when a new version is available.
 
 ## Requirements
 

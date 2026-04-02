@@ -4,6 +4,7 @@ import {
   ModelType,
   ImageInputNodeData,
   AudioInputNodeData,
+  VideoInputNodeData,
   AnnotationNodeData,
   PromptNodeData,
   ArrayNodeData,
@@ -37,6 +38,7 @@ import {
 export const defaultNodeDimensions: Record<NodeType, { width: number; height: number }> = {
   imageInput: { width: 300, height: 280 },
   audioInput: { width: 300, height: 200 },
+  videoInput: { width: 300, height: 240 },
   annotation: { width: 300, height: 280 },
   prompt: { width: 320, height: 220 },
   array: { width: 340, height: 260 },
@@ -98,6 +100,7 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
         image: null,
         filename: null,
         dimensions: null,
+        isOptional: false,
       } as ImageInputNodeData;
     case "audioInput":
       return {
@@ -105,7 +108,17 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
         filename: null,
         duration: null,
         format: null,
+        isOptional: false,
       } as AudioInputNodeData;
+    case "videoInput":
+      return {
+        video: null,
+        videoRef: undefined,
+        filename: null,
+        duration: null,
+        dimensions: null,
+        format: null,
+      } as VideoInputNodeData;
     case "annotation":
       return {
         sourceImage: null,
@@ -115,6 +128,7 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
     case "prompt":
       return {
         prompt: "",
+        isOptional: false,
       } as PromptNodeData;
     case "array":
       return {
@@ -128,6 +142,7 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
         outputItems: [],
         outputText: "[]",
         error: null,
+        batchMode: false,
       } as ArrayNodeData;
     case "promptConstructor":
       return {
@@ -222,7 +237,7 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
         inputImages: [],
         outputText: null,
         provider: llmDefaults?.provider ?? "google",
-        model: llmDefaults?.model ?? "gemini-3-flash-preview",
+        model: llmDefaults?.model ?? "gemini-3.1-pro-preview",
         temperature: llmDefaults?.temperature ?? 0.7,
         maxTokens: llmDefaults?.maxTokens ?? 8192,
         status: "idle",
