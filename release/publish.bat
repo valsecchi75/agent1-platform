@@ -526,6 +526,7 @@ if not exist "!CANDIDATE_ZIP!" (
 :after_candidate
 if exist "!CANDIDATE_STAGING!" rmdir /s /q "!CANDIDATE_STAGING!" 2>nul
 echo.
+goto :final_cleanup
 
 :abort_cleanup
 echo.
