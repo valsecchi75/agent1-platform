@@ -17,6 +17,12 @@ app.prepare().then(() => {
     await handle(req, res);
   });
 
+  // Handle WebSocket upgrade for Next.js HMR (Hot Module Replacement) in dev mode.
+  // Without this, the browser gets a 404 on /_next/webpack-hmr and live reload breaks.
+  server.on('upgrade', (req, socket, head) => {
+    handle(req, socket, head);
+  });
+
   // Increase timeout to 10 minutes for long-running video generation
   server.requestTimeout = 600000; // 10 minutes
   server.headersTimeout = 610000; // Slightly longer than requestTimeout

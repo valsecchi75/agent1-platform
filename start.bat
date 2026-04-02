@@ -73,7 +73,7 @@ if not exist "node_modules" (
     echo  [*] First launch - installing dependencies...
     echo      This may take a few minutes, please wait...
     echo.
-    call npm install
+    call npm install --no-audit --no-fund
     if !ERRORLEVEL! NEQ 0 (
         echo.
         echo  [ERROR] npm install failed. Check your internet connection.
@@ -94,7 +94,7 @@ node -e "require('next/package.json')" >nul 2>nul
 if !ERRORLEVEL! NEQ 0 (
     echo  [*] Next.js not found, reinstalling...
     rmdir /s /q node_modules 2>nul
-    call npm install
+    call npm install --no-audit --no-fund
     if !ERRORLEVEL! NEQ 0 (
         echo.
         echo  [ERROR] Failed to install Next.js. Check your internet.

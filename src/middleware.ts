@@ -54,6 +54,9 @@ export default async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image).*)',
+    // Exclude all _next/* paths (static, images, HMR websocket) from middleware.
+    // This prevents 404s on /_next/webpack-hmr and avoids unnecessary middleware
+    // processing on internal Next.js infrastructure routes.
+    '/((?!_next).*)',
   ],
 };
