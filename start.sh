@@ -9,7 +9,7 @@ echo "   / /_\  / /__ / /___/   V /  / /\/ /"
 echo "  / /   _/ /__ / /___/ /V \ \ / / / /"
 echo " /_/   /______/______/_/ \_\ \/  /_/"
 echo ""
-echo "  From Vision to Form              v0.9.2-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha-alpha
+echo "  From Vision to Form              v0.9.2-alpha
 echo ""
 echo "  +--------------------------------------+"
 echo "  :                                      :"
@@ -144,11 +144,4 @@ mkdir -p storage/output/audio
 mkdir -p storage/workflows
 
 # ── Launch ─────────────────────────────────────────────────────
-echo "  [OK] All systems ready"
-echo ""
-echo "  ----------------------------------------"
-echo "  Starting server on http://localhost:3000"
-echo "  Press Ctrl+C to stop."
-echo "  ----------------------------------------"
-echo ""
-node server.js
+echo "  [OK] A
