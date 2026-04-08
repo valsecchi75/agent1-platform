@@ -143,10 +143,27 @@ mkdir -p storage/output/videos
 mkdir -p storage/output/audio
 mkdir -p storage/workflows
 
+# ── Build application ─────────────────────────────────────────
+echo "  [*] Building application..."
+npm run build > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo "  [!] Build failed, trying clean build..."
+    rm -rf .next 2>/dev/null
+    npm run build
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "  [ERROR] Build failed. Check for errors above."
+        echo ""
+        exit 1
+    fi
+fi
+echo "  [OK] Build complete"
+echo ""
+
 # ── Launch ─────────────────────────────────────────────────────
 echo "  [OK] All systems ready"
 echo ""
-echo "  🚀 Starting server..."
+echo "  Starting server on http://localhost:3000"
 echo ""
 
-npm run dev
+NODE_ENV=production node server.js

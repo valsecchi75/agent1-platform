@@ -167,6 +167,24 @@ if not exist "storage\output\videos" mkdir storage\output\videos
 if not exist "storage\output\audio" mkdir storage\output\audio
 if not exist "storage\workflows" mkdir storage\workflows
 
+REM ── Build application ──────────────────────────────────────
+echo  [*] Building application...
+call npm run build >nul 2>nul
+if !ERRORLEVEL! NEQ 0 (
+    echo  [!] Build failed, trying clean build...
+    if exist ".next" rmdir /s /q ".next" 2>nul
+    call npm run build
+    if !ERRORLEVEL! NEQ 0 (
+        echo.
+        echo  [ERROR] Build failed. Check for errors above.
+        echo.
+        pause
+        exit /b 1
+    )
+)
+echo  [OK] Build complete
+echo.
+
 REM ── Launch server ──────────────────────────────────────────
 echo  [OK] All systems ready
 echo.
@@ -175,7 +193,8 @@ echo  Starting server on http://localhost:3000
 echo  Press Ctrl+C to stop.
 echo  ----------------------------------------
 echo.
+set NODE_ENV=production
 node server.js
 echo.
 pause
-exit /b 0
+exit /b 0

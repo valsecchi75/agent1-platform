@@ -408,6 +408,42 @@ function rebuildAndVerify(
     throw new Error('npm install failed — rolled back to previous version');
   }
 
+  // Clean stale .next cache and rebuild.
+  // Critical: the dev server (Turbopack) watches files and tries to hot-reload
+  // during the file copy phase, causing race conditions where imports resolve
+  // before their target modules have been written. A clean build after all files
+  // are in place eliminates this class of errors.
+  onProgress({ step: 5, status: 'rebuilding' });
+  updateLog('Cleaning .next cache and rebuilding...');
+
+  try {
+    const nextDir = join(APP_ROOT, '.next');
+    if (existsSync(nextDir)) {
+      rmSync(nextDir, { recursive: true, force: true });
+      updateLog('.next cache cleared');
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    updateLog(`WARN: could not clear .next cache: ${msg}`);
+    // Non-fatal — continue with build anyway
+  }
+
+  try {
+    execSync('npm run build', {
+      cwd: APP_ROOT,
+      timeout: NPM_INSTALL_TIMEOUT, // 5 minutes should be enough for build
+      stdio: 'pipe',
+    });
+    updateLog('Build completed successfully');
+  } catch (err) {
+    // Build failed — attempt rollback
+    const msg = err instanceof Error ? err.message : String(err);
+    updateLog(`Build failed: ${msg}`);
+    onProgress({ step: 5, status: 'rolling_back' });
+    rollbackFromBackup(backupDir);
+    throw new Error('Build failed after update — rolled back to previous version');
+  }
+
   onProgress({ step: 5, status: 'verifying' });
 
   // Verify critical files
