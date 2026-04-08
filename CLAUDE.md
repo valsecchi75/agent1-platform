@@ -275,6 +275,84 @@ All routes in `src/app/api/`:
 - `agent1-nanoBanana-defaults` - Sticky generation settings
 - `agent1-node-packs-lastSeen` - Timestamp for new pack badge detection
 
+## UI Design System
+
+### Unified Dialog / Modal System
+
+All modals MUST use the shared Dialog primitives from `src/components/ui/dialog.tsx`. Components: Dialog, DialogContent (size: sm|md|lg|xl|full), DialogHeader, DialogTitle, DialogTabs, DialogBody, DialogFooter, DialogButton (variant: primary|secondary|ghost), DialogSeparator.
+
+Layout convention (flex column): DialogContent → DialogHeader → DialogTabs (optional) → DialogBody (scrollable) → DialogFooter.
+
+All Dialog modals automatically receive the rotating glow effect via the `modal-glow` CSS class applied to DialogContent. The glow uses a `conic-gradient` with `var(--accent)` color, animated via `@keyframes node-glow-rotate`. CSS rules in `globals.css`.
+
+### Skin / Theme System
+
+Theming uses `data-theme` (dark/light) + `data-skin` (brand) attributes on `<html>`. 11 skins: ignite, aurora, ember, matrix, sienna, sage, orchid, platinum, abyss, amber, ocean. CSS custom properties (`--accent`, `--surface-1`, `--surface-2`, `--border`, `--text-primary`, `--text-muted`, `--modal-bg`, `--modal-border`, `--node-bg`, etc.) drive all colors.
+
+Brand logo SVGs per skin: `src/components/settings/BrandLogo.tsx` → `public/skins/{skin}.svg`.
+
+### Node Visual Consistency
+
+- BaseNode `fullBleed` mode uses solid `bg-neutral-800` (not semi-transparent) + `border-neutral-700/40`
+- Non-fullBleed mode uses `bg-neutral-800` + `shadow-lg` + dynamic border colors
+- Selected node glow: `.react-flow__node.selected::before` (rotating conic-gradient) + `::after` (box-shadow) in `globals.css`
+- Custom NA (Neural Atelier) nodes use `fullBleed` with solid `bg-[var(--node-bg,#1a1a1a)]` preview containers and solid `bg-neutral-900` empty states
+
+### Login Page
+
+- `src/app/login/LoginUI.tsx` — Layout with slogan (top-left), agent¹ brand (top-right), contact (bottom-right)
+- `src/app/login/LoginForm.tsx` — A1 logo + version badge using `formatVersion()` from `src/lib/appVersion.ts`
+- `src/app/login/LoginTunnel.tsx` — Three.js WebGL tunnel animation with per-skin color palettes
+- Skin auto-rotation interval: 18 seconds
+
+## Deployment
+
+### Two Deployment Modes
+
+| Mode | Script | Binding | Access |
+|------|--------|---------|--------|
+| **Local** | `start.bat` | `localhost:3000` | Local machine only |
+| **Azure (remote)** | `run-service.bat` | `0.0.0.0:3000` | Any browser via public IP |
+
+### Azure VM Configuration
+
+- **VM**: Windows Server at `72.146.168.162`
+- **Path on VM**: `C:\agent1`
+- **URL**: `http://72.146.168.162:3000`
+- **Auto-start**: Windows Task Scheduler (`schtasks /tn "Agent1"`)
+- **NSG**: Inbound rule `Allow-Agent1-3000` (port 3000, TCP, priority 310)
+
+### Key server.js Change
+
+`server.js` line 122: `const hostname = process.env.HOST || 'localhost'` — supports external binding via `HOST=0.0.0.0` env var while maintaining backward compatibility for local installs.
+
+### Custom Node Config Path Convention
+
+All API routes that access `custom_nodes/` MUST use `process.cwd()` directly (NOT `path.resolve(process.cwd(), "..")`). The `custom_nodes/` directory lives at the project root, same level as `src/`, `package.json`, etc.
+
+The `PACK_ID` constants in node components and executors MUST match the actual directory name under `custom_nodes/`:
+- `morpheus-model-management` (NOT `comfyui_morpheus_model_management`)
+- `agent1_neural_atelier` (NOT `comfyui_neural_atelier`)
+
+Legacy aliases for backward compatibility with saved workflows are maintained in `src/app/api/custom-nodes/[packId]/configs/[...path]/route.ts` via the `PACK_ALIASES` map.
+
+### Azure Release Procedure
+
+1. Run `build-candidate.js` from the source project
+2. **IMPORTANT**: `src/lib/storage/fileNaming.ts` is excluded by `build-candidate.js` because `shouldExclude()` blocks any path containing `storage/`. Add this file manually to the ZIP
+3. Add `start-azure.bat` and `run-service.bat` to the ZIP
+4. Copy ZIP to VM, extract to `C:\agent1`, restart the service
+5. If `package.json` changed: run `npm install` before restart
+6. If `src/` changed: run `npm run build` before restart
+
+### VM Service Management
+
+```bat
+schtasks /run /tn "Agent1"          # Start
+schtasks /end /tn "Agent1"          # Stop
+schtasks /query /tn "Agent1"        # Status
+```
+
 ## Git Workflow
 
 - The primary development branch is `develop`, NOT `main` or `master`
