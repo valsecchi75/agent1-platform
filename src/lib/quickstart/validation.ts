@@ -479,6 +479,8 @@ function createDefaultNodeData(type: NodeType): WorkflowNodeData {
         status: "idle",
         error: null,
       };
+    default:
+      return {} as WorkflowNodeData;
   }
 }
 

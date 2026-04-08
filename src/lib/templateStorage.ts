@@ -20,6 +20,7 @@ import * as path from "path";
 import type {
   TemplatePack,
   TemplatePackMeta,
+  TemplateCategory,
   SaveTemplateInput,
 } from "@/types/templates";
 import type { WorkflowNode } from "@/types/nodes";
@@ -165,10 +166,10 @@ export function listTemplates(): TemplatePackMeta[] {
           author: "Community",
           createdAt: stat.birthtime.toISOString(),
           updatedAt: stat.mtime.toISOString(),
-          source: "community",
+          source: "local" as "local",
           sourceUrl: null,
           registryVersion: "1.0.0",
-          category: "community",
+          category: "simple" as TemplateCategory,
           tags: [],
           techTags: [],
           nodeCount: 0,

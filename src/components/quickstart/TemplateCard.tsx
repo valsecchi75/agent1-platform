@@ -236,7 +236,7 @@ export function TemplateCard({
             {/* Installed remote: show Use button */}
             {template.source === "remote" && isInstalled && (
               <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" title="Installed" />
+                <span title="Installed"><CheckCircle2 className="w-3 h-3 text-emerald-400" /></span>
                 <button
                   onClick={onUseWorkflow}
                   disabled={disabled || isLoading}

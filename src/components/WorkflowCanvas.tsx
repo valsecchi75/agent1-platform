@@ -35,7 +35,8 @@ import { GlobalImageHistory } from "./GlobalImageHistory";
 import { GroupBackgroundsPortal, GroupControlsOverlay } from "./GroupsOverlay";
 import { InteractiveGrid } from "./InteractiveGrid";
 import CanvasToolbar from "./CanvasToolbar";
-import { NodeType, NanoBananaNodeData, HandleType } from "@/types";
+import { NodeType, NanoBananaNodeData, HandleType, SplitGridNodeData } from "@/types";
+import type { ProviderType } from "@/types/providers";
 import { defaultNodeDimensions } from "@/store/utils/nodeDefaults";
 import { FloatingNodeHeader } from "./nodes/FloatingNodeHeader";
 import { ControlPanel } from "./nodes/ControlPanel";
@@ -1719,7 +1720,7 @@ export function WorkflowCanvas() {
         <ViewportPortal>
           {allNodes.map((node) => {
             // Groups don't get floating headers
-            if (node.type === "group") return null;
+            if ((node.type as string) === "group") return null;
 
             const defaultWidth = defaultNodeDimensions[node.type as NodeType]?.width ?? 250;
             const headerWidth = node.measured?.width || (node.style?.width as number) || defaultWidth;
@@ -1752,7 +1753,7 @@ export function WorkflowCanvas() {
                 title={getNodeTitle(node)}
                 customTitle={node.data?.customTitle}
                 comment={node.data?.comment}
-                provider={getNodeDataProp(node.data, 'selectedModel')?.provider}
+                provider={getNodeDataProp<{ provider?: ProviderType }>(node.data, 'selectedModel')?.provider}
                 headerAction={browseAction}
                 onCustomTitleChange={handleCustomTitleChange}
                 onCommentChange={handleCommentChange}
@@ -1841,7 +1842,7 @@ export function WorkflowCanvas() {
         return (
           <SplitGridSettingsModal
             nodeId={expandingNode.id}
-            nodeData={node.data as Record<string, unknown>}
+            nodeData={node.data as unknown as SplitGridNodeData}
             isOpen={true}
             onOpenChange={(open) => { if (!open) setExpandingNode(null); }}
           />

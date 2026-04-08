@@ -43,7 +43,9 @@ export async function executeMorpheusModelManagement(ctx: NodeExecutionContext):
     }
 
     // Find the selected talent
-    const talent = catalog.talents?.find((t: any) => t.id === data.selectedTalentId);
+    if (!catalog) throw new Error("Talent catalog not loaded.");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const talent = (catalog as any).talents?.find((t: any) => t.id === data.selectedTalentId);
     if (!talent) {
       throw new Error(`Talent "${data.selectedTalentId}" not found in catalog.`);
     }

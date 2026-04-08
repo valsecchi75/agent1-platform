@@ -195,7 +195,7 @@ function hydrateNodeData(data: any): any {
     d.imageHistory = d.imageHistory.map((item: Record<string, unknown>) => {
       if (item && item._sessionBase64Ref) {
         const base64 = loadSessionImage(item._sessionBase64Ref as string);
-        const result = { ...item, base64: base64 || item.base64 };
+        const result: Record<string, unknown> = { ...item, base64: base64 || item.base64 };
         delete result._sessionBase64Ref;
         return result;
       }

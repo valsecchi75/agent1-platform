@@ -26,10 +26,10 @@ export function isAppVersionCompatible(
   minAppVersion: string | undefined
 ): boolean {
   if (!minAppVersion) return true;
-  const coercedApp = semver.coerce(appVersion, { includePrerelease: true });
-  const coercedMin = semver.coerce(minAppVersion, { includePrerelease: true });
+  const coercedApp = semver.coerce(appVersion);
+  const coercedMin = semver.coerce(minAppVersion);
   if (!coercedApp || !coercedMin) return true;
   const parsedApp = semver.parse(appVersion) || coercedApp;
   const parsedMin = semver.parse(minAppVersion) || coercedMin;
-  return semver.gte(parsedApp, parsedMin, { includePrerelease: true });
+  return semver.gte(parsedApp, parsedMin);
 }
