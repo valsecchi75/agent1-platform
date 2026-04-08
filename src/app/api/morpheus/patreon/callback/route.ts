@@ -10,7 +10,7 @@ import path from "path";
  * and membership status, and store it locally.
  */
 
-const AUTH_FILE = path.join(process.cwd(), "..", "custom_nodes", "comfyui_morpheus_model_management", ".patreon_auth.json");
+const AUTH_FILE = path.join(process.cwd(), "custom_nodes", "morpheus-model-management", ".patreon_auth.json");
 
 interface PatreonAuthData {
   access_token: string;

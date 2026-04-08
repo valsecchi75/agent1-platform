@@ -29,26 +29,40 @@ const BINARY_EXTENSIONS = new Set([
 ]);
 
 /**
+ * Legacy pack-ID → actual directory-name aliases.
+ * Older components and saved workflows may reference the original ComfyUI-style
+ * directory names; this map resolves them to the current directory names so both
+ * old and new URLs work without breaking existing workflows.
+ */
+const PACK_ALIASES: Record<string, string> = {
+  comfyui_morpheus_model_management: "morpheus-model-management",
+  comfyui_neural_atelier: "agent1_neural_atelier",
+};
+
+/**
  * GET /api/custom-nodes/[packId]/configs/[...path]
  * Serves config files AND assets (images, audio, etc.) from a custom node pack.
  *
  * Examples:
- *   /api/custom-nodes/comfyui_neural_atelier/configs/NA_Recolor/colors.json
- *   /api/custom-nodes/comfyui_morpheus_model_management/configs/morpheus_model_management/images/model_01.png
+ *   /api/custom-nodes/morpheus-model-management/configs/morpheus_model_management/catalog.json
+ *   /api/custom-nodes/morpheus-model-management/configs/morpheus_model_management/images/model_01.png
+ *   /api/custom-nodes/agent1_neural_atelier/configs/NA_Recolor/colors.json
  */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ packId: string; path: string[] }> }
 ) {
-  const { packId, path: pathSegments } = await params;
+  const { packId: rawPackId, path: pathSegments } = await params;
 
-  if (packId.includes("..") || packId.includes("/")) {
+  if (rawPackId.includes("..") || rawPackId.includes("/")) {
     return NextResponse.json({ error: "Invalid pack ID" }, { status: 400 });
   }
 
-  const projectRoot = path.resolve(process.cwd(), "..");
+  // Resolve legacy aliases for backward compatibility
+  const packId = PACK_ALIASES[rawPackId] || rawPackId;
+
   const configPath = path.join(
-    projectRoot,
+    process.cwd(),
     "custom_nodes",
     packId,
     "configs",
@@ -56,7 +70,7 @@ export async function GET(
   );
 
   // Security: ensure resolved path is within custom_nodes
-  const customNodesRoot = path.join(projectRoot, "custom_nodes");
+  const customNodesRoot = path.join(process.cwd(), "custom_nodes");
   if (!configPath.startsWith(customNodesRoot)) {
     return NextResponse.json({ error: "Path traversal detected" }, { status: 403 });
   }

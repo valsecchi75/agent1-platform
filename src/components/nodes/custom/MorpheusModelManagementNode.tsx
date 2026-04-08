@@ -26,7 +26,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 type MorpheusNodeType = Node<MorpheusModelManagementData, "morpheusModelManagement">;
 
 // ── Constants ──
-const PACK_ID = "comfyui_morpheus_model_management";
+const PACK_ID = "morpheus-model-management";
 const CONFIG_DIR = "morpheus_model_management";
 const COLS = 4;
 const ROWS = 2;

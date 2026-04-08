@@ -8,7 +8,7 @@ import path from "path";
  * Removes the local Patreon auth file (logs out).
  */
 
-const AUTH_FILE = path.join(process.cwd(), "..", "custom_nodes", "comfyui_morpheus_model_management", ".patreon_auth.json");
+const AUTH_FILE = path.join(process.cwd(), "custom_nodes", "morpheus-model-management", ".patreon_auth.json");
 
 export async function POST() {
   try {

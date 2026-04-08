@@ -6,7 +6,7 @@ import type { NodeExecutionContext } from "../types";
 import { executeNAPipeline } from "./naPipelineExecutor";
 import type { NAStylingDetailData } from "@/types/customNodes";
 
-const PACK_ID = "comfyui_neural_atelier";
+const PACK_ID = "agent1_neural_atelier";
 const CONFIG_DIR = "NA_Styling_Detail_Change";
 
 export async function executeNAStylingDetail(ctx: NodeExecutionContext): Promise<void> {

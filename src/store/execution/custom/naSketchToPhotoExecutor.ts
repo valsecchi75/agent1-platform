@@ -6,7 +6,7 @@ import type { NodeExecutionContext } from "../types";
 import { executeNAPipeline } from "./naPipelineExecutor";
 import type { NASketchToPhotoData } from "@/types/customNodes";
 
-const PACK_ID = "comfyui_neural_atelier";
+const PACK_ID = "agent1_neural_atelier";
 const CONFIG_DIR = "NA_Sketch_to_Photo_Orchestrator";
 
 export async function executeNASketchToPhoto(ctx: NodeExecutionContext): Promise<void> {

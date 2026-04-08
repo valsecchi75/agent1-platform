@@ -1218,7 +1218,7 @@ function ConditionalSwitchControls({ node }: { node: Node }) {
 // Neural Atelier Controls
 // ══════════════════════════════════════════════════════════
 
-const NA_PACK_ID = "comfyui_neural_atelier";
+const NA_PACK_ID = "agent1_neural_atelier";
 
 function NASketchToPhotoControls({ node }: { node: Node }) {
   const nodeData = node.data as NASketchToPhotoData;

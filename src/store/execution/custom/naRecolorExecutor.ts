@@ -6,7 +6,7 @@ import type { NodeExecutionContext } from "../types";
 import { executeNAPipeline } from "./naPipelineExecutor";
 import type { NARecolorData } from "@/types/customNodes";
 
-const PACK_ID = "comfyui_neural_atelier";
+const PACK_ID = "agent1_neural_atelier";
 const CONFIG_DIR = "NA_Recolor";
 const PLACEHOLDER = "-- Select a Pantone color --";
 

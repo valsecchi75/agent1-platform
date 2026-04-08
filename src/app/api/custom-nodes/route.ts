@@ -9,8 +9,7 @@ import type { CustomNodePackManifest } from "@/types/customNodes";
  */
 export async function GET() {
   try {
-    const projectRoot = path.resolve(process.cwd(), "..");
-    const customNodesDir = path.join(projectRoot, "custom_nodes");
+    const customNodesDir = path.join(process.cwd(), "custom_nodes");
 
     if (!fs.existsSync(customNodesDir)) {
       return NextResponse.json({ packs: [] });
