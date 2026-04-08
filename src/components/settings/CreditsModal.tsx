@@ -1,31 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
+import * as React from "react";
 import { BrandLogo } from "./BrandLogo";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+} from "@/components/ui/dialog";
 import { formatVersion } from "@/lib/appVersion";
 
 interface CreditsModalProps {
+  isOpen: boolean;
   onClose: () => void;
 }
 
-export function CreditsModal({ onClose }: CreditsModalProps) {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
-
+export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60" onClick={onClose}>
-      <div
-        className="w-full max-w-2xl max-h-[85vh] rounded-xl overflow-hidden flex flex-col shadow-2xl mx-4"
-        style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent size="md" hideClose={true}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
+        <DialogHeader className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
           <div className="flex items-center gap-3">
             <BrandLogo variant="icon" height="h-7" />
             <div className="flex items-center gap-2">
@@ -35,15 +30,10 @@ export function CreditsModal({ onClose }: CreditsModalProps) {
               </span>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 transition-colors" style={{ color: 'var(--text-muted)' }}>
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        </DialogHeader>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-8">
+        <DialogBody className="space-y-8">
 
           {/* About */}
           <Section title="About the Project">
@@ -213,9 +203,9 @@ export function CreditsModal({ onClose }: CreditsModalProps) {
           <div className="text-center text-[10px] pt-2" style={{ color: 'var(--text-muted)' }}>
             AGENT 1 — From Vision to Form · <a href="https://linkedin.com/in/valsecchisergio/" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>Sergio Valsecchi</a> · 2026
           </div>
-        </div>
-      </div>
-    </div>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   );
 }
 
