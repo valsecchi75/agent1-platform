@@ -302,7 +302,7 @@ REM ================================================================
 echo.
 echo  Creazione ZIP: !ZIP_NAME!
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try{$td='.release-staging';$fc=(Get-ChildItem -Path $td -Recurse -File).Count;Compress-Archive -Path (Join-Path $td '*') -DestinationPath '!ZIP_NAME!' -Force;$sz=[math]::Round((Get-Item '!ZIP_NAME!').Length/1MB,2);Write-Host('  Zip creato: !ZIP_NAME! - '+$sz+' MB - '+$fc+' file')}catch{Write-Host('  ERRORE PowerShell: '+$_.Exception.Message);exit 1}"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try{Set-Location '!CD!';$td='.release-staging';if(-not(Test-Path $td)){throw 'Staging dir non trovata: '+$td};$fc=(Get-ChildItem -Path $td -Recurse -File).Count;Compress-Archive -Path \"$td\*\" -DestinationPath '!ZIP_NAME!' -Force;$sz=[math]::Round((Get-Item '!ZIP_NAME!').Length/1MB,2);Write-Host('  Zip creato: !ZIP_NAME! - '+$sz+' MB - '+$fc+' file')}catch{Write-Host('  ERRORE PowerShell: '+$_.Exception.Message);exit 1}"
 
 if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
 
@@ -518,7 +518,7 @@ if !ERRORLEVEL! NEQ 0 (
 
 if exist "!CANDIDATE_ZIP!" del "!CANDIDATE_ZIP!" 2>nul
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try{$td='.candidate-staging';Compress-Archive -Path (Join-Path $td '*') -DestinationPath '!CANDIDATE_ZIP!' -Force;$sz=[math]::Round((Get-Item '!CANDIDATE_ZIP!').Length/1MB,2);Write-Host('  [OK] Candidate: agent1-candidate-v!NEW_VERSION!.zip ('+$sz+' MB)')}catch{Write-Host('  [AVVISO] Candidate ZIP fallito: '+$_.Exception.Message);exit 1}"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try{Set-Location '!CD!';$td='.candidate-staging';if(-not(Test-Path $td)){throw 'Candidate staging non trovata'};Compress-Archive -Path \"$td\*\" -DestinationPath '!CANDIDATE_ZIP!' -Force;$sz=[math]::Round((Get-Item '!CANDIDATE_ZIP!').Length/1MB,2);Write-Host('  [OK] Candidate: agent1-candidate-v!NEW_VERSION!.zip ('+$sz+' MB)')}catch{Write-Host('  [AVVISO] Candidate ZIP fallito: '+$_.Exception.Message);exit 1}"
 
 if not exist "!CANDIDATE_ZIP!" (
     echo  [AVVISO] Candidate ZIP non creato
