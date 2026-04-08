@@ -1,34 +1,29 @@
 "use client";
 
 import {
-  Plus,
-  LayoutGrid,
-  Sparkles,
-  Save,
-  ExternalLink,
-  FolderOpen,
-  Key,
-  Settings,
-  Keyboard,
-  MessageSquare,
-  RotateCcw,
-  LogOut,
-  Images,
-  Heart,
   BarChart3,
   ChevronDown,
+  ExternalLink,
+  FolderOpen,
+  Heart,
+  HelpCircle,
+  Images,
+  Key,
+  Keyboard,
+  LayoutGrid,
+  LogOut,
+  MessageSquare,
+  Plus,
   Puzzle,
+  RotateCcw,
+  Save,
+  Settings,
+  Sparkles,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useRef, useMemo, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/shallow";
-import { CostIndicator } from "./CostIndicator";
-import { KeyboardShortcutsDialog } from "./KeyboardShortcutsDialog";
-import { ProjectSetupModal } from "./ProjectSetupModal";
-import { ApiKeyPanel } from "./settings/ApiKeyPanel";
-import { BrandLogo } from "./settings/BrandLogo";
-import { CreditsModal } from "./settings/CreditsModal";
-import { ThemeSwitcher } from "./settings/ThemeSwitcher";
+
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -36,11 +31,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatVersion } from "@/lib/appVersion";
 import { useTabStore } from "@/store/tabStore";
 import { useWorkflowStore, WorkflowFile } from "@/store/workflowStore";
-import { SaveAsTemplateModal } from "./SaveAsTemplateModal";
+
 import { NodePackManager } from "@/components/node-packs";
-import { formatVersion } from "@/lib/appVersion";
+import { CostIndicator } from "./CostIndicator";
+import { KeyboardShortcutsDialog } from "./KeyboardShortcutsDialog";
+import { ProjectSetupModal } from "./ProjectSetupModal";
+import { SaveAsTemplateModal } from "./SaveAsTemplateModal";
+import { ApiKeyPanel } from "./settings/ApiKeyPanel";
+import { BrandLogo } from "./settings/BrandLogo";
+import { CreditsModal } from "./settings/CreditsModal";
+import { ThemeSwitcher } from "./settings/ThemeSwitcher";
+import { useOnboardingStore } from "@/store/onboardingStore";
 
 function CommentsNavigationIcon() {
   const nodes = useWorkflowStore((state) => state.nodes);
@@ -138,10 +142,12 @@ export function Header() {
   const [showSaveMenu, setShowSaveMenu] = useState(false);
   const [showSaveAsTemplateModal, setShowSaveAsTemplateModal] = useState(false);
   const [nodePackManagerOpen, setNodePackManagerOpen] = useState(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const nodePackBadge = useWorkflowStore((s) => s.nodePackBadgeActive);
   const setNodePackBadge = useWorkflowStore((s) => s.setNodePackBadge);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const saveMenuRef = useRef<HTMLDivElement>(null);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
 
   const isProjectConfigured = !!workflowName;
   const canSave = !!(workflowId && workflowName && saveDirectoryPath);
@@ -237,12 +243,15 @@ export function Header() {
       if (saveMenuRef.current && !saveMenuRef.current.contains(e.target as Node)) {
         setShowSaveMenu(false);
       }
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(e.target as Node)) {
+        setShowSettingsMenu(false);
+      }
     }
-    if (showSaveMenu) {
+    if (showSaveMenu || showSettingsMenu) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
-  }, [showSaveMenu]);
+  }, [showSaveMenu, showSettingsMenu]);
 
   const settingsButtons = (
     <div className="flex items-center gap-0.5 ml-1 pl-1 border-l border-neutral-700/50">
@@ -255,14 +264,56 @@ export function Header() {
         </TooltipTrigger>
         <TooltipContent>API Key Settings</TooltipContent>
       </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" onClick={handleOpenSettings}>
-            <Settings className="w-4 h-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Project settings</TooltipContent>
-      </Tooltip>
+      <div ref={settingsMenuRef} className="relative">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowSettingsMenu((prev) => !prev)}
+              className="relative"
+            >
+              <Settings className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Settings</TooltipContent>
+        </Tooltip>
+
+        {/* Settings dropdown menu */}
+        {showSettingsMenu && (
+          <div
+            className="absolute top-full right-0 mt-1 w-48 rounded-lg shadow-lg py-1 z-50"
+            style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
+          >
+            <button
+              onClick={() => {
+                setShowSettingsMenu(false);
+                handleOpenSettings();
+              }}
+              className="w-full text-left px-3 py-2 text-sm transition-colors"
+              style={{ color: "var(--text-secondary)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-3)"; e.currentTarget.style.color = "var(--text-primary)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-secondary)"; }}
+            >
+              Project Settings
+            </button>
+            <div className="h-px" style={{ background: "var(--border)" }} />
+            <button
+              onClick={() => {
+                setShowSettingsMenu(false);
+                useOnboardingStore.getState().resetWizard();
+              }}
+              className="w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2"
+              style={{ color: "var(--text-secondary)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-3)"; e.currentTarget.style.color = "var(--text-primary)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-secondary)"; }}
+            >
+              <HelpCircle className="w-4 h-4" />
+              Restart Tutorial
+            </button>
+          </div>
+        )}
+      </div>
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
@@ -276,7 +327,7 @@ export function Header() {
           >
             <Puzzle className="w-4 h-4" />
             {nodePackBadge && (
-              <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-orange-500" />
+              <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[var(--accent)]" />
             )}
           </Button>
         </TooltipTrigger>
@@ -559,7 +610,7 @@ export function Header() {
         onClose={() => setShortcutsDialogOpen(false)}
       />
       <ApiKeyPanel isOpen={showApiKeys} onClose={() => setShowApiKeys(false)} />
-      {showCredits && <CreditsModal onClose={() => setShowCredits(false)} />}
+      <CreditsModal isOpen={showCredits} onClose={() => setShowCredits(false)} />
       {showSaveAsTemplateModal && (
         <SaveAsTemplateModal
           isOpen={showSaveAsTemplateModal}
@@ -570,7 +621,7 @@ export function Header() {
           currentNodes={nodes}
           currentEdges={edges}
           currentEdgeStyle={edgeStyle}
-          currentGroups={groups}
+          currentGroups={Object.values(groups)}
           currentWorkflowName={workflowName}
         />
       )}
