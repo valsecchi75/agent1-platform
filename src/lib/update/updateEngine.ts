@@ -548,8 +548,31 @@ export async function applyUpdate(
     // Step 4 (manifest-aware)
     replaceFiles(extractedRoot, manifest, onProgress);
 
+    // Write update marker IMMEDIATELY after file copy, before build.
+    // The NEW server.js (just copied by replaceFiles) will detect this marker
+    // on next process start and run `npm run build` — solving the bootstrap
+    // problem where the OLD update engine (pre-build-step) doesn't build.
+    const markerVersion = manifest?.version || 'unknown';
+    try {
+      const markerPath = join(APP_ROOT, '.update-pending');
+      writeFileSync(markerPath, JSON.stringify({
+        version: markerVersion,
+        timestamp: new Date().toISOString(),
+      }));
+      updateLog(`Update marker written for v${markerVersion}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      updateLog(`WARN: could not write update marker: ${msg}`);
+    }
+
     // Step 5
     const newVersion = rebuildAndVerify(backupDir, onProgress);
+
+    // Build succeeded — remove update marker (server.js won't re-build on restart)
+    try {
+      const markerPath = join(APP_ROOT, '.update-pending');
+      if (existsSync(markerPath)) unlinkSync(markerPath);
+    } catch { /* best effort */ }
 
     cleanupTemp();
     updateLog(`=== Update completed successfully: v${newVersion} ===`);

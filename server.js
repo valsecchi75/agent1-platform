@@ -7,14 +7,74 @@
 //   - POST /api/restart triggers process.exit(0) in the worker, which the
 //     supervisor catches and re-forks automatically.
 
-const { fork } = require('child_process');
+const { fork, execSync } = require('child_process');
 const { createServer } = require('http');
 const next = require('next');
 const path = require('path');
+const fs = require('fs');
+
+// ─── Post-Update Build ──────────────────────────────────────────────────────
+// After a delta update, the source files on disk are newer than the .next build.
+// The update engine writes a marker file; on next process start we detect it,
+// run `npm run build`, and delete the marker before launching Next.js.
+// This solves the bootstrap problem: even if the OLD update engine (pre-build-step)
+// applied the delta, the NEW server.js (delivered by that same delta) will run
+// the build on next restart.
+
+const UPDATE_MARKER = path.resolve(__dirname, '.update-pending');
+
+function runPostUpdateBuild() {
+  if (!fs.existsSync(UPDATE_MARKER)) return;
+
+  let markerData = {};
+  try {
+    markerData = JSON.parse(fs.readFileSync(UPDATE_MARKER, 'utf-8'));
+  } catch { /* ignore parse errors */ }
+
+  const version = markerData.version || 'unknown';
+  console.log(`[post-update] Update to v${version} detected — building...`);
+
+  // Clean stale .next cache
+  const nextDir = path.resolve(__dirname, '.next');
+  try {
+    if (fs.existsSync(nextDir)) {
+      fs.rmSync(nextDir, { recursive: true, force: true });
+      console.log('[post-update] Cleared .next cache');
+    }
+  } catch (err) {
+    console.warn(`[post-update] Could not clear .next: ${err.message}`);
+  }
+
+  // Run build
+  try {
+    console.log('[post-update] Running npm run build...');
+    execSync('npm run build', {
+      cwd: __dirname,
+      timeout: 5 * 60 * 1000,
+      stdio: 'inherit',
+    });
+    console.log('[post-update] Build completed successfully');
+  } catch (err) {
+    console.error(`[post-update] Build failed: ${err.message}`);
+    console.error('[post-update] The app may not work correctly. Try running "npm run build" manually.');
+    // Don't delete marker — will retry on next launch
+    return;
+  }
+
+  // Delete marker only on success
+  try {
+    fs.unlinkSync(UPDATE_MARKER);
+  } catch { /* best effort */ }
+
+  console.log(`[post-update] Update to v${version} applied successfully`);
+}
 
 // ─── Supervisor ──────────────────────────────────────────────────────────────
 
 if (!process.env.AGENT1_WORKER) {
+  // Run post-update build BEFORE spawning worker (blocks until done)
+  runPostUpdateBuild();
+
   let worker = null;
   let shuttingDown = false;
 
@@ -31,7 +91,9 @@ if (!process.env.AGENT1_WORKER) {
         process.exit(0);
       }
       if (code === 0) {
-        // Restart requested (from /api/restart)
+        // Restart requested (from /api/restart or post-update)
+        // Re-check for update marker before re-spawning
+        runPostUpdateBuild();
         console.log('[supervisor] Worker exited with code 0 — restarting…');
         setTimeout(spawnWorker, 300);
       } else {

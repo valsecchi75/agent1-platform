@@ -75,6 +75,7 @@ release/release-notes.tmp
 release/.tmp/
 .release-staging/
 .candidate-staging/
+.update-pending
 
 # Release secrets — NEVER commit plaintext tokens
 release/Token.txt
