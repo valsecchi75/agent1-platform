@@ -220,6 +220,7 @@ echo.
 
 if exist "!ZIP_NAME!" del "!ZIP_NAME!" 2>nul
 if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
+if not exist "release\.tmp" mkdir "release\.tmp" 2>nul
 
 if not exist "release\.releaseinclude" (
     echo  [ERRORE] release\.releaseinclude non trovato.
@@ -253,33 +254,33 @@ REM  Delega TUTTA la creazione staging a Node.js
 REM  Node scrive il risultato in un file temp per batch
 REM ================================================================
 
-node -e "var fs=require('fs'),path=require('path');var RELEASE_TYPE='!RELEASE_TYPE!',LAST_TAG='!LAST_TAG!',NEW_VERSION='!NEW_VERSION!',PREV_VERSION='!PREVIOUS_VERSION!';var result={type:RELEASE_TYPE,files:0,deleted:0,error:null};try{var wl=fs.readFileSync('release/.releaseinclude','utf8').split('\n').map(function(l){return l.trim()}).filter(function(l){return l&&l.startsWith('#')===false});function matchWl(f){return wl.some(function(w){var w2=w.endsWith('/')?w.slice(0,-1):w;return w.endsWith('/')?f.startsWith(w2+'/'):f===w2})}var td='.release-staging';if(fs.existsSync(td))fs.rmSync(td,{recursive:true,force:true});fs.mkdirSync(td,{recursive:true});if(RELEASE_TYPE==='full'){wl.forEach(function(item){var clean=item.endsWith('/')?item.slice(0,-1):item;if(shouldNeverInclude(clean))return;if(fs.existsSync(clean)===false)return;var dest=path.join(td,clean);fs.mkdirSync(path.dirname(dest),{recursive:true});var st=fs.statSync(clean);if(st.isDirectory()){fs.cpSync(clean,dest,{recursive:true})}else{fs.copyFileSync(clean,dest)}});var manifest={version:NEW_VERSION,previousVersion:PREV_VERSION,type:'full',files:[],deleted:[],timestamp:new Date().toISOString()};fs.writeFileSync(path.join(td,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');var allFiles=[];function countFiles(d){fs.readdirSync(d).forEach(function(f){var fp=path.join(d,f);if(fs.statSync(fp).isDirectory())countFiles(fp);else allFiles.push(fp)})}countFiles(td);result.files=allFiles.length;result.type='full'}else{function shouldNeverInclude(f){var n=f.replace(/\\\\/g,'/'),b=require('path').basename(n).toLowerCase();return b==='token.txt'||b==='.env'||/\.(db|sqlite|sqlite3)$/i.test(b)||n.endsWith('/token.txt')||b==='logo.psb';}var execSync=require('child_process').execSync;var changed=execSync('git diff --name-only '+LAST_TAG+' HEAD',{encoding:'utf8'}).split('\n').filter(Boolean);var deleted=execSync('git diff --diff-filter=D --name-only '+LAST_TAG+' HEAD',{encoding:'utf8'}).split('\n').filter(Boolean);var included=changed.filter(matchWl).filter(function(f){return !shouldNeverInclude(f)});var deletedIncl=deleted.filter(matchWl);if(included.length===0){result.error='NO_CHANGES';fs.writeFileSync(require('path').join(require('os').tmpdir(),'a1_build_result.txt'),JSON.stringify(result));process.exit(0)}var copied=0;included.forEach(function(f){if(fs.existsSync(f)===false)return;var dest=path.join(td,f);fs.mkdirSync(path.dirname(dest),{recursive:true});var st=fs.statSync(f);if(st.isDirectory()){fs.cpSync(f,dest,{recursive:true})}else{fs.copyFileSync(f,dest)}copied++});if(fs.existsSync(path.join(td,'package.json'))===false&&fs.existsSync('package.json')){fs.copyFileSync('package.json',path.join(td,'package.json'));copied++}var manifest={version:NEW_VERSION,previousVersion:PREV_VERSION,type:'delta',files:included,deleted:deletedIncl,timestamp:new Date().toISOString()};fs.writeFileSync(path.join(td,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');result.files=copied;result.deleted=deletedIncl.length;result.type='delta';result.fileList=included.join('\n');result.deletedList=deletedIncl.join('\n')}}catch(e){result.error=e.message}fs.writeFileSync(require('path').join(require('os').tmpdir(),'a1_build_result.txt'),JSON.stringify(result));" 2>nul
+node -e "var fs=require('fs'),path=require('path');var RELEASE_TYPE='!RELEASE_TYPE!',LAST_TAG='!LAST_TAG!',NEW_VERSION='!NEW_VERSION!',PREV_VERSION='!PREVIOUS_VERSION!';var result={type:RELEASE_TYPE,files:0,deleted:0,error:null};try{var wl=fs.readFileSync('release/.releaseinclude','utf8').split('\n').map(function(l){return l.trim()}).filter(function(l){return l&&l.startsWith('#')===false});function matchWl(f){return wl.some(function(w){var w2=w.endsWith('/')?w.slice(0,-1):w;return w.endsWith('/')?f.startsWith(w2+'/'):f===w2})}var td='.release-staging';if(fs.existsSync(td))fs.rmSync(td,{recursive:true,force:true});fs.mkdirSync(td,{recursive:true});if(RELEASE_TYPE==='full'){wl.forEach(function(item){var clean=item.endsWith('/')?item.slice(0,-1):item;if(shouldNeverInclude(clean))return;if(fs.existsSync(clean)===false)return;var dest=path.join(td,clean);fs.mkdirSync(path.dirname(dest),{recursive:true});var st=fs.statSync(clean);if(st.isDirectory()){fs.cpSync(clean,dest,{recursive:true})}else{fs.copyFileSync(clean,dest)}});var manifest={version:NEW_VERSION,previousVersion:PREV_VERSION,type:'full',files:[],deleted:[],timestamp:new Date().toISOString()};fs.writeFileSync(path.join(td,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');var allFiles=[];function countFiles(d){fs.readdirSync(d).forEach(function(f){var fp=path.join(d,f);if(fs.statSync(fp).isDirectory())countFiles(fp);else allFiles.push(fp)})}countFiles(td);result.files=allFiles.length;result.type='full'}else{function shouldNeverInclude(f){var n=f.replace(/\\\\/g,'/'),b=require('path').basename(n).toLowerCase();return b==='token.txt'||b==='.env'||/\.(db|sqlite|sqlite3)$/i.test(b)||n.endsWith('/token.txt')||b==='logo.psb';}var execSync=require('child_process').execSync;var changed=execSync('git diff --name-only '+LAST_TAG+' HEAD',{encoding:'utf8'}).split('\n').filter(Boolean);var deleted=execSync('git diff --diff-filter=D --name-only '+LAST_TAG+' HEAD',{encoding:'utf8'}).split('\n').filter(Boolean);var included=changed.filter(matchWl).filter(function(f){return !shouldNeverInclude(f)});var deletedIncl=deleted.filter(matchWl);if(included.length===0){result.error='NO_CHANGES';fs.writeFileSync('release/.tmp/a1_build_result.txt',JSON.stringify(result));process.exit(0)}var copied=0;included.forEach(function(f){if(fs.existsSync(f)===false)return;var dest=path.join(td,f);fs.mkdirSync(path.dirname(dest),{recursive:true});var st=fs.statSync(f);if(st.isDirectory()){fs.cpSync(f,dest,{recursive:true})}else{fs.copyFileSync(f,dest)}copied++});if(fs.existsSync(path.join(td,'package.json'))===false&&fs.existsSync('package.json')){fs.copyFileSync('package.json',path.join(td,'package.json'));copied++}var manifest={version:NEW_VERSION,previousVersion:PREV_VERSION,type:'delta',files:included,deleted:deletedIncl,timestamp:new Date().toISOString()};fs.writeFileSync(path.join(td,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');result.files=copied;result.deleted=deletedIncl.length;result.type='delta';result.fileList=included.join('\n');result.deletedList=deletedIncl.join('\n')}}catch(e){result.error=e.message}fs.writeFileSync('release/.tmp/a1_build_result.txt',JSON.stringify(result));" 2>nul
 
 REM Leggi risultato da Node
-if not exist "%TEMP%\a1_build_result.txt" (
+if not exist "release\.tmp\a1_build_result.txt" (
     echo  [ERRORE] Delta detection fallita - nessun risultato da Node.
     echo [ERRORE] Delta detection fallita>> "!LOG_FILE!"
     goto :abort_cleanup
 )
 
 REM Usa Node per parsare il risultato e scrivere variabili semplici
-node -e "var r=JSON.parse(require('fs').readFileSync(require('path').join(require('os').tmpdir(),'a1_build_result.txt'),'utf8'));var lines=['type='+r.type,'files='+r.files,'deleted='+(r.deleted||0),'error='+(r.error||'')];require('fs').writeFileSync(require('path').join(require('os').tmpdir(),'a1_build_vars.txt'),lines.join('\n'));" 2>nul
+node -e "var r=JSON.parse(require('fs').readFileSync('release/.tmp/a1_build_result.txt','utf8'));var lines=['type='+r.type,'files='+r.files,'deleted='+(r.deleted||0),'error='+(r.error||'')];require('fs').writeFileSync('release/.tmp/a1_build_vars.txt',lines.join('\n'));" 2>nul
 
-for /f "usebackq tokens=1,* delims==" %%a in ("%TEMP%\a1_build_vars.txt") do (
+for /f "usebackq tokens=1,* delims==" %%a in ("release\.tmp\a1_build_vars.txt") do (
     set "BUILD_%%a=%%b"
 )
-del "%TEMP%\a1_build_vars.txt" 2>nul
+del "release\.tmp\a1_build_vars.txt" 2>nul
 
 if "!BUILD_error!"=="NO_CHANGES" (
     echo  [ERRORE] Nessun file modificato rispetto a !LAST_TAG!. Nulla da rilasciare.
     echo [ERRORE] Nessun file modificato>> "!LOG_FILE!"
-    del "%TEMP%\a1_build_result.txt" 2>nul
+    del "release\.tmp\a1_build_result.txt" 2>nul
     goto :abort_cleanup
 )
 if not "!BUILD_error!"=="" (
     echo  [ERRORE] Delta detection: !BUILD_error!
     echo [ERRORE] !BUILD_error!>> "!LOG_FILE!"
-    del "%TEMP%\a1_build_result.txt" 2>nul
+    del "release\.tmp\a1_build_result.txt" 2>nul
     goto :abort_cleanup
 )
 
@@ -288,8 +289,8 @@ echo [OK] !BUILD_type!: !BUILD_files! file, !BUILD_deleted! eliminati>> "!LOG_FI
 echo  [OK] manifest.json generato (type: !BUILD_type!)
 
 REM Log file list dettagliato
-node -e "var r=JSON.parse(require('fs').readFileSync(require('path').join(require('os').tmpdir(),'a1_build_result.txt'),'utf8'));var fs=require('fs');var log='';if(r.fileList)log+='\n[DELTA FILES]\n'+r.fileList;if(r.deletedList)log+='\n[DELETED FILES]\n'+r.deletedList;if(log)fs.appendFileSync('!LOG_FILE!',log+'\n');" 2>nul
-del "%TEMP%\a1_build_result.txt" 2>nul
+node -e "var r=JSON.parse(require('fs').readFileSync('release/.tmp/a1_build_result.txt','utf8'));var fs=require('fs');var log='';if(r.fileList)log+='\n[DELTA FILES]\n'+r.fileList;if(r.deletedList)log+='\n[DELETED FILES]\n'+r.deletedList;if(log)fs.appendFileSync('!LOG_FILE!',log+'\n');" 2>nul
+del "release\.tmp\a1_build_result.txt" 2>nul
 
 REM ================================================================
 REM  Crea ZIP da staging dir
