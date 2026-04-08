@@ -264,8 +264,12 @@ if not exist "release\.tmp\a1_build_result.txt" (
 )
 
 REM Usa Node per parsare il risultato e scrivere variabili semplici
-node -e "var r=JSON.parse(require('fs').readFileSync('release/.tmp/a1_build_result.txt','utf8'));var lines=['type='+r.type,'files='+r.files,'deleted='+(r.deleted||0),'error='+(r.error||'')];require('fs').writeFileSync('release/.tmp/a1_build_vars.txt',lines.join('\n'));" 2>nul
+node -e "var r=JSON.parse(require('fs').readFileSync('release/.tmp/a1_build_result.txt','utf8'));var lines=['type='+r.type,'files='+r.files,'deleted='+(r.deleted||0),'error='+(r.error?r.error:'none')];require('fs').writeFileSync('release/.tmp/a1_build_vars.txt',lines.join('\n'));" 2>nul
 
+set "BUILD_type="
+set "BUILD_files=0"
+set "BUILD_deleted=0"
+set "BUILD_error=none"
 for /f "usebackq tokens=1,* delims==" %%a in ("release\.tmp\a1_build_vars.txt") do (
     set "BUILD_%%a=%%b"
 )
@@ -277,7 +281,7 @@ if "!BUILD_error!"=="NO_CHANGES" (
     del "release\.tmp\a1_build_result.txt" 2>nul
     goto :abort_cleanup
 )
-if not "!BUILD_error!"=="" (
+if not "!BUILD_error!"=="none" (
     echo  [ERRORE] Delta detection: !BUILD_error!
     echo [ERRORE] !BUILD_error!>> "!LOG_FILE!"
     del "release\.tmp\a1_build_result.txt" 2>nul
