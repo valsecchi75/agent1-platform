@@ -11,7 +11,7 @@ echo  ========================================
 echo.
 
 REM ================================================================
-REM  LOG SETUP — usa PowerShell per timestamp (wmic e' deprecato)
+REM  LOG SETUP
 REM ================================================================
 if not exist "release\logs" mkdir "release\logs"
 for /f "delims=" %%T in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd-HHmmss"') do set "LOG_TS=%%T"
@@ -85,7 +85,7 @@ del "%TEMP%\a1_phase.txt" 2>nul
 if "!PHASE!"=="" set "PHASE=stable"
 
 REM ================================================================
-REM  STEP 2 - Scelta tipo di bump
+REM  STEP 2 - Scelta tipo di bump (SOLO calcolo, nessuna scrittura)
 REM ================================================================
 
 if "!PHASE!"=="alpha" goto :menu_alpha
@@ -158,26 +158,6 @@ echo  [OK] Versione finale: !NEW_VERSION!
 echo [INFO] Versione finale: !NEW_VERSION!>> "!LOG_FILE!"
 echo.
 
-REM -- Aggiorna badge versione nei file sorgente UI --
-node -e "var fs=require('fs');function toDisplay(v){var a=v.match(/^(\d+\.\d+\.\d+)-alpha/);var b=v.match(/^(\d+\.\d+\.\d+)-beta/);var s=v.match(/^(\d+\.\d+\.\d+)$/);if(a)return 'Alpha '+a[1];if(b)return 'Beta '+b[1];if(s)return 'v'+s[1];return v.charAt(0).toUpperCase()+v.slice(1)}var oldL=toDisplay('!CURRENT_VERSION!');var newL=toDisplay('!NEW_VERSION!');if(oldL===newL){process.stdout.write('  [INFO] Badge gia aggiornato ('+newL+')\n');process.exit(0)}var files=['src/app/credits/page.tsx','src/components/settings/CreditsModal.tsx'];var re=new RegExp('(>\\s*)'+oldL.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(\\s*<)','g');var updated=0;files.forEach(function(f){if(fs.existsSync(f)===false)return;var c=fs.readFileSync(f,'utf8');var n=c.replace(re,'$1'+newL+'$2');if(n!==c){fs.writeFileSync(f,n);updated++;process.stdout.write('  [OK] Badge aggiornato: '+f+'\n')}});if(updated===0)process.stdout.write('  [AVVISO] Nessun badge trovato - aggiornamento manuale necessario\n');" 2>nul
-echo  [OK] Badge UI aggiornati
-echo [OK] Badge UI aggiornati>> "!LOG_FILE!"
-
-REM -- Aggiorna package.json --
-node -e "var fs=require('fs');var p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version='!NEW_VERSION!';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
-echo  [OK] package.json aggiornato a v!NEW_VERSION!
-echo [OK] package.json aggiornato>> "!LOG_FILE!"
-
-REM -- Aggiorna start scripts --
-if exist "start.bat" (
-    node -e "var fs=require('fs');var c=fs.readFileSync('start.bat','utf8');c=c.replace(/v\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)*/,'v!NEW_VERSION!');fs.writeFileSync('start.bat',c);"
-    echo  [OK] start.bat aggiornato
-)
-if exist "start.sh" (
-    node -e "var fs=require('fs');var c=fs.readFileSync('start.sh','utf8');c=c.replace(/v\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)*/,'v!NEW_VERSION!');fs.writeFileSync('start.sh',c);"
-    echo  [OK] start.sh aggiornato
-)
-
 REM -- ZIP_NAME --
 set "ZIP_NAME=agent1-v!NEW_VERSION!.zip"
 
@@ -186,6 +166,7 @@ if "!DRY_RUN!"=="1" goto :step7_summary
 
 REM ================================================================
 REM  STEP 3 - Build di verifica
+REM  (PRIMA del version bump — se fallisce, nulla viene modificato)
 REM ================================================================
 echo.
 echo  ----------------------------------------
@@ -197,20 +178,21 @@ if !ERRORLEVEL! NEQ 0 (
     echo  [ERRORE] Build fallito.
     echo [ERRORE] Build fallito>> "!LOG_FILE!"
     set /p "BUILD_CHOICE=  Abortire o continuare comunque? (a/c): "
-    if /i "!BUILD_CHOICE!"=="a" goto :abort_cleanup
+    if /i "!BUILD_CHOICE!"=="a" (
+        echo  Nessun file modificato - annullamento pulito.
+        echo [INFO] Annullato prima del bump - nessun rollback necessario>> "!LOG_FILE!"
+        pause & exit /b 0
+    )
     echo  [ATTENZIONE] Continuo nonostante il build fallito.
 ) else (
     echo  [OK] Build riuscito
     echo [OK] Build riuscito>> "!LOG_FILE!"
 )
 
-echo.
-set /p "CONFIRM_ZIP=  Proseguo con la creazione dello zip? (s/n): "
-if /i not "!CONFIRM_ZIP!"=="s" goto :abort_cleanup
-
 REM ================================================================
 REM  STEP 4 - Delta detection + Creazione zip
-REM  Tutta la logica complessa e' delegata a Node.js
+REM  (PRIMA del version bump — se fallisce, nulla viene modificato)
+REM  Usa script esterno per evitare problemi di escape e lunghezza CLI
 REM ================================================================
 echo.
 echo  ----------------------------------------
@@ -227,7 +209,7 @@ if not exist "release\.releaseinclude" (
     pause & exit /b 1
 )
 
-REM -- Detect last release tag via file temp --
+REM -- Detect last release tag --
 set "LAST_TAG="
 set "RELEASE_TYPE=full"
 set "PREVIOUS_VERSION=none"
@@ -250,17 +232,22 @@ if "!LAST_TAG!"=="" (
 )
 
 REM ================================================================
-REM  Delega TUTTA la creazione staging a Node.js
-REM  Node scrive il risultato in un file temp per batch
+REM  Delega la creazione staging a build-staging.js (script esterno)
 REM ================================================================
 
-node -e "var fs=require('fs'),path=require('path');var RELEASE_TYPE='!RELEASE_TYPE!',LAST_TAG='!LAST_TAG!',NEW_VERSION='!NEW_VERSION!',PREV_VERSION='!PREVIOUS_VERSION!';var result={type:RELEASE_TYPE,files:0,deleted:0,error:null};try{var wl=fs.readFileSync('release/.releaseinclude','utf8').split('\n').map(function(l){return l.trim()}).filter(function(l){return l&&l.startsWith('#')===false});function matchWl(f){return wl.some(function(w){var w2=w.endsWith('/')?w.slice(0,-1):w;return w.endsWith('/')?f.startsWith(w2+'/'):f===w2})}var td='.release-staging';if(fs.existsSync(td))fs.rmSync(td,{recursive:true,force:true});fs.mkdirSync(td,{recursive:true});if(RELEASE_TYPE==='full'){wl.forEach(function(item){var clean=item.endsWith('/')?item.slice(0,-1):item;if(shouldNeverInclude(clean))return;if(fs.existsSync(clean)===false)return;var dest=path.join(td,clean);fs.mkdirSync(path.dirname(dest),{recursive:true});var st=fs.statSync(clean);if(st.isDirectory()){fs.cpSync(clean,dest,{recursive:true})}else{fs.copyFileSync(clean,dest)}});var manifest={version:NEW_VERSION,previousVersion:PREV_VERSION,type:'full',files:[],deleted:[],timestamp:new Date().toISOString()};fs.writeFileSync(path.join(td,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');var allFiles=[];function countFiles(d){fs.readdirSync(d).forEach(function(f){var fp=path.join(d,f);if(fs.statSync(fp).isDirectory())countFiles(fp);else allFiles.push(fp)})}countFiles(td);result.files=allFiles.length;result.type='full'}else{function shouldNeverInclude(f){var n=f.replace(/\\\\/g,'/'),b=require('path').basename(n).toLowerCase();return b==='token.txt'||b==='.env'||/\.(db|sqlite|sqlite3)$/i.test(b)||n.endsWith('/token.txt')||b==='logo.psb';}var execSync=require('child_process').execSync;var changed=execSync('git diff --name-only '+LAST_TAG+' HEAD',{encoding:'utf8'}).split('\n').filter(Boolean);var deleted=execSync('git diff --diff-filter=D --name-only '+LAST_TAG+' HEAD',{encoding:'utf8'}).split('\n').filter(Boolean);var included=changed.filter(matchWl).filter(function(f){return !shouldNeverInclude(f)});var deletedIncl=deleted.filter(matchWl);if(included.length===0){result.error='NO_CHANGES';fs.writeFileSync('release/.tmp/a1_build_result.txt',JSON.stringify(result));process.exit(0)}var copied=0;included.forEach(function(f){if(fs.existsSync(f)===false)return;var dest=path.join(td,f);fs.mkdirSync(path.dirname(dest),{recursive:true});var st=fs.statSync(f);if(st.isDirectory()){fs.cpSync(f,dest,{recursive:true})}else{fs.copyFileSync(f,dest)}copied++});if(fs.existsSync(path.join(td,'package.json'))===false&&fs.existsSync('package.json')){fs.copyFileSync('package.json',path.join(td,'package.json'));copied++}var manifest={version:NEW_VERSION,previousVersion:PREV_VERSION,type:'delta',files:included,deleted:deletedIncl,timestamp:new Date().toISOString()};fs.writeFileSync(path.join(td,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');result.files=copied;result.deleted=deletedIncl.length;result.type='delta';result.fileList=included.join('\n');result.deletedList=deletedIncl.join('\n')}}catch(e){result.error=e.message}fs.writeFileSync('release/.tmp/a1_build_result.txt',JSON.stringify(result));" 2>nul
+node release/build-staging.js "!RELEASE_TYPE!" "!NEW_VERSION!" "!PREVIOUS_VERSION!" "!LAST_TAG!"
+
+if !ERRORLEVEL! NEQ 0 (
+    echo  [ERRORE] build-staging.js ha restituito errore.
+    echo [ERRORE] build-staging.js fallito>> "!LOG_FILE!"
+)
 
 REM Leggi risultato da Node
 if not exist "release\.tmp\a1_build_result.txt" (
-    echo  [ERRORE] Delta detection fallita - nessun risultato da Node.
+    echo  [ERRORE] Delta detection fallita - nessun risultato da build-staging.js.
+    echo  [INFO] Nessun file modificato - annullamento pulito.
     echo [ERRORE] Delta detection fallita>> "!LOG_FILE!"
-    goto :abort_cleanup
+    pause & exit /b 0
 )
 
 REM Usa Node per parsare il risultato e scrivere variabili semplici
@@ -276,16 +263,19 @@ for /f "usebackq tokens=1,* delims==" %%a in ("release\.tmp\a1_build_vars.txt") 
 del "release\.tmp\a1_build_vars.txt" 2>nul
 
 if "!BUILD_error!"=="NO_CHANGES" (
-    echo  [ERRORE] Nessun file modificato rispetto a !LAST_TAG!. Nulla da rilasciare.
-    echo [ERRORE] Nessun file modificato>> "!LOG_FILE!"
+    echo  [INFO] Nessun file modificato rispetto a !LAST_TAG!. Nulla da rilasciare.
+    echo [INFO] Nessun file modificato - annullamento pulito>> "!LOG_FILE!"
     del "release\.tmp\a1_build_result.txt" 2>nul
-    goto :abort_cleanup
+    if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
+    pause & exit /b 0
 )
 if not "!BUILD_error!"=="none" (
     echo  [ERRORE] Delta detection: !BUILD_error!
+    echo  [INFO] Nessun file modificato - annullamento pulito.
     echo [ERRORE] !BUILD_error!>> "!LOG_FILE!"
     del "release\.tmp\a1_build_result.txt" 2>nul
-    goto :abort_cleanup
+    if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
+    pause & exit /b 0
 )
 
 echo  [OK] !BUILD_type!: !BUILD_files! file inclusi, !BUILD_deleted! file eliminati
@@ -308,8 +298,9 @@ if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
 
 if not exist "!ZIP_NAME!" (
     echo  [ERRORE] Creazione zip fallita.
+    echo  [INFO] Nessun file modificato - annullamento pulito.
     echo [ERRORE] Creazione zip fallita>> "!LOG_FILE!"
-    pause & exit /b 1
+    pause & exit /b 0
 )
 
 REM Calcola dimensione ZIP
@@ -323,8 +314,38 @@ echo  [OK] ZIP: !ZIP_SIZE_MB! MB (!BUILD_type!)
 echo [OK] ZIP creato: !ZIP_SIZE_MB! MB (!BUILD_type!)>> "!LOG_FILE!"
 
 echo.
-set /p "CONFIRM_GIT=  Proseguo con il commit git? (s/n): "
-if /i not "!CONFIRM_GIT!"=="s" goto :abort_cleanup
+set /p "CONFIRM_BUMP=  Build e ZIP OK. Proseguo con il version bump e commit? (s/n): "
+if /i not "!CONFIRM_BUMP!"=="s" goto :abort_cleanup
+
+REM ================================================================
+REM  STEP 4b - Version bump (ORA che build e zip sono OK)
+REM ================================================================
+echo.
+echo  ----------------------------------------
+echo   STEP 4b: Version bump
+echo  ----------------------------------------
+echo.
+
+REM -- Aggiorna badge versione nei file sorgente UI --
+node -e "var fs=require('fs');function toDisplay(v){var a=v.match(/^(\d+\.\d+\.\d+)-alpha/);var b=v.match(/^(\d+\.\d+\.\d+)-beta/);var s=v.match(/^(\d+\.\d+\.\d+)$/);if(a)return 'Alpha '+a[1];if(b)return 'Beta '+b[1];if(s)return 'v'+s[1];return v.charAt(0).toUpperCase()+v.slice(1)}var oldL=toDisplay('!CURRENT_VERSION!');var newL=toDisplay('!NEW_VERSION!');if(oldL===newL){process.stdout.write('  [INFO] Badge gia aggiornato ('+newL+')\n');process.exit(0)}var files=['src/app/credits/page.tsx','src/components/settings/CreditsModal.tsx'];var re=new RegExp('(>\\s*)'+oldL.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(\\s*<)','g');var updated=0;files.forEach(function(f){if(fs.existsSync(f)===false)return;var c=fs.readFileSync(f,'utf8');var n=c.replace(re,'$1'+newL+'$2');if(n!==c){fs.writeFileSync(f,n);updated++;process.stdout.write('  [OK] Badge aggiornato: '+f+'\n')}});if(updated===0)process.stdout.write('  [AVVISO] Nessun badge trovato - aggiornamento manuale necessario\n');" 2>nul
+
+REM -- Aggiorna package.json --
+node -e "var fs=require('fs');var p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version='!NEW_VERSION!';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
+echo  [OK] package.json aggiornato a v!NEW_VERSION!
+echo [OK] package.json aggiornato>> "!LOG_FILE!"
+
+REM -- Aggiorna start scripts --
+if exist "start.bat" (
+    node -e "var fs=require('fs');var c=fs.readFileSync('start.bat','utf8');c=c.replace(/v\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)*/,'v!NEW_VERSION!');fs.writeFileSync('start.bat',c);"
+    echo  [OK] start.bat aggiornato
+)
+if exist "start.sh" (
+    node -e "var fs=require('fs');var c=fs.readFileSync('start.sh','utf8');c=c.replace(/v\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)*/,'v!NEW_VERSION!');fs.writeFileSync('start.sh',c);"
+    echo  [OK] start.sh aggiornato
+)
+
+echo  [OK] Version bump completato
+echo [OK] Version bump a v!NEW_VERSION!>> "!LOG_FILE!"
 
 REM ================================================================
 REM  STEP 5 - Git commit + tag + push
@@ -493,6 +514,7 @@ echo [OK] Release v!NEW_VERSION! pubblicata>> "!LOG_FILE!"
 
 REM ================================================================
 REM  STEP 8 - Candidate Release ZIP (clean, senza DB/dati)
+REM  Usa script esterno build-candidate.js
 REM ================================================================
 echo  ----------------------------------------
 echo   STEP 8: Candidate Release ZIP
@@ -508,7 +530,7 @@ if not exist "!CANDIDATE_DIR!" mkdir "!CANDIDATE_DIR!" 2>nul
 
 echo  Creo staging pulito (esclusi: storage, .db, .env, Token.txt)...
 
-node -e "var fs=require('fs'),path=require('path');var td='.candidate-staging';if(fs.existsSync(td))fs.rmSync(td,{recursive:true,force:true});fs.mkdirSync(td,{recursive:true});function shouldExclude(fp){var n=fp.replace(/\\\\/g,'/');if(/^storage\//.test(n)||/\/storage\//.test(n))return true;if(/\.(db|sqlite|sqlite3)$/i.test(n))return true;var base=path.basename(n);if(/^\.env/.test(base))return true;if(base.toLowerCase()==='token.txt')return true;return false}function copyRec(src,dest){if(fs.existsSync(src)===false)return 0;var st=fs.statSync(src);if(st.isFile()){if(shouldExclude(src))return 0;fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(src,dest);return 1}var count=0;try{fs.readdirSync(src).forEach(function(f){count+=copyRec(path.join(src,f),path.join(dest,f))})}catch(e){}return count}var wl=fs.readFileSync('release/.releaseinclude','utf8').split('\n').map(function(l){return l.trim()}).filter(function(l){return l&&l.startsWith('#')===false});var total=0;wl.forEach(function(item){var clean=item.endsWith('/')?item.slice(0,-1):item;if(shouldExclude(clean))return;total+=copyRec(clean,path.join(td,clean))});process.stdout.write('  [OK] Staging: '+total+' file copiati\n');" 2>nul
+node release/build-candidate.js "!NEW_VERSION!" "!PREVIOUS_VERSION!"
 
 if !ERRORLEVEL! NEQ 0 (
     echo  [AVVISO] Staging Candidate fallito - ZIP non creato
@@ -541,8 +563,18 @@ if exist "release\release-notes.tmp" del "release\release-notes.tmp" 2>nul
 if exist "!ZIP_NAME!" del "!ZIP_NAME!" 2>nul
 if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
 if exist ".candidate-staging" rmdir /s /q ".candidate-staging" 2>nul
-echo  [INFO] Se il bump e' gia avvenuto, per annullare:
-echo  [INFO]   git checkout package.json start.bat start.sh src/app/credits/page.tsx src/components/settings/CreditsModal.tsx
+
+REM -- Verifica se il bump era gia avvenuto --
+node -p "require('./package.json').version" > "%TEMP%\a1_curver.txt" 2>nul
+set /p ABORT_VER=<"%TEMP%\a1_curver.txt"
+del "%TEMP%\a1_curver.txt" 2>nul
+if not "!ABORT_VER!"=="!CURRENT_VERSION!" (
+    echo  [AVVISO] package.json e' stato modificato (v!ABORT_VER!).
+    echo  Per annullare il bump:
+    echo    git checkout package.json start.bat start.sh src/app/credits/page.tsx src/components/settings/CreditsModal.tsx
+) else (
+    echo  [OK] Nessun file modificato - annullamento pulito.
+)
 echo.
 pause
 exit /b 0
