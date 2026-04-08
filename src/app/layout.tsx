@@ -3,6 +3,7 @@ import "./globals.css";
 import { DashboardEntrance } from "@/components/DashboardEntrance";
 import { Toast } from "@/components/Toast";
 import { NodePackChecker } from "@/components/node-packs/NodePackChecker";
+import { OnboardingWizardLoader } from "@/components/onboarding/OnboardingWizardLoader";
 
 export const metadata: Metadata = {
   title: "AGENT 1 — From Vision to Form",
@@ -38,6 +39,7 @@ export default function RootLayout({
         <NodePackChecker />
         {children}
         <Toast />
+        <OnboardingWizardLoader />
       </body>
     </html>
   );
