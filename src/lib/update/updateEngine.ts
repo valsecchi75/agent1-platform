@@ -554,17 +554,26 @@ export async function applyUpdate(
     cleanupTemp();
     updateLog(`=== Update completed successfully: v${newVersion} ===`);
 
-    // Detect if running in production mode
-    const isDev = process.env.NODE_ENV === 'development';
-
+    // Always require restart — server-side code (API routes, update engine itself,
+    // node registry, etc.) only picks up changes after a process restart.
+    // Dev-mode HMR only hot-reloads client components, not server modules.
     onProgress({
       step: 5,
       status: 'done',
       done: true,
       success: true,
       newVersion,
-      requiresRestart: !isDev,
+      requiresRestart: true,
     });
+
+    // Auto-restart: schedule process exit after SSE response is flushed.
+    // The supervisor (server.js) will detect exit code 0 and re-fork the worker,
+    // picking up all new server-side code from disk.
+    updateLog('Scheduling automatic restart in 2 seconds...');
+    setTimeout(() => {
+      updateLog('Restarting process...');
+      process.exit(0);
+    }, 2000);
   } catch (err) {
     cleanupTemp();
     const msg = err instanceof Error ? err.message : String(err);
