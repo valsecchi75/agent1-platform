@@ -230,9 +230,11 @@ async function validateAndExtract(
         fileCount++;
         totalSize += entry.uncompressedSize || 0;
 
-        // Path traversal check
-        if (entry.fileName.includes('..')) {
-          throw new Error('Zip contains path traversal entries (..) — rejected');
+        // Path traversal check — look for actual traversal patterns (../ or ..\)
+        // not just ".." which can appear in legitimate filenames
+        const fn = entry.fileName.replace(/\\/g, '/');
+        if (fn.includes('../') || fn.startsWith('..') || fn.split('/').some(seg => seg === '..')) {
+          throw new Error(`Zip contains path traversal entry: ${entry.fileName}`);
         }
 
         // File count check
