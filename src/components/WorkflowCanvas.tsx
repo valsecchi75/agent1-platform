@@ -343,13 +343,13 @@ export function WorkflowCanvas() {
   const getNodeTitle = useCallback((node: Node) => {
     // For generate nodes, check for selectedModel display name
     if (node.type === "nanoBanana" || node.type === "generateVideo" || node.type === "generate3d" || node.type === "generateAudio") {
-      const model = getNodeDataProp(node.data, 'selectedModel');
+      const model = getNodeDataProp<{ displayName?: string; name?: string }>(node.data, 'selectedModel');
       if (model?.displayName) return model.displayName;
     }
 
     // For LLM nodes, check for selectedLLMModel or selectedModel
     if (node.type === "llmGenerate") {
-      const model = getNodeDataProp(node.data, 'selectedLLMModel') || getNodeDataProp(node.data, 'selectedModel');
+      const model = getNodeDataProp<{ displayName?: string; name?: string }>(node.data, 'selectedLLMModel') || getNodeDataProp<{ displayName?: string; name?: string }>(node.data, 'selectedModel');
       if (model?.displayName) return model.displayName;
       if (model?.name) return model.name;
     }
@@ -1842,7 +1842,8 @@ export function WorkflowCanvas() {
           <SplitGridSettingsModal
             nodeId={expandingNode.id}
             nodeData={node.data as Record<string, unknown>}
-            onClose={() => setExpandingNode(null)}
+            isOpen={true}
+            onOpenChange={(open) => { if (!open) setExpandingNode(null); }}
           />
         );
       })()}

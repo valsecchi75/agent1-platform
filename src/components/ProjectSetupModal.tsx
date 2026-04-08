@@ -4,6 +4,16 @@ import { useState, useEffect } from "react";
 import { EnvStatusResponse } from "@/app/api/env-status/route";
 import { ModelSearchDialog } from "@/components/modals/ModelSearchDialog";
 import { BrandLogo } from "@/components/settings/BrandLogo";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTabs,
+  DialogBody,
+  DialogFooter,
+  DialogButton,
+} from "@/components/ui/dialog";
 import { useInlineParameters } from "@/hooks/useInlineParameters";
 import { ProviderModel } from "@/lib/providers/types";
 import { loadNodeDefaults, saveNodeDefaults } from "@/store/utils/localStorage";
@@ -92,13 +102,13 @@ function NodeDesignToggle() {
   const nodeDesignMode = useWorkflowStore((s) => s.nodeDesignMode);
   const setNodeDesignMode = useWorkflowStore((s) => s.setNodeDesignMode);
   return (
-    <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+    <div className="p-3 bg-[var(--surface-1)] rounded-lg border border-[var(--border)]">
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-neutral-100">Node Design</span>
-          <p className="text-xs text-neutral-400">Visual style for all nodes on the canvas</p>
+          <span className="text-sm font-medium text-[var(--text-primary)]">Node Design</span>
+          <p className="text-xs text-[var(--text-secondary)]">Visual style for all nodes on the canvas</p>
         </div>
-        <div className="flex gap-1 p-0.5 bg-neutral-800 rounded-md">
+        <div className="flex gap-1 p-0.5 bg-[var(--surface-2)] rounded-md">
           {([
             { value: "classic" as const, label: "Classic" },
             { value: "v2" as const, label: "Design 2.0" },
@@ -109,8 +119,8 @@ function NodeDesignToggle() {
               onClick={() => setNodeDesignMode(option.value)}
               className={`flex-1 px-2 py-1.5 text-xs rounded transition-all duration-150 ${
                 nodeDesignMode === option.value
-                  ? "bg-neutral-700 text-neutral-100 font-medium"
-                  : "text-neutral-400 hover:text-neutral-300"
+                  ? "bg-[var(--surface-3)] text-[var(--text-primary)] font-medium"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               {option.label}
@@ -423,62 +433,27 @@ export function ProjectSetupModal({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      onWheelCapture={(e) => e.stopPropagation()}
-    >
-      <div
-        className="bg-neutral-800 rounded-xl w-[520px] border border-neutral-700 shadow-2xl overflow-clip flex flex-col max-h-[80vh]"
-        onKeyDown={handleKeyDown}
-      >
-        <div className="px-8 pt-8 pb-0 shrink-0">
-          <div className="flex items-center gap-2 mb-5">
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+        <DialogContent size="md" hideClose onKeyDown={handleKeyDown}>
+        <DialogHeader>
+          <DialogTitle className="text-lg flex items-center gap-2">
             <BrandLogo variant="icon" height="h-6" />
-            <h2 className="text-xl font-medium text-neutral-100">
-              {mode === "new" ? "New Project" : "Project Settings"}
-            </h2>
-          </div>
-
-          {/* Tab Bar */}
-          <div className="flex gap-1.5 p-1 bg-neutral-900/50 rounded-lg">
-          <button
-            onClick={() => setActiveTab("project")}
-            className={`px-3 py-1.5 text-sm rounded-md transition-all duration-150 ${activeTab === "project" ? "bg-neutral-700 text-neutral-100 font-medium" : "text-neutral-400 hover:text-neutral-300 hover:bg-neutral-800/50"}`}
-          >
-            Project
-          </button>
-          <button
-            onClick={() => setActiveTab("providers")}
-            className={`px-3 py-1.5 text-sm rounded-md transition-all duration-150 ${activeTab === "providers" ? "bg-neutral-700 text-neutral-100 font-medium" : "text-neutral-400 hover:text-neutral-300 hover:bg-neutral-800/50"}`}
-          >
-            Providers
-          </button>
-          <button
-            onClick={() => setActiveTab("nodeDefaults")}
-            className={`px-3 py-1.5 text-sm rounded-md transition-all duration-150 ${activeTab === "nodeDefaults" ? "bg-neutral-700 text-neutral-100 font-medium" : "text-neutral-400 hover:text-neutral-300 hover:bg-neutral-800/50"}`}
-          >
-            Node Defaults
-          </button>
-          <button
-            onClick={() => setActiveTab("canvas")}
-            className={`px-3 py-1.5 text-sm rounded-md transition-all duration-150 ${activeTab === "canvas" ? "bg-neutral-700 text-neutral-100 font-medium" : "text-neutral-400 hover:text-neutral-300 hover:bg-neutral-800/50"}`}
-          >
-            Canvas
-          </button>
-          <button
-            onClick={() => setActiveTab("brandSkin")}
-            className={`px-3 py-1.5 text-sm rounded-md transition-all duration-150 ${activeTab === "brandSkin" ? "bg-neutral-700 text-neutral-100 font-medium" : "text-neutral-400 hover:text-neutral-300 hover:bg-neutral-800/50"}`}
-          >
-            Brand Skin
-          </button>
-          </div>
-        </div>
-
-        {/* Scrollable tab content area */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-8 py-5">
+            {mode === "new" ? "New Project" : "Project Settings"}
+          </DialogTitle>
+        </DialogHeader>
+        <DialogTabs
+          tabs={[
+            { id: "project", label: "Project" },
+            { id: "providers", label: "Providers" },
+            { id: "nodeDefaults", label: "Node Defaults" },
+            { id: "canvas", label: "Canvas" },
+            { id: "brandSkin", label: "Brand Skin" },
+          ]}
+          active={activeTab}
+          onChange={(id) => setActiveTab(id as typeof activeTab)}
+        />
+        <DialogBody>
 
         {/* Project Tab Content */}
         {activeTab === "project" && (
@@ -1278,14 +1253,17 @@ export function ProjectSetupModal({
                     const store = useWorkflowStore.getState();
                     const hasColors = store.nodes.some((n) => (n.data as Record<string, unknown>)?.nodeColor);
                     if (!hasColors) return;
-                    store.setNodes(store.nodes.map((n) => {
-                      const data = { ...n.data } as Record<string, unknown>;
-                      delete data.nodeColor;
-                      delete data.nodeColorMode;
-                      return { ...n, data };
-                    }));
+                    store.nodes.forEach((n) => {
+                      const data = n.data as Record<string, unknown>;
+                      if (data.nodeColor !== undefined || data.nodeColorMode !== undefined) {
+                        store.updateNodeData(n.id, {
+                          nodeColor: undefined,
+                          nodeColorMode: undefined,
+                        });
+                      }
+                    });
                   }}
-                  className="px-3 py-1.5 text-xs text-neutral-300 bg-neutral-800 hover:bg-neutral-700 rounded-md border border-neutral-600 transition-colors"
+                  className="px-3 py-1.5 text-xs text-[var(--text-secondary)] bg-[var(--surface-2)] hover:bg-[var(--btn-hover)] rounded-md border border-[var(--border)] transition-colors"
                 >
                   Reset All Colors
                 </button>
@@ -1306,6 +1284,12 @@ export function ProjectSetupModal({
 
             <div className="grid grid-cols-3 gap-3">
               {([
+                {
+                  id: 'ignite',
+                  name: 'Ignite',
+                  desc: 'Minimal · Black & Orange',
+                  colors: ['#E8530E', '#080808', '#1e1e1e'],
+                },
                 {
                   id: 'aurora',
                   name: 'Aurora',
@@ -1406,29 +1390,22 @@ export function ProjectSetupModal({
           </div>
         )}
 
-        </div>
-
-        {/* Fixed footer */}
-        <div className="flex justify-end gap-2 px-8 py-5 border-t border-neutral-700/50 shrink-0">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-neutral-400 hover:text-neutral-100 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
+        </DialogBody>
+        <DialogFooter>
+          <DialogButton variant="ghost" onClick={onClose}>Cancel</DialogButton>
+          <DialogButton
+            variant="primary"
             onClick={handleSave}
             disabled={activeTab === "project" && (isValidating || isBrowsing)}
-            className="px-4 py-2 text-sm bg-[var(--accent)] text-[var(--btn-primary-text)] rounded-lg hover:bg-[var(--accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {activeTab === "project"
               ? (isValidating ? "Validating..." : mode === "new" ? "Create" : "Save")
               : "Save"
             }
-          </button>
-        </div>
-      </div>
-
+          </DialogButton>
+        </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Model Selection Dialogs */}
       {showImageModelDialog && (
         <ModelSearchDialog
@@ -1472,6 +1449,6 @@ export function ProjectSetupModal({
           initialCapabilityFilter="video"
         />
       )}
-    </div>
+    </>
   );
 }

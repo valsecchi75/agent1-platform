@@ -2,9 +2,19 @@
 
 import { useState, useRef, ChangeEvent, KeyboardEvent } from "react";
 import { X, Upload, Tag, Plus } from "lucide-react";
-import type { WorkflowNode, WorkflowEdge } from "@/types/workflow";
+import type { WorkflowNode } from "@/types/nodes";
+import type { WorkflowEdge } from "@/types/workflow";
 import type { TemplatePack } from "@/types/templates";
 import { TEMPLATE_CATEGORIES, TECH_TAG_MAP } from "@/types/templates";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+  DialogButton,
+} from "@/components/ui/dialog";
 
 interface SaveAsTemplateModalProps {
   isOpen: boolean;
@@ -209,6 +219,13 @@ export function SaveAsTemplateModal({
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Map Dialog's open prop and onOpenChange callback
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && !isLoading) {
+      onClose();
+    }
+  };
+
   const detectedTechTags = detectTechTags(currentNodes);
   const allTags = [...new Set([...detectedTechTags, ...customTags])];
 
@@ -380,31 +397,14 @@ export function SaveAsTemplateModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isLoading) onClose();
-      }}
-      onWheelCapture={(e) => e.stopPropagation()}
-    >
-      <div className="bg-neutral-900 rounded-lg w-full max-w-lg border border-neutral-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-700 shrink-0">
-          <h2 className="text-lg font-medium text-neutral-100">Save as Template</h2>
-          <button
-            onClick={onClose}
-            disabled={isLoading}
-            className="text-neutral-400 hover:text-neutral-200 disabled:opacity-50 transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent size="md" className="max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>Save as Template</DialogTitle>
+        </DialogHeader>
 
-        {/* Content */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+        <DialogBody className="space-y-4">
           {/* Error Message */}
           {error && (
             <div className="p-3 bg-red-950/50 border border-red-700 rounded-lg">
@@ -414,39 +414,39 @@ export function SaveAsTemplateModal({
 
           {/* Name */}
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">Name</label>
+            <label className="block text-sm text-[var(--text-secondary)] mb-1">Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="My Workflow Template"
               disabled={isLoading}
-              className="w-full px-3 py-2 bg-neutral-700/50 border border-neutral-600 rounded-lg text-neutral-100 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] disabled:opacity-50 transition-colors"
+              className="w-full px-3 py-2 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--input-focus)] disabled:opacity-50 transition-colors"
               autoFocus
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">Description</label>
+            <label className="block text-sm text-[var(--text-secondary)] mb-1">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe what this workflow does..."
               disabled={isLoading}
               rows={3}
-              className="w-full px-3 py-2 bg-neutral-700/50 border border-neutral-600 rounded-lg text-neutral-100 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] disabled:opacity-50 resize-none transition-colors"
+              className="w-full px-3 py-2 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--input-focus)] disabled:opacity-50 resize-none transition-colors"
             />
           </div>
 
           {/* Category */}
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">Category</label>
+            <label className="block text-sm text-[var(--text-secondary)] mb-1">Category</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as typeof category)}
               disabled={isLoading}
-              className="w-full px-3 py-2 bg-neutral-700/50 border border-neutral-600 rounded-lg text-neutral-100 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] disabled:opacity-50 transition-colors"
+              className="w-full px-3 py-2 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--input-focus)] disabled:opacity-50 transition-colors"
             >
               {TEMPLATE_CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
@@ -459,15 +459,15 @@ export function SaveAsTemplateModal({
           {/* Tech Tags */}
           {detectedTechTags.length > 0 && (
             <div>
-              <label className="block text-sm text-neutral-400 mb-2">Auto-Detected Tech Tags</label>
+              <label className="block text-sm text-[var(--text-secondary)] mb-2">Auto-Detected Tech Tags</label>
               <div className="flex flex-wrap gap-2">
                 {detectedTechTags.map((tag) => (
                   <div
                     key={tag}
-                    className="inline-flex items-center gap-1.5 px-2 py-1 bg-neutral-700/50 border border-neutral-600 rounded-full"
+                    className="inline-flex items-center gap-1.5 px-2 py-1 bg-[var(--surface-2)] border border-[var(--border)] rounded-full"
                   >
-                    <Tag size={14} className="text-neutral-400" />
-                    <span className="text-xs text-neutral-300">{tag}</span>
+                    <Tag size={14} className="text-[var(--text-secondary)]" />
+                    <span className="text-xs text-[var(--text-secondary)]">{tag}</span>
                   </div>
                 ))}
               </div>
@@ -476,7 +476,7 @@ export function SaveAsTemplateModal({
 
           {/* Custom Tags */}
           <div>
-            <label className="block text-sm text-neutral-400 mb-2">Custom Tags</label>
+            <label className="block text-sm text-[var(--text-secondary)] mb-2">Custom Tags</label>
             <div className="flex gap-2 mb-2">
               <input
                 type="text"
@@ -485,12 +485,12 @@ export function SaveAsTemplateModal({
                 onKeyDown={handleKeyDown}
                 placeholder="Add a tag and press Enter"
                 disabled={isLoading}
-                className="flex-1 px-3 py-2 bg-neutral-700/50 border border-neutral-600 rounded-lg text-neutral-100 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] disabled:opacity-50 transition-colors"
+                className="flex-1 px-3 py-2 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--input-focus)] disabled:opacity-50 transition-colors"
               />
               <button
                 onClick={handleAddCustomTag}
                 disabled={isLoading || !customTagInput.trim()}
-                className="px-3 py-2 bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50 text-neutral-200 text-sm rounded-lg transition-colors flex items-center gap-1"
+                className="px-3 py-2 bg-[var(--surface-3)] hover:bg-[var(--controls-hover)] disabled:opacity-50 text-[var(--text-primary)] text-sm rounded-lg transition-colors flex items-center gap-1"
               >
                 <Plus size={16} />
               </button>
@@ -500,13 +500,13 @@ export function SaveAsTemplateModal({
                 {customTags.map((tag) => (
                   <div
                     key={tag}
-                    className="inline-flex items-center gap-2 px-2 py-1 bg-neutral-700 border border-neutral-600 rounded-full"
+                    className="inline-flex items-center gap-2 px-2 py-1 bg-[var(--surface-3)] border border-[var(--border)] rounded-full"
                   >
-                    <span className="text-xs text-neutral-300">{tag}</span>
+                    <span className="text-xs text-[var(--text-secondary)]">{tag}</span>
                     <button
                       onClick={() => handleRemoveCustomTag(tag)}
                       disabled={isLoading}
-                      className="text-neutral-400 hover:text-neutral-200 disabled:opacity-50 transition-colors"
+                      className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-50 transition-colors"
                     >
                       <X size={14} />
                     </button>
@@ -518,25 +518,25 @@ export function SaveAsTemplateModal({
 
           {/* Author */}
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">Author</label>
+            <label className="block text-sm text-[var(--text-secondary)] mb-1">Author</label>
             <input
               type="text"
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
               placeholder="User"
               disabled={isLoading}
-              className="w-full px-3 py-2 bg-neutral-700/50 border border-neutral-600 rounded-lg text-neutral-100 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] disabled:opacity-50 transition-colors"
+              className="w-full px-3 py-2 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--input-focus)] disabled:opacity-50 transition-colors"
             />
           </div>
 
           {/* Preview Images */}
           <div>
-            <label className="block text-sm text-neutral-400 mb-2">Preview Images</label>
+            <label className="block text-sm text-[var(--text-secondary)] mb-2">Preview Images</label>
             <div
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onClick={handleDropZoneClick}
-              className="p-6 border-2 border-dashed border-neutral-600 rounded-lg text-center cursor-pointer hover:border-neutral-500 hover:bg-neutral-800/50 transition-colors disabled:opacity-50"
+              className="p-6 border-2 border-dashed border-[var(--input-border)] rounded-lg text-center cursor-pointer hover:border-[var(--input-focus)] hover:bg-[var(--input-bg)] transition-colors disabled:opacity-50"
             >
               <input
                 ref={fileInputRef}
@@ -548,9 +548,9 @@ export function SaveAsTemplateModal({
                 className="hidden"
               />
               <div className="flex flex-col items-center gap-2">
-                <Upload size={24} className="text-neutral-400" />
-                <p className="text-sm text-neutral-300">Drop images or click to upload</p>
-                <p className="text-xs text-neutral-500">JPG, PNG, WebP</p>
+                <Upload size={24} className="text-[var(--text-secondary)]" />
+                <p className="text-sm text-[var(--text-secondary)]">Drop images or click to upload</p>
+                <p className="text-xs text-[var(--text-muted)]">JPG, PNG, WebP</p>
               </div>
             </div>
 
@@ -562,12 +562,12 @@ export function SaveAsTemplateModal({
                     <img
                       src={img.url}
                       alt="Preview"
-                      className="w-full h-20 object-cover rounded-lg border border-neutral-600"
+                      className="w-full h-20 object-cover rounded-lg border border-[var(--border)]"
                     />
                     <button
                       onClick={() => handleRemovePreviewImage(img.id)}
                       disabled={isLoading}
-                      className="absolute top-1 right-1 p-1 bg-neutral-900/80 rounded-full text-neutral-300 hover:text-neutral-100 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                      className="absolute top-1 right-1 p-1 bg-[var(--surface-1)]/80 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
                     >
                       <X size={14} />
                     </button>
@@ -579,31 +579,27 @@ export function SaveAsTemplateModal({
 
           {/* Node Count */}
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">Node Count</label>
-            <div className="px-3 py-2 bg-neutral-700/50 border border-neutral-600 rounded-lg text-neutral-300 text-sm">
+            <label className="block text-sm text-[var(--text-secondary)] mb-1">Node Count</label>
+            <div className="px-3 py-2 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--text-secondary)] text-sm">
               {currentNodes.length} node{currentNodes.length !== 1 ? "s" : ""}
             </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-neutral-700 shrink-0">
-          <button
-            onClick={onClose}
-            disabled={isLoading}
-            className="px-4 py-2 text-sm text-neutral-400 hover:text-neutral-100 disabled:opacity-50 transition-colors"
-          >
+        </DialogBody>
+
+        <DialogFooter>
+          <DialogButton variant="ghost" onClick={onClose} disabled={isLoading}>
             Cancel
-          </button>
-          <button
+          </DialogButton>
+          <DialogButton
+            variant="primary"
             onClick={handleSaveTemplate}
             disabled={isLoading || !name.trim() || !description.trim()}
-            className="px-4 py-2 text-sm bg-[var(--accent)] text-[var(--btn-primary-text)] rounded-lg hover:bg-[var(--accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? "Saving..." : "Save Template"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </DialogButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
