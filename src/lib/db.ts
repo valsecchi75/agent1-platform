@@ -878,6 +878,17 @@ export function saveUserSession(userId: string, sessionData: object): void {
   const now = new Date().toISOString();
   const json = JSON.stringify(sessionData);
 
+  // Verify the user exists before inserting (avoids FK constraint failure
+  // when seedAdminIfEmpty() hasn't completed yet on first launch)
+  const userExists = db
+    .prepare("SELECT 1 FROM users WHERE id = ? LIMIT 1")
+    .get(userId);
+
+  if (!userExists) {
+    // User not seeded yet — skip silently, next persist call will succeed
+    return;
+  }
+
   db.prepare(`
     INSERT INTO user_sessions (id, user_id, session_data, updated_at)
     VALUES (?, ?, ?, ?)
