@@ -7,6 +7,7 @@ import * as path from "path";
 import * as bcrypt from "bcryptjs";
 import Database from "better-sqlite3";
 import { v4 as uuidv4 } from "uuid";
+import { ensureEncryptionSecret } from "./auth/ensureEncryptionSecret";
 import type {
   DbUser,
   DbGeneration,
@@ -46,6 +47,9 @@ function getDatabasePath(): string {
 }
 
 export function getDb(): Database.Database {
+  // Ensure encryption secret exists before any DB operations that may use it
+  ensureEncryptionSecret();
+
   const dbPath = getDatabasePath();
 
   // If DB path changed (e.g., in tests), close old instance
