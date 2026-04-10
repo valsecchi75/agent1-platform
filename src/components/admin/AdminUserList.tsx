@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Edit2 } from "lucide-react";
+import { Trash2, Edit2, BarChart3 } from "lucide-react";
 import { DialogButton } from "@/components/ui/dialog";
 
 interface User {
@@ -17,10 +17,17 @@ interface AdminUserListProps {
   users: User[];
   onRefresh: () => void;
   onSelectUser: (user: User) => void;
+  onCreate: () => void;
+  onViewStats: (user: User) => void;
 }
 
-export function AdminUserList({ users, onRefresh, onSelectUser }: AdminUserListProps) {
-  const [isCreating, setIsCreating] = useState(false);
+export function AdminUserList({
+  users,
+  onRefresh,
+  onSelectUser,
+  onCreate,
+  onViewStats,
+}: AdminUserListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState("");
@@ -69,50 +76,20 @@ export function AdminUserList({ users, onRefresh, onSelectUser }: AdminUserListP
       {deleteError && (
         <div
           className="p-3 rounded-lg text-sm"
-          style={{ background: "var(--surface-3)", color: "var(--text-primary)" }}
+          style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)" }}
         >
           {deleteError}
         </div>
       )}
 
-      <div className="flex justify-end">
-        <DialogButton
-          variant="primary"
-          onClick={() => setIsCreating(true)}
-          disabled={isCreating}
-        >
+      <div className="flex items-center justify-between">
+        <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+          {users.length} user{users.length !== 1 ? "s" : ""}
+        </span>
+        <DialogButton variant="primary" onClick={onCreate}>
           Create User
         </DialogButton>
       </div>
-
-      {isCreating && (
-        <div
-          className="p-4 rounded-lg space-y-3"
-          style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-              New User
-            </span>
-            <button
-              onClick={() => setIsCreating(false)}
-              className="text-xs px-2 py-1 rounded"
-              style={{
-                background: "var(--surface-3)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-          <div
-            className="p-3 rounded-lg text-sm"
-            style={{ background: "var(--surface-3)", color: "var(--text-muted)" }}
-          >
-            Click "Create User" in the form to proceed with user creation.
-          </div>
-        </div>
-      )}
 
       {/* Users table */}
       <div className="overflow-x-auto">
@@ -140,7 +117,7 @@ export function AdminUserList({ users, onRefresh, onSelectUser }: AdminUserListP
             {users.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center">
-                  <span style={{ color: "var(--text-muted)" }}>No users yet</span>
+                  <span style={{ color: "var(--text-muted)" }}>No users yet. Click "Create User" to add one.</span>
                 </td>
               </tr>
             ) : (
@@ -178,22 +155,19 @@ export function AdminUserList({ users, onRefresh, onSelectUser }: AdminUserListP
                   <td className="px-4 py-3 text-right">
                     {deleteConfirm === user.id ? (
                       <div className="flex items-center justify-end gap-2">
-                        <span
-                          className="text-xs"
-                          style={{ color: "var(--text-muted)" }}
-                        >
-                          Confirm?
+                        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          Delete this user?
                         </span>
                         <button
                           onClick={() => handleDeleteUser(user.id)}
                           disabled={deletingId === user.id}
                           className="text-xs px-2 py-1 rounded font-medium transition-colors"
                           style={{
-                            background: "var(--accent)",
-                            color: "var(--btn-primary-text)",
+                            background: "#dc2626",
+                            color: "white",
                           }}
                         >
-                          {deletingId === user.id ? "..." : "Delete"}
+                          {deletingId === user.id ? "..." : "Yes, Delete"}
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(null)}
@@ -210,20 +184,33 @@ export function AdminUserList({ users, onRefresh, onSelectUser }: AdminUserListP
                     ) : (
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={() => onSelectUser(user)}
+                          onClick={() => onViewStats(user)}
                           className="p-1.5 rounded transition-colors"
-                          title="Edit user"
-                          style={{
-                            background: "var(--surface-2)",
-                            color: "var(--text-secondary)",
-                          }}
+                          title="View stats"
+                          style={{ color: "var(--text-muted)" }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = "var(--surface-3)";
                             e.currentTarget.style.color = "var(--text-primary)";
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "var(--surface-2)";
-                            e.currentTarget.style.color = "var(--text-secondary)";
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.color = "var(--text-muted)";
+                          }}
+                        >
+                          <BarChart3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onSelectUser(user)}
+                          className="p-1.5 rounded transition-colors"
+                          title="Edit user"
+                          style={{ color: "var(--text-muted)" }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "var(--surface-3)";
+                            e.currentTarget.style.color = "var(--text-primary)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.color = "var(--text-muted)";
                           }}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -232,17 +219,14 @@ export function AdminUserList({ users, onRefresh, onSelectUser }: AdminUserListP
                           onClick={() => handleDeleteUser(user.id)}
                           className="p-1.5 rounded transition-colors"
                           title="Delete user"
-                          style={{
-                            background: "var(--surface-2)",
-                            color: "var(--text-secondary)",
-                          }}
+                          style={{ color: "var(--text-muted)" }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = "var(--surface-3)";
-                            e.currentTarget.style.color = "var(--text-primary)";
+                            e.currentTarget.style.color = "#f87171";
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "var(--surface-2)";
-                            e.currentTarget.style.color = "var(--text-secondary)";
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.color = "var(--text-muted)";
                           }}
                         >
                           <Trash2 className="w-3.5 h-3.5" />

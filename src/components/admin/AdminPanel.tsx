@@ -27,14 +27,16 @@ interface AdminPanelProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type View = "list" | "create" | "edit" | "stats";
+
 export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState("users");
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [view, setView] = useState<View>("list");
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [selectedUserForStats, setSelectedUserForStats] = useState<User | null>(null);
+  const [statsUser, setStatsUser] = useState<User | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -57,35 +59,149 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   useEffect(() => {
     if (open) {
       fetchUsers();
+      setView("list");
+      setActiveTab("users");
     }
   }, [open]);
 
   const handleSelectUser = (user: User) => {
     setEditingUser(user);
-    setShowForm(true);
+    setView("edit");
   };
 
   const handleCreateUser = () => {
     setEditingUser(null);
-    setShowForm(true);
+    setView("create");
+  };
+
+  const handleViewStats = (user: User) => {
+    setStatsUser(user);
+    setActiveTab("stats");
   };
 
   const handleFormSave = () => {
-    setShowForm(false);
+    setView("list");
     setEditingUser(null);
     fetchUsers();
   };
 
   const handleFormCancel = () => {
-    setShowForm(false);
+    setView("list");
     setEditingUser(null);
   };
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
-    if (tabId === "stats" && users.length > 0 && !selectedUserForStats) {
-      setSelectedUserForStats(users[0]);
+    if (tabId === "users") {
+      setView("list");
     }
+    if (tabId === "stats" && !statsUser && users.length > 0) {
+      setStatsUser(users[0]);
+    }
+  };
+
+  const renderUsersTab = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <span style={{ color: "var(--text-muted)" }}>Loading users...</span>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div
+          className="p-4 rounded-lg text-sm"
+          style={{ background: "var(--surface-3)", color: "var(--text-primary)" }}
+        >
+          {error}
+        </div>
+      );
+    }
+
+    if (view === "create" || view === "edit") {
+      return (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <button
+              onClick={handleFormCancel}
+              className="text-xs px-2 py-1 rounded transition-colors"
+              style={{ background: "var(--surface-3)", color: "var(--text-secondary)" }}
+            >
+              &larr; Back
+            </button>
+            <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+              {view === "edit" && editingUser
+                ? `Edit ${editingUser.username}`
+                : "Create New User"}
+            </h3>
+          </div>
+          <AdminUserForm
+            user={editingUser || undefined}
+            onSave={handleFormSave}
+            onCancel={handleFormCancel}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <AdminUserList
+        users={users}
+        onRefresh={fetchUsers}
+        onSelectUser={handleSelectUser}
+        onCreate={handleCreateUser}
+        onViewStats={handleViewStats}
+      />
+    );
+  };
+
+  const renderStatsTab = () => {
+    if (users.length === 0) {
+      return (
+        <div
+          className="p-4 rounded-lg text-sm text-center"
+          style={{ background: "var(--surface-2)", color: "var(--text-muted)" }}
+        >
+          No users to show stats for.
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {/* User selector */}
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+            User:
+          </label>
+          <select
+            value={statsUser?.id || ""}
+            onChange={(e) => {
+              const u = users.find((u) => u.id === e.target.value);
+              if (u) setStatsUser(u);
+            }}
+            className="px-3 py-1.5 rounded-lg border text-sm"
+            style={{
+              background: "var(--surface-2)",
+              borderColor: "var(--border)",
+              color: "var(--text-primary)",
+            }}
+          >
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.username} {u.display_name ? `(${u.display_name})` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {statsUser && (
+          <AdminUserStats userId={statsUser.id} username={statsUser.username} />
+        )}
+      </div>
+    );
   };
 
   return (
@@ -105,53 +221,7 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
         />
 
         <DialogBody>
-          {isLoading && activeTab === "users" ? (
-            <div className="flex items-center justify-center py-8">
-              <span style={{ color: "var(--text-muted)" }}>Loading users...</span>
-            </div>
-          ) : error && activeTab === "users" ? (
-            <div
-              className="p-4 rounded-lg text-sm"
-              style={{ background: "var(--surface-3)", color: "var(--text-primary)" }}
-            >
-              {error}
-            </div>
-          ) : activeTab === "users" ? (
-            <>
-              {showForm ? (
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                      {editingUser ? `Edit ${editingUser.username}` : "Create User"}
-                    </h3>
-                  </div>
-                  <AdminUserForm
-                    user={editingUser || undefined}
-                    onSave={handleFormSave}
-                    onCancel={handleFormCancel}
-                  />
-                </div>
-              ) : (
-                <AdminUserList
-                  users={users}
-                  onRefresh={fetchUsers}
-                  onSelectUser={handleSelectUser}
-                />
-              )}
-            </>
-          ) : selectedUserForStats ? (
-            <AdminUserStats
-              userId={selectedUserForStats.id}
-              username={selectedUserForStats.username}
-            />
-          ) : (
-            <div
-              className="p-4 rounded-lg text-sm text-center"
-              style={{ background: "var(--surface-2)", color: "var(--text-muted)" }}
-            >
-              Select a user from the Users tab to view stats
-            </div>
-          )}
+          {activeTab === "users" ? renderUsersTab() : renderStatsTab()}
         </DialogBody>
       </DialogContent>
     </Dialog>
