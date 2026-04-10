@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
 
       if (dbUser) {
         failedAttempts.delete(ip);
-        const token = await signToken({ authenticated: true, username: dbUser.username, userId: dbUser.id });
+        const token = await signToken({ authenticated: true, username: dbUser.username, userId: dbUser.id, role: dbUser.role });
 
         const response = NextResponse.json({ success: true });
         response.cookies.set('agent1_session', token, {
@@ -136,8 +136,30 @@ export async function POST(req: NextRequest) {
   // Clear failed attempts on success
   failedAttempts.delete(ip);
 
-  // Sign JWT with username (env-based auth, no userId)
-  const token = await signToken({ authenticated: true, username });
+  // Env-auth: create or retrieve DB user record
+  let envUser: { id: string; username: string; role: string } | null = null;
+  if (dbModule) {
+    try {
+      envUser = dbModule.getUserByUsername(username) || null;
+      if (!envUser) {
+        const userId = await dbModule.createUser({
+          username,
+          password,
+          displayName: username,
+          role: username === 'admin' ? 'admin' : 'user',
+        });
+        envUser = dbModule.getUserById(userId);
+      }
+    } catch (err) {
+      console.warn('[auth] Could not create/get DB user for env auth:', err);
+    }
+  }
+
+  const token = await signToken({
+    authenticated: true,
+    username,
+    ...(envUser ? { userId: envUser.id, role: envUser.role } : {}),
+  });
 
   const response = NextResponse.json({ success: true });
   response.cookies.set('agent1_session', token, {
