@@ -4,8 +4,10 @@ import { User, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, FormEvent } from "react";
 import { playHoverSound } from "./LoginAudio";
+import { formatVersion } from "@/lib/appVersion";
 
 const SCHEMES = [
+  { id: "ignite", label: "Ignite", color: "#E8530E" },
   { id: "aurora", label: "Aurora", color: "#c5a44e" },
   { id: "ember", label: "Ember", color: "#D31920" },
   { id: "matrix", label: "Matrix", color: "#4CAF50" },
@@ -73,7 +75,7 @@ export function LoginForm({ scheme, onSchemeChange }: LoginFormProps) {
   };
 
   const inputClass =
-    "w-full pl-10 pr-4 py-3 rounded-lg text-sm bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-white/25 focus:ring-1 focus:ring-white/10 transition-colors";
+    "w-full pl-10 pr-4 py-3 rounded-lg text-sm bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-white/25 focus:ring-1 focus:ring-white/10 transition-colors font-light tracking-wide";
 
   return (
     <>
@@ -103,19 +105,16 @@ export function LoginForm({ scheme, onSchemeChange }: LoginFormProps) {
               border: "1px solid rgba(255,255,255,0.06)",
             }}
           >
-            {/* Logo */}
+            {/* Logo + Version */}
             <div className="text-center mb-8">
               <div className="flex justify-center mb-3">
                 <img src="/brands/A1-logo-neg.png" alt="Agent 1" className="h-10" />
               </div>
-              <div className="flex justify-center mb-1">
-                <img src="/brands/agent-1-logo_neg.png" alt="Agent 1" className="h-4" />
-              </div>
               <span
-                className="inline-block text-[9px] font-medium tracking-wider uppercase px-2 py-0.5 rounded mt-2"
-                style={{ background: "var(--accent-subtle)", color: "var(--accent)" }}
+                className="inline-block text-[9px] font-medium tracking-wider uppercase px-2 py-0.5 rounded"
+                style={{ background: "rgba(var(--login-accent-rgb), 0.12)", color: "var(--login-accent)" }}
               >
-                Alpha 0.9
+                {formatVersion()}
               </span>
             </div>
 

@@ -1,0 +1,38 @@
+Prerequisito unico: Node.js 18-22
+Installi Node.js e lo script fa tutto il resto da solo (dipendenze, build, config, database, cartelle storage). Due opzioni per installarlo:
+Opzione A — Installer diretto (più semplice):
+Vai su nodejs.org, scarica la versione LTS (22.x), installa. Questo ti dà sia node che npm.
+Opzione B — Con Homebrew (se lo hai già):
+bashbrew install node@22
+Per lanciarlo:
+
+Apri Terminale
+Vai nella cartella del progetto:
+
+bash   cd /percorso/della/cartella/app
+
+Rendi lo script eseguibile (solo la prima volta):
+
+bash   chmod +x start.sh
+
+Lancia:
+
+bash   ./start.sh
+Il primo avvio ci mette qualche minuto perché fa npm install e npm run build. I successivi sono più veloci. Una volta pronto, apri http://localhost:3000 nel browser e fai login con admin / admin.
+Lo script gestisce automaticamente anche il modulo nativo better-sqlite3 — se il rebuild fallisce (raro su Mac), l'app funziona comunque usando il fallback auth da .env. L'unica cosa che ti servirà poi è almeno una chiave API nel file .env (viene creato da .env.example al primo avvio) — come minimo la GEMINI_API_KEY per generare immagini.
+
+
+----
+
+
+Prerequisito unico: Node.js 18-22
+Vai su nodejs.org, scarica il Windows Installer (.msi) della versione LTS (22.x), installa con le opzioni di default. Questo aggiunge automaticamente node e npm al PATH di sistema.
+Per lanciarlo:
+Doppio click su start.bat nella cartella del progetto. Fine.
+Oppure da terminale (PowerShell o CMD):
+cd C:\percorso\della\cartella\app
+start.bat
+Il comportamento è lo stesso dello script Mac: primo avvio installa dipendenze e builda (qualche minuto), quelli successivi sono rapidi. Si apre su http://localhost:3000, login admin / admin.
+Differenza pratica tra i due:
+Mac (start.sh)Windows (start.bat)Installa Nodebrew install node@22 o installerInstaller .msi da nodejs.orgLanciachmod +x start.sh poi ./start.shDoppio click su start.batBindinglocalhost:3000localhost:3000Database nativobetter-sqlite3 rebuild automaticobetter-sqlite3 rebuild automaticoSe il DB fallisceFallback su .env authFallback su .env auth
+In entrambi i casi l'unica configurazione manuale è mettere almeno la GEMINI_API_KEY nel file .env (che viene creato automaticamente da .env.example al primo avvio).

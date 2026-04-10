@@ -177,7 +177,7 @@ export function WelcomeModal({
       onClick={onClose}
     >
       <div className={`welcome-glow w-full ${dialogWidth} mx-4`} onClick={(e) => e.stopPropagation()}>
-      <div className={`relative z-10 bg-neutral-800 rounded-xl border border-neutral-700 shadow-2xl overflow-clip ${dialogHeight} flex flex-col`}>
+      <div className={`relative z-10 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] shadow-2xl overflow-clip ${dialogHeight} flex flex-col`}>
         {currentView === "initial" && (
           <QuickstartInitialView
             onNewProject={handleNewProject}

@@ -118,7 +118,7 @@ if (!process.env.AGENT1_WORKER) {
 
 } else {
   const dev = process.env.NODE_ENV !== 'production';
-  const hostname = 'localhost';
+  const hostname = process.env.HOST || 'localhost';
   const port = process.env.PORT || 3000;
 
   const app = next({ dev, hostname, port });

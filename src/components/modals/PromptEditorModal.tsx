@@ -1,4 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+  DialogButton,
+} from '@/components/ui/dialog';
 
 const FONT_SIZE_STORAGE_KEY = 'prompt-editor-font-size';
 const DEFAULT_FONT_SIZE = 14;
@@ -59,23 +68,6 @@ export const PromptEditorModal: React.FC<PromptEditorModalProps> = ({
     }
   }, [hasUnsavedChanges, onClose]);
 
-  // Handle Escape key to close
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        handleAttemptClose();
-      }
-    };
-
-    if (isOpen) {
-      window.addEventListener('keydown', handleKeyDown);
-    }
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, handleAttemptClose]);
-
   const handleSubmit = useCallback(() => {
     onSubmit(prompt);
     onClose();
@@ -85,139 +77,87 @@ export const PromptEditorModal: React.FC<PromptEditorModalProps> = ({
     setFontSize(parseInt(e.target.value, 10));
   }, []);
 
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      // Only close if clicking the backdrop itself, not the dialog content
-      if (e.target === e.currentTarget) {
-        handleAttemptClose();
-      }
-    },
-    [handleAttemptClose]
-  );
-
   const handleDismissConfirmation = useCallback(() => {
     setShowConfirmation(false);
   }, []);
 
-  const handleConfirmationBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      // Only dismiss if clicking the backdrop itself, not the confirmation dialog
-      if (e.target === e.currentTarget) {
-        handleDismissConfirmation();
-      }
-    },
-    [handleDismissConfirmation]
-  );
-
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
-      onClick={handleBackdropClick}
-    >
-      <div className="relative bg-neutral-800 border border-neutral-700 rounded-lg shadow-2xl w-full max-w-3xl h-[85vh] flex flex-col mx-4">
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4">
-          <h2 className="text-xl font-semibold text-neutral-100">
-            Edit Prompt
-          </h2>
-        </div>
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open) handleAttemptClose();
+      }}>
+        <DialogContent size="lg">
+          <DialogHeader>
+            <DialogTitle>Edit Prompt</DialogTitle>
+          </DialogHeader>
 
-        {/* Box containing toolbar and textarea */}
-        <div className="mx-6 flex-1 flex flex-col border border-neutral-700 rounded bg-neutral-900/30 overflow-hidden mb-4">
-          {/* Toolbar - header of the box */}
-          <div className="h-12 bg-neutral-900 border-b border-neutral-700 flex items-center px-4 gap-3 shrink-0">
-            {/* Font Size Control */}
-            <select
-              value={fontSize}
-              onChange={handleFontSizeChange}
-              className="text-sm py-1 px-2 border border-neutral-700 rounded bg-neutral-900/50 focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
-            >
-              {FONT_SIZE_OPTIONS.map((size) => (
-                <option key={size} value={size}>
-                  {size}px
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Textarea */}
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe what to generate..."
-            className="nodrag nopan nowheel flex-1 w-full p-6 leading-relaxed text-neutral-100 bg-transparent border-0 resize-none focus:outline-none placeholder:text-neutral-500"
-            style={{ fontSize: `${fontSize}px` }}
-            autoFocus
-          />
-        </div>
-
-        {/* Footer with buttons */}
-        <div className="flex justify-end gap-3 px-6 pb-6">
-          <button
-            onClick={handleAttemptClose}
-            className="px-4 py-2 text-sm font-medium text-neutral-300 bg-neutral-700 hover:bg-neutral-600 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-neutral-500"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 text-sm font-medium text-[var(--btn-primary-text)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] rounded transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-          >
-            Submit
-          </button>
-        </div>
-
-        {/* Confirmation overlay */}
-        {showConfirmation && (
-          <div
-            className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg"
-            onClick={handleConfirmationBackdropClick}
-          >
-            <div className="relative bg-neutral-800 border border-neutral-600 rounded-lg p-6 mx-4 max-w-sm shadow-xl">
-              {/* Close button */}
-              <button
-                onClick={handleDismissConfirmation}
-                className="absolute top-3 right-3 text-neutral-400 hover:text-neutral-200 transition-colors focus:outline-none"
-                aria-label="Close"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+          <DialogBody className="flex flex-col gap-4 p-0">
+            {/* Box containing toolbar and textarea */}
+            <div className="flex-1 flex flex-col border border-[var(--border)] rounded bg-[var(--surface-1)]/30 overflow-hidden mx-6">
+              {/* Toolbar - header of the box */}
+              <div className="h-12 bg-[var(--surface-1)] border-b border-[var(--border)] flex items-center px-4 gap-3 shrink-0">
+                {/* Font Size Control */}
+                <select
+                  value={fontSize}
+                  onChange={handleFontSizeChange}
+                  className="text-sm py-1 px-2 border border-[var(--border)] rounded bg-[var(--surface-1)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--input-focus)] text-[var(--text-secondary)]"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-
-              <p className="text-neutral-100 text-center mb-6">
-                You have unsaved changes
-              </p>
-              <div className="flex justify-center gap-3">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-neutral-300 bg-neutral-700 hover:bg-neutral-600 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-neutral-500"
-                >
-                  Discard
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  className="px-4 py-2 text-sm font-medium text-[var(--btn-primary-text)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] rounded transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                >
-                  Submit
-                </button>
+                  {FONT_SIZE_OPTIONS.map((size) => (
+                    <option key={size} value={size}>
+                      {size}px
+                    </option>
+                  ))}
+                </select>
               </div>
+
+              {/* Textarea */}
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Describe what to generate..."
+                className="nodrag nopan nowheel flex-1 w-full p-6 leading-relaxed text-[var(--text-primary)] bg-transparent border-0 resize-none focus:outline-none placeholder:text-[var(--text-muted)]"
+                style={{ fontSize: `${fontSize}px` }}
+                autoFocus
+              />
             </div>
-          </div>
-        )}
-      </div>
-    </div>
+          </DialogBody>
+
+          <DialogFooter>
+            <DialogButton variant="ghost" onClick={handleAttemptClose}>
+              Cancel
+            </DialogButton>
+            <DialogButton variant="primary" onClick={handleSubmit}>
+              Submit
+            </DialogButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmation} onOpenChange={(open) => {
+        if (!open) handleDismissConfirmation();
+      }}>
+        <DialogContent size="sm">
+          <DialogHeader>
+            <DialogTitle>Unsaved Changes</DialogTitle>
+          </DialogHeader>
+
+          <DialogBody className="text-center">
+            <p className="text-[var(--text-primary)]">
+              You have unsaved changes
+            </p>
+          </DialogBody>
+
+          <DialogFooter>
+            <DialogButton variant="ghost" onClick={onClose}>
+              Discard
+            </DialogButton>
+            <DialogButton variant="primary" onClick={handleSubmit}>
+              Submit
+            </DialogButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

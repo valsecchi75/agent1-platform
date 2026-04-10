@@ -207,13 +207,12 @@ export function SplitGridNode({ id, data, selected }: NodeProps<SplitGridNodeTyp
       </BaseNode>
 
       {/* Settings Modal */}
-      {showSettings && (
-        <SplitGridSettingsModal
-          nodeId={id}
-          nodeData={nodeData}
-          onClose={handleCloseSettings}
-        />
-      )}
+      <SplitGridSettingsModal
+        nodeId={id}
+        nodeData={nodeData}
+        isOpen={showSettings}
+        onOpenChange={(open) => { if (!open) handleCloseSettings(); }}
+      />
     </>
   );
 }

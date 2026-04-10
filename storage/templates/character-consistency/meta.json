@@ -1,0 +1,33 @@
+{
+  "slug": "character-consistency",
+  "name": "Character consistency",
+  "description": "Builds a consistent character sheet from a selected talent, combining outfit and accessory references to generate aligned full-body views, expressive close-ups, and detail panels within one coherent visual identity.",
+  "author": "SV",
+  "createdAt": "2026-04-02T16:09:47.544Z",
+  "updatedAt": "2026-04-02T16:09:47.544Z",
+  "source": "local",
+  "sourceUrl": null,
+  "registryVersion": null,
+  "category": "simple",
+  "tags": [
+    "Gemini",
+    "LLM",
+    "Nano Banana",
+    "Prompt Constructor",
+    "Character consistency"
+  ],
+  "techTags": [
+    "Custom: morpheusModelManagement",
+    "Custom: previewImage",
+    "Custom: showAnything",
+    "LLM",
+    "Nano Banana",
+    "Prompt Constructor"
+  ],
+  "nodeCount": 15,
+  "previewFrames": [
+    "agent1_0098.jpg",
+    "agent1_0100.jpg",
+    "agent1_0104.jpg"
+  ]
+}

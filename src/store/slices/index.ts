@@ -25,3 +25,6 @@ export type { SnapshotSlice, SnapshotSliceDeps } from "./snapshotSlice";
 
 export { createDimmingSlice } from "./dimmingSlice";
 export type { DimmingSlice, DimmingSliceDeps } from "./dimmingSlice";
+
+export { createAuthSlice } from "./authSlice";
+export type { AuthSlice, CurrentUser } from "./authSlice";

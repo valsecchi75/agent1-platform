@@ -59,7 +59,7 @@ export function NASketchToPhotoNode({ id, data, selected }: NodeProps<SketchToPh
       ))}
 
       {/* Preview area — fullBleed */}
-      <div className="relative w-full h-full min-h-0 overflow-hidden rounded-lg">
+      <div className="relative w-full h-full min-h-0 overflow-hidden rounded-lg bg-[var(--node-bg,#1a1a1a)]">
         {data.outputImage ? (
           <>
             <img src={adaptiveImage ?? undefined} alt="Generated" className="w-full h-full object-cover" />
@@ -70,7 +70,7 @@ export function NASketchToPhotoNode({ id, data, selected }: NodeProps<SketchToPh
             </div>
           </>
         ) : (
-          <div className="w-full h-full min-h-[112px] bg-neutral-900/40 flex flex-col items-center justify-center">
+          <div className="w-full h-full min-h-[112px] bg-neutral-900 flex flex-col items-center justify-center">
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin text-neutral-400" /> :
              hasError ? <span className="text-[10px] text-red-400 text-center px-2">{data.error}</span> :
              <span className="text-neutral-500 text-[10px]">Run to generate</span>}

@@ -59,6 +59,7 @@ import {
   createCommentSlice,
   createSnapshotSlice,
   createDimmingSlice,
+  createAuthSlice,
 } from "./slices";
 import type {
   UISlice,
@@ -68,6 +69,7 @@ import type {
   CommentSlice,
   SnapshotSlice,
   DimmingSlice,
+  AuthSlice,
 } from "./slices";
 
 // Components / Utils
@@ -306,7 +308,8 @@ interface WorkflowStore
     CanvasNavSlice,
     CommentSlice,
     SnapshotSlice,
-    DimmingSlice {
+    DimmingSlice,
+    AuthSlice {
   // Core state
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
@@ -410,6 +413,7 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get, api) => ({
   ...createCommentSlice(set as never, get as never, api as never),
   ...createSnapshotSlice(set as never, get as never, api as never),
   ...createDimmingSlice(set as never, get as never, api as never),
+  ...createAuthSlice(set, get, api),
 
   // ── Core state ──────────────────────────────────────────────────────────
   nodes: [],

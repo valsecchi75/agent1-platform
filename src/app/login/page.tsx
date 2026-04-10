@@ -7,13 +7,13 @@ import { LoginForm } from "./LoginForm";
 import { LoginTunnel } from "./LoginTunnel";
 import { LoginUI } from "./LoginUI";
 
-const SCHEMES = ["aurora", "ember", "matrix", "sienna", "sage", "orchid", "platinum", "abyss", "amber", "ocean"];
+const SCHEMES = ["ignite", "aurora", "ember", "matrix", "sienna", "sage", "orchid", "platinum", "abyss", "amber", "ocean"];
 
 export default function LoginPage() {
   const [musicFiles, setMusicFiles] = useState<string[]>([]);
   const [audioData, setAudioData] = useState<Uint8Array<ArrayBufferLike> | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [scheme, setScheme] = useState("aurora");
+  const [scheme, setScheme] = useState("ignite");
   const userPickedRef = useRef(false);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function LoginPage() {
         const nextIndex = (currentIndex + 1) % SCHEMES.length;
         return SCHEMES[nextIndex];
       });
-    }, 10000);
+    }, 18000);
 
     return () => clearInterval(interval);
   }, []);

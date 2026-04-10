@@ -247,3 +247,26 @@ body {
   0%   { opacity: 0; }
   100% { opacity: 1; }
 }
+
+/* Ignite — warm orange */
+[data-login-scheme="ignite"] {
+  --login-accent: #E8530E;
+  --login-accent-rgb: 232, 83, 14;
+  --login-glow: rgba(232, 83, 14, 0.4);
+  --login-glow-soft: rgba(232, 83, 14, 0.12);
+}
+
+/* ══════════════════════════════════════════════════
+   Blinking cursor (agno-style)
+   ══════════════════════════════════════════════════ */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.blinking-cursor {
+  display: inline-block;
+  animation: cursor-blink 1s step-end infinite;
+  color: var(--login-accent);
+  font-weight: 200;
+  margin-left: 1px;
+}

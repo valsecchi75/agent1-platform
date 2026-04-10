@@ -319,7 +319,7 @@ export function BaseNode({
         className={`w-full h-full relative rounded-full border shadow-lg ${
           isCurrentlyExecuting || isExecuting ? "border-[var(--accent)]" : "border-neutral-700/60"
         } ${colorStyle.className} ${className}`}
-        style={{ ...colorStyle.style, ...pillBg, background: pillBg.background || "var(--tw-neutral-800, #27272a)" }}
+        style={{ ...colorStyle.style, ...pillBg, background: pillBg.background || "var(--node-bg, #1a1a1a)" }}
         onMouseEnter={(e) => {
           if (e.buttons !== 0 || isPanningRef.current || isDraggingNodeRef.current) return;
           setHoveredNodeId(id);
@@ -354,7 +354,7 @@ export function BaseNode({
   return (
     <div
       className={hasExpandedSettings
-        ? `relative flex flex-col w-full h-full overflow-visible bg-neutral-800 ${v2Round}`
+        ? `relative flex flex-col w-full h-full overflow-visible bg-[var(--node-bg,#1a1a1a)] ${v2Round}`
         : "contents"}
       onDoubleClick={handleResizeHandleDblClick}
     >
@@ -371,8 +371,8 @@ export function BaseNode({
           ${hasExpandedSettings ? "flex-1 min-h-0 w-full" : "h-full w-full"} flex flex-col overflow-visible relative
           ${isV2 ? "node-v2-shell" : ""}
           ${fullBleed
-            ? `${settingsExpanded ? `${v2RoundTop} border-b-0` : v2Round} bg-neutral-800/50 border border-neutral-700/40`
-            : `bg-neutral-800 ${settingsExpanded ? `${v2RoundTop} border-b-0` : v2Round} shadow-lg border`}
+            ? `${settingsExpanded ? `${v2RoundTop} border-b-0` : v2Round} bg-[var(--node-bg,#1a1a1a)] border border-neutral-700/40`
+            : `bg-[var(--node-bg,#1a1a1a)] ${settingsExpanded ? `${v2RoundTop} border-b-0` : v2Round} shadow-lg border`}
           ${fullBleed ? "" : (isCurrentlyExecuting || isExecuting ? "border-[var(--accent)] ring-1 ring-[var(--accent)]/20" : isBypassed ? "border-neutral-600/50" : "border-neutral-700/60")}
           ${fullBleed ? "" : (hasError ? "border-red-500" : "")}
           ${isBypassed ? "node-bypassed-border" : ""}

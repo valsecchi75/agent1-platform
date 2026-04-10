@@ -2,29 +2,9 @@ import { writeFileSync } from "fs";
 import { NextRequest, NextResponse } from "next/server";
 import { getNextFilename, ensureStorageDirs } from "@/lib/storage/fileNaming";
 import { isDbAvailable } from "@/lib/db-guard";
-import { insertGeneration, getDb } from "@/lib/db";
+import { insertGeneration } from "@/lib/db";
 import { PRICING } from "@/utils/costCalculator";
-
-/**
- * Get or cache the admin user's UUID from the DB.
- * The generations table has a foreign key on user_id → users.id,
- * so we need the actual UUID, not the username string "admin".
- */
-let cachedAdminUserId: string | null = null;
-function getAdminUserId(): string {
-  if (cachedAdminUserId) return cachedAdminUserId;
-  try {
-    const db = getDb();
-    const row = db.prepare("SELECT id FROM users WHERE username = 'admin' LIMIT 1").get() as { id: string } | undefined;
-    if (row) {
-      cachedAdminUserId = row.id;
-      return row.id;
-    }
-  } catch {
-    // DB unavailable
-  }
-  return "admin"; // fallback (will fail FK if no user)
-}
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
 
 /**
  * POST /api/agent1-save
@@ -49,6 +29,7 @@ function getAdminUserId(): string {
  */
 export async function POST(req: NextRequest) {
   try {
+    const user = await getRequestUser(req);
     const body = await req.json();
     const {
       type,
@@ -120,8 +101,8 @@ export async function POST(req: NextRequest) {
 
     const ext = extOverride || detectedExt;
 
-    // Get next filename
-    const { filename, fullPath, publicUrl } = getNextFilename(type, ext);
+    // Get next filename with user scope
+    const { filename, fullPath, publicUrl } = getNextFilename(type, ext, user.userId);
 
     // Write file
     const buffer = Buffer.from(base64Data, "base64");
@@ -129,9 +110,9 @@ export async function POST(req: NextRequest) {
 
     // Insert DB record for gallery (only for image/video types)
     if (isDbAvailable() && (type === "image" || type === "video")) {
-      const relPath = type === "image" ? `output/images/${filename}`
-        : type === "video" ? `output/videos/${filename}`
-        : `output/audio/${filename}`;
+      const relPath = type === "image" ? `users/${user.userId}/output/images/${filename}`
+        : type === "video" ? `users/${user.userId}/output/videos/${filename}`
+        : `users/${user.userId}/output/audio/${filename}`;
 
       const mimeMap: Record<string, string> = {
         jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
@@ -156,7 +137,7 @@ export async function POST(req: NextRequest) {
       // No need to store workflow JSON in the generation DB record.
 
       insertGeneration({
-        userId: getAdminUserId(),
+        userId: user.userId,
         filePath: relPath,
         fileType: type as "image" | "video",
         mimeType,
@@ -179,8 +160,11 @@ export async function POST(req: NextRequest) {
       publicUrl,
       fullPath,
     });
-  } catch (error) {
-    console.error("Error saving file:", error);
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    console.error("Error saving file:", err);
     return NextResponse.json(
       { success: false, error: "Failed to save file" },
       { status: 500 }

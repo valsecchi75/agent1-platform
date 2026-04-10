@@ -1,14 +1,23 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { createPortal } from "react-dom";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { SplitGridNodeData, AspectRatio, Resolution, ModelType } from "@/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+  DialogButton,
+} from "@/components/ui/dialog";
 
 interface SplitGridSettingsModalProps {
   nodeId: string;
   nodeData: SplitGridNodeData;
-  onClose: () => void;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const LAYOUT_OPTIONS = [
@@ -39,7 +48,8 @@ const findLayoutIndex = (rows: number, cols: number): number => {
 export function SplitGridSettingsModal({
   nodeId,
   nodeData,
-  onClose,
+  isOpen,
+  onOpenChange,
 }: SplitGridSettingsModalProps) {
   const { updateNodeData, addNode, onConnect, addEdgeWithType, getNodeById } = useWorkflowStore();
 
@@ -171,33 +181,25 @@ export function SplitGridSettingsModal({
       isConfigured: true,
     });
 
-    onClose();
+    onOpenChange(false);
   }, [
     nodeId, targetCount, defaultPrompt, aspectRatio, resolution,
     model, useGoogleSearch, useImageSearch, rows, cols, selectedLayoutIndex, getNodeById,
-    addNode, updateNodeData, onConnect, addEdgeWithType, onClose
+    addNode, updateNodeData, onConnect, addEdgeWithType, onOpenChange
   ]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      onClose();
-    }
-  };
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent size="sm">
+        <DialogHeader>
+          <DialogTitle>Split Grid Settings</DialogTitle>
+        </DialogHeader>
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
-      <div
-        className="bg-neutral-800 rounded-lg p-6 w-[600px] border border-neutral-700 shadow-xl"
-        onKeyDown={handleKeyDown}
-      >
-        <h2 className="text-lg font-semibold text-neutral-100 mb-4">
-          Split Grid Settings
-        </h2>
-
-        <div className="space-y-4">
+        <DialogBody>
+          <div className="space-y-4">
           {/* Layout selector with visual preview */}
           <div>
-            <label className="block text-sm text-neutral-400 mb-2">
+            <label className="block text-sm text-[var(--text-secondary)] mb-2">
               Grid Layout
             </label>
             <div className="flex gap-2">
@@ -211,7 +213,7 @@ export function SplitGridSettingsModal({
                     className={`flex-1 p-2 rounded border transition-colors ${
                       isSelected
                         ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
-                        : "border-neutral-600 hover:border-neutral-500"
+                        : "border-[var(--border)] hover:border-[var(--input-focus)]"
                     }`}
                   >
                     <div
@@ -225,25 +227,25 @@ export function SplitGridSettingsModal({
                         <div
                           key={i}
                           className={`rounded-sm ${
-                            isSelected ? "bg-[var(--accent)]" : "bg-neutral-500"
+                            isSelected ? "bg-[var(--accent)]" : "bg-[var(--text-muted)]"
                           }`}
                         />
                       ))}
                     </div>
-                    <div className="text-xs text-neutral-300 mt-1 text-center">{layout.rows}x{layout.cols}</div>
-                    <div className="text-[10px] text-neutral-500 text-center">{count}</div>
+                    <div className="text-xs text-[var(--text-secondary)] mt-1 text-center">{layout.rows}x{layout.cols}</div>
+                    <div className="text-[10px] text-[var(--text-muted)] text-center">{count}</div>
                   </button>
                 );
               })}
             </div>
-            <p className="text-xs text-neutral-500 mt-2">
+            <p className="text-xs text-[var(--text-muted)] mt-2">
               Grid will be split into {rows}x{cols} = {targetCount} images
             </p>
           </div>
 
           {/* Default prompt */}
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">
+            <label className="block text-sm text-[var(--text-secondary)] mb-1">
               Default Prompt
             </label>
             <textarea
@@ -251,21 +253,21 @@ export function SplitGridSettingsModal({
               onChange={(e) => setDefaultPrompt(e.target.value)}
               placeholder="Enter prompt that will be applied to all generated images..."
               rows={3}
-              className="w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded text-neutral-100 text-sm focus:outline-none focus:border-neutral-500 resize-none"
+              className="w-full px-3 py-2 bg-[var(--surface-1)] border border-[var(--border)] rounded text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--input-focus)] resize-none"
             />
-            <p className="text-xs text-neutral-500 mt-1">
+            <p className="text-xs text-[var(--text-muted)] mt-1">
               Each prompt node can be edited individually after creation
             </p>
           </div>
 
           {/* Generate settings */}
           <div>
-            <label className="block text-sm text-neutral-400 mb-2">
+            <label className="block text-sm text-[var(--text-secondary)] mb-2">
               Generate Node Settings
             </label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-neutral-500 mb-1">
+                <label className="block text-xs text-[var(--text-muted)] mb-1">
                   Model
                 </label>
                 <select
@@ -284,7 +286,7 @@ export function SplitGridSettingsModal({
                       setResolution(newResolutions[0]);
                     }
                   }}
-                  className="w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+                  className="w-full px-3 py-2 bg-[var(--surface-1)] border border-[var(--border)] rounded text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--input-focus)]"
                 >
                   {MODELS.map((m) => (
                     <option key={m.value} value={m.value}>{m.label}</option>
@@ -293,13 +295,13 @@ export function SplitGridSettingsModal({
               </div>
 
               <div>
-                <label className="block text-xs text-neutral-500 mb-1">
+                <label className="block text-xs text-[var(--text-muted)] mb-1">
                   Aspect Ratio
                 </label>
                 <select
                   value={aspectRatio}
                   onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-                  className="w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+                  className="w-full px-3 py-2 bg-[var(--surface-1)] border border-[var(--border)] rounded text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--input-focus)]"
                 >
                   {aspectRatios.map((ar) => (
                     <option key={ar} value={ar}>{ar}</option>
@@ -310,13 +312,13 @@ export function SplitGridSettingsModal({
               {isNanoBananaPro && (
                 <>
                   <div>
-                    <label className="block text-xs text-neutral-500 mb-1">
+                    <label className="block text-xs text-[var(--text-muted)] mb-1">
                       Resolution
                     </label>
                     <select
                       value={resolution}
                       onChange={(e) => setResolution(e.target.value as Resolution)}
-                      className="w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+                      className="w-full px-3 py-2 bg-[var(--surface-1)] border border-[var(--border)] rounded text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--input-focus)]"
                     >
                       {resolutions.map((res) => (
                         <option key={res} value={res}>{res}</option>
@@ -325,24 +327,24 @@ export function SplitGridSettingsModal({
                   </div>
 
                   <div className="flex items-end pb-2">
-                    <label className="flex items-center gap-2 text-sm text-neutral-300 cursor-pointer">
+                    <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] cursor-pointer">
                       <input
                         type="checkbox"
                         checked={useGoogleSearch}
                         onChange={(e) => setUseGoogleSearch(e.target.checked)}
-                        className="w-4 h-4 rounded border-neutral-600 bg-neutral-900"
+                        className="w-4 h-4 rounded border-[var(--border)] bg-[var(--surface-1)]"
                       />
                       Google Search
                     </label>
                   </div>
                   {model === "nano-banana-2" && (
                     <div className="flex items-end pb-2">
-                      <label className="flex items-center gap-2 text-sm text-neutral-300 cursor-pointer">
+                      <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={useImageSearch}
                           onChange={(e) => setUseImageSearch(e.target.checked)}
-                          className="w-4 h-4 rounded border-neutral-600 bg-neutral-900"
+                          className="w-4 h-4 rounded border-[var(--border)] bg-[var(--surface-1)]"
                         />
                         Image Search
                       </label>
@@ -352,24 +354,18 @@ export function SplitGridSettingsModal({
               )}
             </div>
           </div>
-        </div>
+          </div>
+        </DialogBody>
 
-        <div className="flex justify-end gap-2 mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-neutral-400 hover:text-neutral-100 transition-colors"
-          >
+        <DialogFooter>
+          <DialogButton variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
-          </button>
-          <button
-            onClick={handleCreate}
-            className="px-4 py-2 text-sm bg-[var(--surface-1)] text-neutral-900 rounded hover:bg-neutral-200 transition-colors"
-          >
+          </DialogButton>
+          <DialogButton variant="primary" onClick={handleCreate}>
             Create {targetCount} Generate Sets
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body
+          </DialogButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -11,91 +11,134 @@ export function LoginUI() {
 
   return (
     <>
-      {/* ── Top left — Brand claim (Arimo) ── */}
-      <div className="fixed top-6 left-8 z-50 select-none" style={{ fontFamily: "'Arimo', sans-serif" }}>
-        <p className="text-white tracking-[0.04em] leading-snug login-flicker font-normal" style={{ fontSize: "1.45em", "--flicker-delay": "0s" } as React.CSSProperties}>
-          <span className={hover} onMouseEnter={onHover}>agent 1</span>{" "}
-          <span className="opacity-30 font-light" onMouseEnter={onHover}>—</span>{" "}
-          <span className={`opacity-60 font-light ${hover}`} onMouseEnter={onHover}>from vision to form</span>
-        </p>
-        <p className="text-white/40 tracking-[0.06em] login-flicker font-light" style={{ fontSize: "0.78em", "--flicker-delay": "0.5s" } as React.CSSProperties}>
-          <span className={`opacity-80 ${hover}`} onMouseEnter={onHover}>connect</span>{" "}
-          <span className="opacity-40">any api.</span>{" "}
-          <span className={`opacity-80 ${hover}`} onMouseEnter={onHover}>build</span>{" "}
-          <span className="opacity-40">any workflow.</span>{" "}
-          <span className={`opacity-80 ${hover}`} onMouseEnter={onHover}>generate</span>{" "}
-          <span className="opacity-40">anything.</span>
+      {/* ── Top left — Big slogan (two lines, bold, skin-colored like agno.com) ── */}
+      <div className="fixed top-8 left-10 z-50 select-none">
+        <p
+          className="leading-[1.1] login-flicker font-semibold tracking-[-0.02em]"
+          style={{
+            fontSize: "3.2em",
+            color: "var(--login-accent)",
+            "--flicker-delay": "0s",
+          } as React.CSSProperties}
+        >
+          <span className={hover} onMouseEnter={onHover}>
+            Connect. Build.
+          </span>
+          <br />
+          <span className={`${hover} text-white`} onMouseEnter={onHover}>
+            Generate<span style={{ color: "var(--login-accent)" }}>_</span>
+          </span>
         </p>
       </div>
 
-      {/* ── Top right — Contact ── */}
-      <div className="fixed top-6 right-8 z-50 flex items-center gap-4">
+      {/* ── Top right — Brand name (Inter semibold, agno-style) ── */}
+      <div className="fixed top-8 right-10 z-50 select-none text-right">
+        <p
+          className="text-white tracking-[-0.01em] leading-tight login-flicker font-semibold"
+          style={{ fontSize: "2.4em", "--flicker-delay": "0s" } as React.CSSProperties}
+        >
+          <span className={hover} onMouseEnter={onHover}>
+            agent
+            <sup
+              style={{
+                fontSize: "0.5em",
+                verticalAlign: "super",
+                marginLeft: "3px",
+                color: "var(--login-accent)",
+                fontWeight: 700,
+              }}
+            >
+              1
+            </sup>
+          </span>
+          <span className="blinking-cursor" style={{ fontWeight: 300 }}>_</span>
+        </p>
+        <p
+          className="text-white/30 tracking-[0.04em] login-flicker font-normal mt-1"
+          style={{ fontSize: "0.85em", "--flicker-delay": "0.5s" } as React.CSSProperties}
+        >
+          <span className={`opacity-70 ${hover}`} onMouseEnter={onHover}>
+            from vision to form
+          </span>
+        </p>
+      </div>
+
+      {/* ── Bottom right — Contact + Footer ── */}
+      <div className="fixed bottom-8 right-10 z-50 select-none text-right">
         <button
           onClick={() => setContactOpen(true)}
           onMouseEnter={onHover}
-          className="text-white/60 hover:text-white text-[0.7em] tracking-[0.18em] transition-colors cursor-pointer"
-          style={{ fontFamily: "'Arimo', sans-serif" }}
+          className="text-white/40 hover:text-white/80 text-[0.7em] tracking-[0.15em] uppercase transition-colors cursor-pointer font-light mb-2 block ml-auto"
         >
-          Click to contact
+          Contact
         </button>
-      </div>
-
-      {/* ── Bottom right — Footer ── */}
-      <div className="fixed bottom-6 right-8 z-50 select-none text-right">
-        <p className="text-white/25 uppercase tracking-[0.12em] font-mono" style={{ fontSize: "0.5em" }}>
-          <span className={hover} onMouseEnter={onHover}>///</span>{" "}
+        <p className="text-white/20 uppercase tracking-[0.12em] font-mono" style={{ fontSize: "0.5em" }}>
           <span className={hover} onMouseEnter={onHover}>2026</span>{" "}
-          <span className={hover} onMouseEnter={onHover}>©</span>{" "}
-          <a href="https://linkedin.com/in/valsecchisergio/" target="_blank" rel="noopener noreferrer" className={hover} onMouseEnter={onHover}>
+          <span className={hover} onMouseEnter={onHover}>&copy;</span>{" "}
+          <a
+            href="https://linkedin.com/in/valsecchisergio/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={hover}
+            onMouseEnter={onHover}
+          >
             Sergio Valsecchi
-          </a>{" "}
-          <span className="opacity-50">— Fork of Node Banana</span>
-        </p>
-        <p className="text-white/15 uppercase tracking-[0.12em] font-mono mt-0.5" style={{ fontSize: "0.45em" }}>
-          <span className={hover} onMouseEnter={onHover}>Powered by</span>{" "}
-          <span className={hover} onMouseEnter={onHover}>Gemini</span>{" "}
-          <span className="opacity-50">+</span>{" "}
-          <span className={hover} onMouseEnter={onHover}>Nano Banana Pro</span>
+          </a>
         </p>
       </div>
 
       {/* ── Contact popup ── */}
       {contactOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center contact-entering" onClick={() => setContactOpen(false)}>
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center contact-entering"
+          onClick={() => setContactOpen(false)}
+        >
           <div className="flex flex-col items-center gap-8" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setContactOpen(false)}
               onMouseEnter={onHover}
-              className="fixed top-6 right-8 text-white/50 hover:text-white text-[0.65em] uppercase tracking-[0.25em] transition-colors duration-200 cursor-pointer"
+              className="fixed top-8 right-10 text-white/40 hover:text-white text-[0.65em] uppercase tracking-[0.25em] transition-colors duration-200 cursor-pointer font-light"
             >
               Close
             </button>
 
-            <ul className="text-white text-center space-y-4" style={{ fontSize: "1.2em", fontFamily: "'Arimo', sans-serif" }}>
+            <ul className="text-white text-center space-y-5" style={{ fontSize: "1.1em" }}>
               <li>
-                <a href="mailto:sergio@kframeinteractive.com" target="_blank" rel="noopener noreferrer"
+                <a
+                  href="mailto:sergio@kframeinteractive.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onMouseEnter={onHover}
-                  className="hover:opacity-100 opacity-60 transition-all duration-200 py-2 inline-block uppercase tracking-[0.2em] hover:tracking-[0.25em]">
+                  className="hover:opacity-100 opacity-50 transition-all duration-200 py-2 inline-block uppercase tracking-[0.25em] hover:tracking-[0.3em] font-light"
+                >
                   Email
                 </a>
               </li>
               <li>
-                <a href="https://linkedin.com/in/valsecchisergio/" target="_blank" rel="noopener noreferrer"
+                <a
+                  href="https://linkedin.com/in/valsecchisergio/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onMouseEnter={onHover}
-                  className="hover:opacity-100 opacity-60 transition-all duration-200 py-2 inline-block uppercase tracking-[0.2em] hover:tracking-[0.25em]">
+                  className="hover:opacity-100 opacity-50 transition-all duration-200 py-2 inline-block uppercase tracking-[0.25em] hover:tracking-[0.3em] font-light"
+                >
                   LinkedIn
                 </a>
               </li>
               <li>
-                <a href="https://instagram.com/wall__ai/" target="_blank" rel="noopener noreferrer"
+                <a
+                  href="https://instagram.com/wall__ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onMouseEnter={onHover}
-                  className="hover:opacity-100 opacity-60 transition-all duration-200 py-2 inline-block uppercase tracking-[0.2em] hover:tracking-[0.25em]">
+                  className="hover:opacity-100 opacity-50 transition-all duration-200 py-2 inline-block uppercase tracking-[0.25em] hover:tracking-[0.3em] font-light"
+                >
                   Instagram
                 </a>
               </li>
             </ul>
 
-            <p className="text-white/15 text-[0.5em] uppercase tracking-[0.2em] font-mono mt-6">
+            <p className="text-white/10 text-[0.5em] uppercase tracking-[0.2em] font-mono mt-6">
               sergio@kframeinteractive.com
             </p>
           </div>

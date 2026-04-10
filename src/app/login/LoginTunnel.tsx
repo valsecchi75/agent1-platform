@@ -35,6 +35,13 @@ interface SkinPalette {
 }
 
 const PALETTES: Record<string, SkinPalette> = {
+  "ignite": {
+    bg: "#020201",
+    lines: "#3a2010",
+    signal1: "#E8530E",
+    signal2: "#ff7a3a",
+    signal3: "#b83d08",
+  },
   "aurora": {
     bg: "#030405",
     lines: "#4a4230",

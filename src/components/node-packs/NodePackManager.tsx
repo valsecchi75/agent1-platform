@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTabs, DialogBody } from '@/components/ui/dialog';
 import { NodePackCard } from './NodePackCard';
 import type { NodePackEntryWithStatus } from '@/types/nodePacks';
 
@@ -118,53 +118,39 @@ export function NodePackManager({ open, onOpenChange, mockMode }: NodePackManage
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col bg-neutral-900 border-neutral-700">
+      <DialogContent size="md">
         <DialogHeader>
-          <DialogTitle className="text-neutral-200">Node Pack Manager</DialogTitle>
+          <DialogTitle>Node Pack Manager</DialogTitle>
         </DialogHeader>
 
         {/* Tabs */}
-        <div className="flex gap-1 border-b border-neutral-700 mb-3">
-          <button
-            onClick={() => setTab('available')}
-            className={`px-3 py-1.5 text-sm font-medium border-b-2 transition-colors ${
-              tab === 'available'
-                ? 'border-orange-500 text-orange-400'
-                : 'border-transparent text-neutral-400 hover:text-neutral-300'
-            }`}
-          >
-            Available ({available.length})
-          </button>
-          <button
-            onClick={() => setTab('installed')}
-            className={`px-3 py-1.5 text-sm font-medium border-b-2 transition-colors ${
-              tab === 'installed'
-                ? 'border-orange-500 text-orange-400'
-                : 'border-transparent text-neutral-400 hover:text-neutral-300'
-            }`}
-          >
-            Installed ({installed.length})
-          </button>
-        </div>
+        <DialogTabs
+          tabs={[
+            { id: 'available', label: `Available (${available.length})` },
+            { id: 'installed', label: `Installed (${installed.length})` },
+          ]}
+          active={tab}
+          onChange={(id) => setTab(id as Tab)}
+        />
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+        <DialogBody className="space-y-2">
           {loading && (
-            <div className="text-sm text-neutral-400 text-center py-8">Loading...</div>
+            <div className="text-sm text-[var(--text-secondary)] text-center py-8">Loading...</div>
           )}
           {error && !loading && (
             <div className="text-sm text-red-400 text-center py-4">
               {error}
-              <button onClick={fetchPacks} className="block mx-auto mt-2 text-xs text-orange-400 hover:underline">
+              <button onClick={fetchPacks} className="block mx-auto mt-2 text-xs text-[var(--accent)] hover:underline">
                 Retry
               </button>
             </div>
           )}
           {!loading && !error && tab === 'available' && available.length === 0 && (
-            <div className="text-sm text-neutral-500 text-center py-8">No new packs available</div>
+            <div className="text-sm text-[var(--text-muted)] text-center py-8">No new packs available</div>
           )}
           {!loading && !error && tab === 'installed' && installed.length === 0 && (
-            <div className="text-sm text-neutral-500 text-center py-8">No packs installed</div>
+            <div className="text-sm text-[var(--text-muted)] text-center py-8">No packs installed</div>
           )}
 
           {!loading && (tab === 'available' ? available : installed).map((pack) => (
@@ -177,11 +163,11 @@ export function NodePackManager({ open, onOpenChange, mockMode }: NodePackManage
               onUpdate={handleUpdate}
             />
           ))}
-        </div>
+        </DialogBody>
 
         {/* Restart banner */}
         {restartRequired && (
-          <div className="flex items-center justify-between px-3 py-2 mt-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+          <div className="shrink-0 flex items-center justify-between px-6 py-4 mt-2 rounded-lg bg-amber-500/10 border border-amber-500/30 -mx-6 -mb-6 px-6">
             <span className="text-xs text-amber-400">Restart required to activate changes</span>
             <button
               onClick={handleRestart}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { BrandLogo } from "@/components/settings/BrandLogo";
+import { formatVersion } from "@/lib/appVersion";
 
 interface QuickstartInitialViewProps {
   onNewProject: () => void;
@@ -55,12 +56,13 @@ export function QuickstartInitialView({
       {/* Header — Logo + Title */}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-3 mb-3">
-          <BrandLogo variant="icon" height="h-10" />
           <div className="text-left">
             <div className="flex items-center gap-2">
-              <BrandLogo variant="wordmark" height="h-5" />
+              <span className="text-xl font-semibold tracking-[-0.01em]" style={{ color: 'var(--text-primary)' }}>
+                agent<sup style={{ fontSize: '0.5em', verticalAlign: 'super', marginLeft: '2px', color: 'var(--accent)', fontWeight: 700 }}>1</sup>
+              </span>
               <span className="text-[9px] font-medium tracking-wider uppercase px-1.5 py-0.5 rounded" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
-                Alpha 0.9
+                {formatVersion()}
               </span>
             </div>
             <p className="text-xs tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>

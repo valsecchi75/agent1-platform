@@ -2,11 +2,17 @@
 
 import { useReactFlow } from "@xyflow/react";
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { createPortal } from "react-dom";
 import { ProviderModel, ModelCapability } from "@/lib/providers/types";
 import { useWorkflowStore, useProviderApiKeys } from "@/store/workflowStore";
 import { ProviderType, RecentModel } from "@/types";
 import { deduplicatedFetch, clearFetchCache } from "@/utils/deduplicatedFetch";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+} from "@/components/ui/dialog";
 
 // localStorage cache for models (persists across dev server restarts)
 const MODELS_CACHE_KEY = "agent1-models-cache";
@@ -375,16 +381,6 @@ export function ModelSearchDialog({
     };
   }, [isOpen, onClose]);
 
-  // Handle backdrop click
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    },
-    [onClose]
-  );
-
   // Get provider badge color
   const getProviderBadgeColor = (provider: ProviderType) => {
     switch (provider) {
@@ -399,7 +395,7 @@ export function ModelSearchDialog({
       case "wavespeed":
         return "bg-purple-500/20 text-purple-300";
       default:
-        return "bg-neutral-500/20 text-neutral-300";
+        return "bg-[var(--surface-3)] text-[var(--text-secondary)]";
     }
   };
 
@@ -577,46 +573,21 @@ export function ModelSearchDialog({
     return badges;
   };
 
-  if (!isOpen) return null;
-
-  const dialogContent = (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
-      onClick={handleBackdropClick}
-    >
-      <div className="relative bg-neutral-800 border border-neutral-700 rounded-lg shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col mx-4">
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent size="xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-700">
-          <h2 className="text-lg font-semibold text-neutral-100">
-            Browse Models
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-neutral-400 hover:text-neutral-100 hover:bg-neutral-700 rounded transition-colors"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+        <DialogHeader>
+          <DialogTitle>Browse Models</DialogTitle>
+        </DialogHeader>
 
         {/* Filter Bar */}
-        <div className="px-6 py-4 border-b border-neutral-700">
+        <div className="shrink-0 px-6 py-4 border-b border-[var(--border)]">
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search Input */}
             <div className="flex-1 relative">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -634,19 +605,19 @@ export function ModelSearchDialog({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search models..."
-                className="w-full pl-10 pr-4 py-2 text-sm bg-neutral-700 border border-neutral-600 rounded text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+                className="w-full pl-10 pr-4 py-2 text-sm bg-[var(--surface-3)] border border-[var(--border)] rounded text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--input-focus)]"
               />
             </div>
 
             {/* Provider Filter - Icon Buttons (only show available providers) */}
-            <div className="flex items-center gap-0.5 bg-neutral-700/50 rounded p-0.5">
+            <div className="flex items-center gap-0.5 bg-[var(--surface-3)]/50 rounded p-0.5">
               <button
                 onClick={() => setProviderFilter("all")}
                 title="All Providers"
                 className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                   providerFilter === "all"
-                    ? "bg-neutral-600 text-neutral-100"
-                    : "text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700"
+                    ? "bg-[var(--border)] text-[var(--text-primary)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)]"
                 }`}
               >
                 All
@@ -658,7 +629,7 @@ export function ModelSearchDialog({
                   className={`p-2 rounded transition-colors ${
                     providerFilter === "gemini"
                       ? "bg-green-500/20 text-green-300"
-                      : "text-neutral-400 hover:text-green-300 hover:bg-neutral-700"
+                      : "text-[var(--text-secondary)] hover:text-green-300 hover:bg-[var(--surface-3)]"
                   }`}
                 >
                   <GeminiIcon />
@@ -671,7 +642,7 @@ export function ModelSearchDialog({
                   className={`p-2 rounded transition-colors ${
                     providerFilter === "replicate"
                       ? "bg-[var(--accent-subtle)] text-[var(--accent)]"
-                      : "text-neutral-400 hover:text-[var(--accent)] hover:bg-neutral-700"
+                      : "text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--surface-3)]"
                   }`}
                 >
                   <ReplicateIcon />
@@ -684,7 +655,7 @@ export function ModelSearchDialog({
                   className={`p-2 rounded transition-colors ${
                     providerFilter === "fal"
                       ? "bg-yellow-500/20 text-yellow-300"
-                      : "text-neutral-400 hover:text-yellow-300 hover:bg-neutral-700"
+                      : "text-[var(--text-secondary)] hover:text-yellow-300 hover:bg-[var(--surface-3)]"
                   }`}
                 >
                   <FalIcon />
@@ -697,7 +668,7 @@ export function ModelSearchDialog({
                   className={`p-2 rounded transition-colors ${
                     providerFilter === "kie"
                       ? "bg-orange-500/20 text-orange-300"
-                      : "text-neutral-400 hover:text-orange-300 hover:bg-neutral-700"
+                      : "text-[var(--text-secondary)] hover:text-orange-300 hover:bg-[var(--surface-3)]"
                   }`}
                 >
                   <KieIcon />
@@ -710,7 +681,7 @@ export function ModelSearchDialog({
                   className={`p-2 rounded transition-colors ${
                     providerFilter === "wavespeed"
                       ? "bg-purple-500/20 text-purple-300"
-                      : "text-neutral-400 hover:text-purple-300 hover:bg-neutral-700"
+                      : "text-[var(--text-secondary)] hover:text-purple-300 hover:bg-[var(--surface-3)]"
                   }`}
                 >
                   <WaveSpeedIcon />
@@ -724,7 +695,7 @@ export function ModelSearchDialog({
               onChange={(e) =>
                 setCapabilityFilter(e.target.value as CapabilityFilter)
               }
-              className="px-3 py-2 text-sm bg-neutral-700 border border-neutral-600 rounded text-neutral-100 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+              className="px-3 py-2 text-sm bg-[var(--surface-3)] border border-[var(--border)] rounded text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--input-focus)]"
             >
               <option value="all">All Types</option>
               <option value="image">Image</option>
@@ -739,7 +710,7 @@ export function ModelSearchDialog({
               onClick={handleRefresh}
               disabled={isRefreshing || isLoading}
               title="Refresh models & schemas"
-              className="p-2 rounded text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg
                 className={`w-4 h-4${isRefreshing ? " animate-spin" : ""}`}
@@ -758,13 +729,13 @@ export function ModelSearchDialog({
           </div>
         </div>
 
-        {/* Model List */}
-        <div className="flex-1 overflow-y-auto p-4">
+        {/* Model List Body */}
+        <DialogBody className="px-4 py-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-48">
               <div className="flex flex-col items-center gap-3">
                 <svg
-                  className="w-8 h-8 animate-spin text-neutral-400"
+                  className="w-8 h-8 animate-spin text-[var(--text-secondary)]"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -782,7 +753,7 @@ export function ModelSearchDialog({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                <span className="text-sm text-neutral-400">
+                <span className="text-sm text-[var(--text-secondary)]">
                   Loading models...
                 </span>
               </div>
@@ -802,12 +773,12 @@ export function ModelSearchDialog({
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-              <p className="text-sm text-neutral-400 text-center max-w-xs">
+              <p className="text-sm text-[var(--text-secondary)] text-center max-w-xs">
                 {error}
               </p>
               <button
                 onClick={handleRefresh}
-                className="px-3 py-1.5 text-sm bg-neutral-700 hover:bg-neutral-600 text-neutral-200 rounded transition-colors"
+                className="px-3 py-1.5 text-sm bg-[var(--surface-3)] hover:bg-[var(--controls-hover)] text-[var(--text-primary)] rounded transition-colors"
               >
                 Try Again
               </button>
@@ -815,7 +786,7 @@ export function ModelSearchDialog({
           ) : models.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 gap-2">
               <svg
-                className="w-10 h-10 text-neutral-500"
+                className="w-10 h-10 text-[var(--text-muted)]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -827,8 +798,8 @@ export function ModelSearchDialog({
                   d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <p className="text-sm text-neutral-400">No models found</p>
-              <p className="text-xs text-neutral-500">
+              <p className="text-sm text-[var(--text-secondary)]">No models found</p>
+              <p className="text-xs text-[var(--text-muted)]">
                 Try adjusting your search or filters
               </p>
             </div>
@@ -836,8 +807,8 @@ export function ModelSearchDialog({
             <div className="space-y-4">
               {/* Recently Used Section */}
               {filteredRecentModels.length > 0 && !searchQuery && (
-                <div className="bg-neutral-700/30 rounded-lg p-3">
-                  <h3 className="text-xs font-medium text-neutral-500 mb-2">
+                <div className="bg-[var(--surface-3)]/30 rounded-lg p-3">
+                  <h3 className="text-xs font-medium text-[var(--text-muted)] mb-2">
                     Recently Used
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -857,10 +828,10 @@ export function ModelSearchDialog({
                         <button
                           key={`recent-${recent.modelId}`}
                           onClick={() => handleSelectModel(model)}
-                          className="flex items-center gap-3 p-3 bg-neutral-700/50 hover:bg-neutral-700 border border-neutral-600/30 hover:border-neutral-500 rounded-lg transition-colors text-left cursor-pointer group"
+                          className="flex items-center gap-3 p-3 bg-[var(--surface-3)]/50 hover:bg-[var(--surface-3)] border border-[var(--border)]/30 hover:border-[var(--input-focus)] rounded-lg transition-colors text-left cursor-pointer group"
                         >
                           {/* Small cover image */}
-                          <div className="w-10 h-10 rounded bg-neutral-600 overflow-hidden flex-shrink-0">
+                          <div className="w-10 h-10 rounded bg-[var(--border)] overflow-hidden flex-shrink-0">
                             {matchingModel?.coverImage ? (
                               <img
                                 src={matchingModel.coverImage}
@@ -870,7 +841,7 @@ export function ModelSearchDialog({
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <svg
-                                  className="w-5 h-5 text-neutral-500"
+                                  className="w-5 h-5 text-[var(--text-muted)]"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -886,7 +857,7 @@ export function ModelSearchDialog({
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium text-neutral-100 text-sm truncate">
+                            <div className="font-medium text-[var(--text-primary)] text-sm truncate">
                               {recent.displayName}
                             </div>
                             <span
@@ -904,66 +875,28 @@ export function ModelSearchDialog({
 
               {/* Main Model List */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {models.map((model) => (
-                <button
-                  key={`${model.provider}-${model.id}`}
-                  onClick={() => handleSelectModel(model)}
-                  className="flex items-start gap-3 p-4 bg-neutral-700/50 hover:bg-neutral-700 border border-neutral-600/50 hover:border-neutral-500 rounded-lg transition-colors text-left cursor-pointer group"
-                >
-                  {/* Cover Image - larger */}
-                  <div className="w-20 h-20 rounded bg-neutral-600 overflow-hidden flex-shrink-0">
-                    {model.coverImage ? (
-                      <img
-                        src={model.coverImage}
-                        alt={model.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // Hide broken images
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <svg
-                          className="w-8 h-8 text-neutral-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Model Info */}
-                  <div className="flex-1 min-w-0">
-                    {/* Model name with variant suffix for fal.ai */}
-                    <div className="font-medium text-neutral-100 text-sm truncate">
-                      {getDisplayName(model)}
-                    </div>
-
-                    {/* Model ID with link to provider page */}
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-xs text-neutral-500 truncate font-mono">
-                        {model.id}
-                      </span>
-                      {getModelUrl(model) && (
-                        <a
-                          href={getModelUrl(model)!}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-neutral-500 hover:text-neutral-300 transition-colors flex-shrink-0"
-                          title={`View on ${getProviderDisplayName(model.provider)}`}
-                        >
+                {models.map((model) => (
+                  <button
+                    key={`${model.provider}-${model.id}`}
+                    onClick={() => handleSelectModel(model)}
+                    className="flex items-start gap-3 p-4 bg-[var(--surface-3)]/50 hover:bg-[var(--surface-3)] border border-[var(--border)]/50 hover:border-[var(--input-focus)] rounded-lg transition-colors text-left cursor-pointer group"
+                  >
+                    {/* Cover Image - larger */}
+                    <div className="w-20 h-20 rounded bg-[var(--border)] overflow-hidden flex-shrink-0">
+                      {model.coverImage ? (
+                        <img
+                          src={model.coverImage}
+                          alt={model.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Hide broken images
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
                           <svg
-                            className="w-3 h-3"
+                            className="w-8 h-8 text-[var(--text-muted)]"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -971,65 +904,100 @@ export function ModelSearchDialog({
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                              strokeWidth={1.5}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                           </svg>
-                        </a>
+                        </div>
                       )}
                     </div>
 
-                    {/* Badges row */}
-                    <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                      <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded ${getProviderBadgeColor(model.provider)}`}
-                      >
-                        {getProviderDisplayName(model.provider)}
-                      </span>
-                      {getCapabilityBadges(model.capabilities)}
+                    {/* Model Info */}
+                    <div className="flex-1 min-w-0">
+                      {/* Model name with variant suffix for fal.ai */}
+                      <div className="font-medium text-[var(--text-primary)] text-sm truncate">
+                        {getDisplayName(model)}
+                      </div>
+
+                      {/* Model ID with link to provider page */}
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-xs text-[var(--text-muted)] truncate font-mono">
+                          {model.id}
+                        </span>
+                        {getModelUrl(model) && (
+                          <a
+                            href={getModelUrl(model)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors flex-shrink-0"
+                            title={`View on ${getProviderDisplayName(model.provider)}`}
+                          >
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                              />
+                            </svg>
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Badges row */}
+                      <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                        <span
+                          className={`text-[10px] px-1.5 py-0.5 rounded ${getProviderBadgeColor(model.provider)}`}
+                        >
+                          {getProviderDisplayName(model.provider)}
+                        </span>
+                        {getCapabilityBadges(model.capabilities)}
+                      </div>
+
+                      {/* Description - more lines */}
+                      {model.description && (
+                        <p className="mt-1.5 text-xs text-[var(--text-secondary)] line-clamp-3">
+                          {model.description}
+                        </p>
+                      )}
                     </div>
 
-                    {/* Description - more lines */}
-                    {model.description && (
-                      <p className="mt-1.5 text-xs text-neutral-400 line-clamp-3">
-                        {model.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Hover indicator */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 self-center">
-                    <svg
-                      className="w-5 h-5 text-neutral-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                  </div>
-                </button>
-              ))}
+                    {/* Hover indicator */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 self-center">
+                      <svg
+                        className="w-5 h-5 text-[var(--text-secondary)]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
-        </div>
+        </DialogBody>
 
         {/* Footer with model count */}
         {!isLoading && !error && models.length > 0 && (
-          <div className="px-6 py-3 border-t border-neutral-700 text-xs text-neutral-400">
+          <div className="shrink-0 px-6 py-3 border-t border-[var(--border)] text-xs text-[var(--text-secondary)]">
             {models.length} model{models.length !== 1 ? "s" : ""} found
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
-
-  // Use portal to render outside React Flow stacking context
-  return createPortal(dialogContent, document.body);
 }

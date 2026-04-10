@@ -409,9 +409,9 @@ export function AnnotationModal() {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] bg-neutral-950 flex flex-col">
+    <div className="fixed inset-0 z-[100] bg-[var(--modal-bg)] flex flex-col">
       {/* Top Bar */}
-      <div className="h-14 bg-neutral-900 flex items-center justify-between px-4 border-b border-neutral-800">
+      <div className="h-14 bg-[var(--surface-1)] flex items-center justify-between px-4 border-b border-[var(--border)]">
         <div className="flex items-center gap-1.5">
           {tools.map((tool) => (
             <button
@@ -420,25 +420,25 @@ export function AnnotationModal() {
               className={`px-3.5 py-1.5 text-xs font-medium rounded transition-colors ${
                 currentTool === tool.type
                   ? "bg-[var(--accent)] text-[var(--btn-primary-text)]"
-                  : "text-neutral-400 hover:text-neutral-50"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               {tool.label}
             </button>
           ))}
 
-          <div className="w-px h-6 bg-neutral-700 mx-3" />
+          <div className="w-px h-6 bg-[var(--border)] mx-3" />
 
-          <button onClick={undo} className="px-3 py-1.5 text-xs text-neutral-400 hover:text-neutral-50">Undo</button>
-          <button onClick={redo} className="px-3 py-1.5 text-xs text-neutral-400 hover:text-neutral-50">Redo</button>
+          <button onClick={undo} className="px-3 py-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Undo</button>
+          <button onClick={redo} className="px-3 py-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Redo</button>
 
-          <div className="w-px h-6 bg-neutral-700 mx-3" />
+          <div className="w-px h-6 bg-[var(--border)] mx-3" />
 
-          <button onClick={clearAnnotations} className="px-3 py-1.5 text-xs text-neutral-400 hover:text-red-400">Clear</button>
+          <button onClick={clearAnnotations} className="px-3 py-1.5 text-xs text-[var(--text-secondary)] hover:text-red-400">Clear</button>
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={closeModal} className="px-4 py-1.5 text-xs font-medium text-neutral-400 hover:text-neutral-50">
+          <button onClick={closeModal} className="px-4 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
             Cancel
           </button>
           <button onClick={handleDone} className="px-4 py-1.5 text-xs font-medium bg-[var(--accent)] text-[var(--btn-primary-text)] rounded hover:bg-[var(--accent-hover)]">
@@ -448,7 +448,7 @@ export function AnnotationModal() {
       </div>
 
       {/* Canvas Container */}
-      <div ref={containerRef} className="flex-1 overflow-hidden bg-neutral-900">
+      <div ref={containerRef} className="flex-1 overflow-hidden bg-[var(--surface-1)]">
         <Stage
           ref={stageRef}
           width={containerRef.current?.clientWidth || 800}
@@ -475,33 +475,33 @@ export function AnnotationModal() {
       </div>
 
       {/* Bottom Options Bar */}
-      <div className="h-14 bg-neutral-900 flex items-center justify-center gap-6 px-4 border-t border-neutral-800">
+      <div className="h-14 bg-[var(--surface-1)] flex items-center justify-center gap-6 px-4 border-t border-[var(--border)]">
         {/* Colors */}
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-neutral-500 uppercase tracking-wide mr-1">Color</span>
+          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide mr-1">Color</span>
           {COLORS.map((color) => (
             <button
               key={color}
               onClick={() => setToolOptions({ strokeColor: color })}
               className={`w-6 h-6 rounded-full transition-transform ${
-                toolOptions.strokeColor === color ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-neutral-900 scale-110" : "hover:scale-105"
+                toolOptions.strokeColor === color ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--surface-1)] scale-110" : "hover:scale-105"
               }`}
               style={{ backgroundColor: color }}
             />
           ))}
         </div>
 
-        <div className="w-px h-6 bg-neutral-700" />
+        <div className="w-px h-6 bg-[var(--border)]" />
 
         {/* Stroke Width */}
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-neutral-500 uppercase tracking-wide mr-1">Size</span>
+          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide mr-1">Size</span>
           {STROKE_WIDTHS.map((width) => (
             <button
               key={width}
               onClick={() => setToolOptions({ strokeWidth: width })}
               className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
-                toolOptions.strokeWidth === width ? "bg-neutral-700" : "hover:bg-neutral-800"
+                toolOptions.strokeWidth === width ? "bg-[var(--surface-3)]" : "hover:bg-[var(--surface-2)]"
               }`}
             >
               <div className="rounded-full" style={{ width: width * 1.5, height: width * 1.5, background: "var(--accent)" }} />
@@ -509,13 +509,13 @@ export function AnnotationModal() {
           ))}
         </div>
 
-        <div className="w-px h-6 bg-neutral-700" />
+        <div className="w-px h-6 bg-[var(--border)]" />
 
         {/* Fill Toggle */}
         <button
           onClick={() => setToolOptions({ fillColor: toolOptions.fillColor ? null : toolOptions.strokeColor })}
           className={`px-3 py-1.5 text-[10px] uppercase tracking-wide rounded transition-colors ${
-            toolOptions.fillColor ? "bg-neutral-700 text-neutral-50" : "text-neutral-500 hover:text-neutral-50"
+            toolOptions.fillColor ? "bg-[var(--surface-3)] text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
           }`}
         >
           Fill
@@ -523,9 +523,9 @@ export function AnnotationModal() {
 
         {/* Zoom */}
         <div className="flex items-center gap-2 ml-auto">
-          <button onClick={() => setScale(Math.max(scale - 0.1, 0.1))} className="w-7 h-7 rounded text-neutral-400 hover:text-neutral-50 text-sm">-</button>
-          <span className="text-[10px] text-neutral-400 w-10 text-center">{Math.round(scale * 100)}%</span>
-          <button onClick={() => setScale(Math.min(scale + 0.1, 5))} className="w-7 h-7 rounded text-neutral-400 hover:text-neutral-50 text-sm">+</button>
+          <button onClick={() => setScale(Math.max(scale - 0.1, 0.1))} className="w-7 h-7 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm">-</button>
+          <span className="text-[10px] text-[var(--text-secondary)] w-10 text-center">{Math.round(scale * 100)}%</span>
+          <button onClick={() => setScale(Math.min(scale + 0.1, 5))} className="w-7 h-7 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm">+</button>
         </div>
       </div>
 

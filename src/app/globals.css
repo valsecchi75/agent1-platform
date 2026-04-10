@@ -1210,6 +1210,119 @@ html[data-theme="light"][data-skin="ocean"] {
   --btn-primary-text: #ffffff;
 }
 
+/* ── Ignite — Pure black, warm orange, agno-inspired minimal ── */
+html[data-skin="ignite"] {
+  --tw-neutral-50:  #f0f0f0;
+  --tw-neutral-100: #d0d0d0;
+  --tw-neutral-200: #999999;
+  --tw-neutral-300: #777777;
+  --tw-neutral-400: #555555;
+  --tw-neutral-500: #444444;
+  --tw-neutral-600: #333333;
+  --tw-neutral-700: #222222;
+  --tw-neutral-800: #151515;
+  --tw-neutral-900: #0e0e0e;
+  --tw-neutral-950: #080808;
+
+  --background: #080808;
+  --foreground: #f0f0f0;
+  --canvas-bg: #0a0a0a;
+
+  --surface-1: #0e0e0e;
+  --surface-2: #151515;
+  --surface-3: #1e1e1e;
+  --border: #252525;
+  --border-subtle: #1a1a1a;
+
+  --text-primary: #f0f0f0;
+  --text-secondary: #999999;
+  --text-muted: #555555;
+
+  --accent: #E8530E;
+  --accent-hover: #FF6B2B;
+  --accent-vivid: #FF8040;
+  --accent-subtle: rgba(232, 83, 14, 0.12);
+
+  --header-bg: #080808;
+  --header-border: #1a1a1a;
+
+  --node-bg: #0e0e0e;
+  --node-border: #252525;
+  --node-header: #151515;
+
+  --controls-bg: #151515;
+  --controls-border: #252525;
+  --controls-hover: #1e1e1e;
+
+  --edge-color: #333333;
+  --edge-selected: #E8530E;
+
+  --modal-bg: #0e0e0e;
+  --modal-border: #252525;
+  --input-bg: #0a0a0a;
+  --input-border: #252525;
+  --input-focus: #444444;
+  --scrollbar-track: #0e0e0e;
+  --scrollbar-thumb: #333333;
+  --scrollbar-thumb-hover: #444444;
+  --btn-secondary-bg: #1e1e1e;
+  --btn-secondary-text: #999999;
+  --btn-hover: #282828;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="ignite"] {
+  --tw-neutral-50:  #111111;
+  --tw-neutral-100: #1a1a1a;
+  --tw-neutral-200: #333333;
+  --tw-neutral-300: #555555;
+  --tw-neutral-400: #777777;
+  --tw-neutral-500: #888888;
+  --tw-neutral-600: #aaaaaa;
+  --tw-neutral-700: #d0d0d0;
+  --tw-neutral-800: #f0f0f0;
+  --tw-neutral-900: #f8f8f8;
+  --tw-neutral-950: #fcfcfc;
+
+  --background: #fcfcfc;
+  --foreground: #111111;
+  --canvas-bg: #f0f0f0;
+  --surface-1: #ffffff;
+  --surface-2: #f8f8f8;
+  --surface-3: #f0f0f0;
+  --border: #e0e0e0;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-muted: #888888;
+  --accent: #C0440A;
+  --accent-hover: #D85010;
+  --accent-vivid: #E86020;
+  --accent-subtle: rgba(192, 68, 10, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #e8e8e8;
+  --node-bg: #ffffff;
+  --node-border: #e0e0e0;
+  --controls-bg: #ffffff;
+  --controls-border: #e0e0e0;
+  --controls-hover: #f0f0f0;
+
+  --modal-bg: #ffffff;
+  --modal-border: #e0e0e0;
+  --input-bg: #f8f8f8;
+  --input-border: #e0e0e0;
+  --input-focus: #aaaaaa;
+  --scrollbar-track: #f0f0f0;
+  --scrollbar-thumb: #cccccc;
+  --scrollbar-thumb-hover: #aaaaaa;
+  --btn-secondary-bg: #f0f0f0;
+  --btn-secondary-text: #555555;
+  --btn-hover: #e8e8e8;
+  --edge-color: #cccccc;
+  --edge-selected: #C0440A;
+
+  --btn-primary-text: #ffffff;
+}
+
 /* ══════════════════════════════════════════════════
    BRAND SKIN APPLICATION — Forces --accent onto UI elements
    These rules make the skin color VISIBLE across the app.
@@ -1281,12 +1394,14 @@ html[data-theme="light"][data-skin="ocean"] {
   z-index: -1;
 }
 
-/* ── WELCOME MODAL — Rotating light glow border (same as login/nodes) ── */
+/* ── MODAL GLOW — Rotating light glow border (shared by all modals) ── */
+/* .modal-glow inherits position:fixed from Tailwind — no override needed */
 .welcome-glow {
   position: relative;
 }
 
 /* Rotating conic-gradient ring — 2px visible border sweeping around the modal */
+.modal-glow::before,
 .welcome-glow::before {
   content: "";
   position: absolute;
@@ -1313,6 +1428,7 @@ html[data-theme="light"][data-skin="ocean"] {
 }
 
 /* Soft outer ambient glow */
+.modal-glow::after,
 .welcome-glow::after {
   content: "";
   position: absolute;

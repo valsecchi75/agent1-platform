@@ -23,6 +23,7 @@ interface LogoSet {
 
 // Color swatches — shown in header, changes with skin
 const BRAND_LOGOS: Record<string, LogoSet> = {
+  'ignite':   { dark: '/skins/ignite.svg',       light: '/skins/ignite.svg' },
   'aurora':   { dark: '/skins/aurora-dark.svg',  light: '/skins/aurora-light.svg' },
   'ember':    { dark: '/skins/ember.svg',        light: '/skins/ember.svg' },
   'matrix':   { dark: '/skins/matrix.svg',       light: '/skins/matrix.svg' },

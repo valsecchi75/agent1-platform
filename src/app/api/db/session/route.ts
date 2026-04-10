@@ -1,45 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isDbAvailable, dbUnavailableResponse } from "@/lib/db-guard";
-import { saveUserSession, loadUserSession, getDb } from "@/lib/db";
-
-/**
- * Resolve "admin" username → actual UUID (cached).
- */
-let cachedAdminId: string | null = null;
-function resolveAdminId(): string {
-  if (cachedAdminId) return cachedAdminId;
-  try {
-    const db = getDb();
-    const row = db
-      .prepare("SELECT id FROM users WHERE username = 'admin' LIMIT 1")
-      .get() as { id: string } | undefined;
-    if (row) {
-      cachedAdminId = row.id;
-      return row.id;
-    }
-  } catch { /* DB unavailable */ }
-  return "admin";
-}
+import { saveUserSession, loadUserSession } from "@/lib/db";
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
 
 /**
  * GET /api/db/session — Load the user's last saved editor session.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (!isDbAvailable()) return dbUnavailableResponse();
 
   try {
-    const userId = resolveAdminId();
-    const session = loadUserSession(userId);
+    const user = await getRequestUser(request);
+    const session = loadUserSession(user.userId);
 
     return NextResponse.json({
       success: true,
       session,
     });
-  } catch (error) {
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to load session",
+        error: err instanceof Error ? err.message : "Failed to load session",
       },
       { status: 500 }
     );
@@ -55,17 +40,20 @@ export async function POST(request: NextRequest) {
   if (!isDbAvailable()) return dbUnavailableResponse();
 
   try {
+    const user = await getRequestUser(request);
     const body = await request.json();
-    const userId = resolveAdminId();
 
-    saveUserSession(userId, body);
+    saveUserSession(user.userId, body);
 
     return NextResponse.json({ success: true }, { status: 200 });
-  } catch (error) {
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to save session",
+        error: err instanceof Error ? err.message : "Failed to save session",
       },
       { status: 500 }
     );

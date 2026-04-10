@@ -82,3 +82,10 @@ release/Token.txt
 
 # Large template files (contain base64 images, exceed GitHub 50MB warning)
 storage/templates/*/template.json
+
+# Archived/legacy files
+/_old/
+
+# Stale build backups
+/.next.bak/
+/.next.old/

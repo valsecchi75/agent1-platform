@@ -1,0 +1,32 @@
+{
+  "slug": "brand-visual-builder",
+  "name": "Brand Visual Builder",
+  "description": "Builds brand-coherent visuals by combining product references, selected talent, pose direction, and mood imagery into a polished final image.",
+  "author": "SV75",
+  "createdAt": "2026-04-02T14:31:38.224Z",
+  "updatedAt": "2026-04-02T14:31:38.224Z",
+  "source": "remote",
+  "sourceUrl": "https://raw.githubusercontent.com/valsecchi75/agent1/main/",
+  "registryVersion": "1.0.0",
+  "category": "advanced",
+  "tags": [
+    "Gemini",
+    "LLM",
+    "Nano Banana",
+    "Prompt Constructor",
+    "Talent"
+  ],
+  "techTags": [
+    "Custom: morpheusModelManagement",
+    "LLM",
+    "Nano Banana",
+    "Prompt Constructor"
+  ],
+  "nodeCount": 15,
+  "previewFrames": [
+    "generated-1774892008382.jpg",
+    "generated-1774892512523.jpg",
+    "generated-1774894031233.jpg",
+    "generated-1774936100924.jpg"
+  ]
+}

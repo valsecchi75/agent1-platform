@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { usePromptAutocomplete } from "@/hooks/usePromptAutocomplete";
 import { AvailableVariable } from "@/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+  DialogButton,
+} from "@/components/ui/dialog";
 
 const FONT_SIZE_STORAGE_KEY = "prompt-constructor-editor-font-size";
 const DEFAULT_FONT_SIZE = 14;
@@ -100,26 +109,6 @@ export const PromptConstructorEditorModal: React.FC<PromptConstructorEditorModal
     }
   }, [hasUnsavedChanges, onClose]);
 
-  // Escape key: close autocomplete first, then modal
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (showAutocomplete) {
-          closeAutocomplete();
-        } else {
-          handleAttemptClose();
-        }
-      }
-    };
-
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, handleAttemptClose, showAutocomplete, closeAutocomplete]);
-
   const handleSubmit = useCallback(() => {
     onSubmit(template);
     onClose();
@@ -129,27 +118,9 @@ export const PromptConstructorEditorModal: React.FC<PromptConstructorEditorModal
     setFontSize(parseInt(e.target.value, 10));
   }, []);
 
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) {
-        handleAttemptClose();
-      }
-    },
-    [handleAttemptClose]
-  );
-
   const handleDismissConfirmation = useCallback(() => {
     setShowConfirmation(false);
   }, []);
-
-  const handleConfirmationBackdropClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) {
-        handleDismissConfirmation();
-      }
-    },
-    [handleDismissConfirmation]
-  );
 
   // Insert @varName at cursor when clicking a variable pill
   const handleVariablePillClick = useCallback(
@@ -171,174 +142,154 @@ export const PromptConstructorEditorModal: React.FC<PromptConstructorEditorModal
     [template]
   );
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
-      onClick={handleBackdropClick}
-    >
-      <div className="relative bg-neutral-800 border border-neutral-700 rounded-lg shadow-2xl w-full max-w-3xl h-[85vh] flex flex-col mx-4">
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4 flex items-center gap-3">
-          <h2 className="text-xl font-semibold text-neutral-100">Edit Prompt Constructor</h2>
-          {unresolvedVars.length > 0 && (
-            <span className="px-2 py-0.5 bg-amber-900/30 border border-amber-700/50 rounded text-[11px] text-amber-400">
-              Unresolved: {unresolvedVars.map((v) => `@${v}`).join(", ")}
-            </span>
-          )}
-        </div>
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open) handleAttemptClose();
+      }}>
+        <DialogContent size="lg">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <DialogTitle>Edit Prompt Constructor</DialogTitle>
+              {unresolvedVars.length > 0 && (
+                <span className="px-2 py-0.5 bg-amber-900/30 border border-amber-700/50 rounded text-[11px] text-amber-400">
+                  Unresolved: {unresolvedVars.map((v) => `@${v}`).join(", ")}
+                </span>
+              )}
+            </div>
+          </DialogHeader>
 
-        {/* Box containing toolbar and textarea */}
-        <div className="mx-6 flex-1 flex flex-col border border-neutral-700 rounded bg-neutral-900/30 overflow-hidden mb-4">
-          {/* Toolbar */}
-          <div className="min-h-[48px] bg-neutral-900 border-b border-neutral-700 flex items-center px-4 gap-3 shrink-0 flex-wrap py-2">
-            {/* Font Size Control */}
-            <select
-              value={fontSize}
-              onChange={handleFontSizeChange}
-              className="text-sm py-1 px-2 border border-neutral-700 rounded bg-neutral-900/50 focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
-            >
-              {FONT_SIZE_OPTIONS.map((size) => (
-                <option key={size} value={size}>
-                  {size}px
-                </option>
-              ))}
-            </select>
+          <DialogBody className="flex flex-col gap-4 p-0">
+            {/* Box containing toolbar and textarea */}
+            <div className="flex-1 flex flex-col border border-[var(--border)] rounded bg-[var(--surface-1)]/30 overflow-hidden mx-6">
+              {/* Toolbar */}
+              <div className="min-h-[48px] bg-[var(--surface-1)] border-b border-[var(--border)] flex items-center px-4 gap-3 shrink-0 flex-wrap py-2">
+                {/* Font Size Control */}
+                <select
+                  value={fontSize}
+                  onChange={handleFontSizeChange}
+                  className="text-sm py-1 px-2 border border-[var(--border)] rounded bg-[var(--surface-1)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--input-focus)] text-[var(--text-secondary)]"
+                >
+                  {FONT_SIZE_OPTIONS.map((size) => (
+                    <option key={size} value={size}>
+                      {size}px
+                    </option>
+                  ))}
+                </select>
 
-            {/* Divider */}
-            {availableVariables.length > 0 && (
-              <div className="w-px h-5 bg-neutral-700" />
-            )}
+                {/* Divider */}
+                {availableVariables.length > 0 && (
+                  <div className="w-px h-5 bg-[var(--border)]" />
+                )}
 
-            {/* Variable pills */}
-            {availableVariables.map((v) => (
-              <button
-                key={v.nodeId}
-                onClick={() => handleVariablePillClick(v.name)}
-                className="px-2 py-0.5 text-[11px] text-[var(--accent)] bg-[var(--accent-subtle)] border border-[var(--accent)]/30 rounded hover:bg-[var(--accent-subtle)] transition-colors"
-                title={v.value || "(empty)"}
-              >
-                @{v.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Textarea with autocomplete */}
-          <div className="relative flex-1 flex flex-col">
-            <textarea
-              ref={textareaRef}
-              value={template}
-              onChange={autocompleteHandleChange}
-              onKeyDown={autocompleteHandleKeyDown}
-              placeholder="Type @ to insert variables..."
-              className="nodrag nopan nowheel flex-1 w-full p-6 leading-relaxed text-neutral-100 bg-transparent border-0 resize-none focus:outline-none placeholder:text-neutral-500"
-              style={{ fontSize: `${fontSize}px` }}
-              autoFocus
-            />
-
-            {/* Autocomplete dropdown */}
-            {showAutocomplete && filteredAutocompleteVars.length > 0 && (
-              <div
-                className="absolute z-10 bg-neutral-800 border border-neutral-600 rounded shadow-xl max-h-40 overflow-y-auto"
-                style={{
-                  top: autocompletePosition.top + 16,
-                  left: autocompletePosition.left + 24,
-                }}
-              >
-                {filteredAutocompleteVars.map((variable, index) => (
+                {/* Variable pills */}
+                {availableVariables.map((v) => (
                   <button
-                    key={variable.nodeId}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleAutocompleteSelect(variable.name);
-                    }}
-                    className={`w-full px-3 py-2 text-left text-[11px] flex flex-col gap-0.5 transition-colors ${
-                      index === selectedAutocompleteIndex
-                        ? "bg-neutral-700 text-neutral-100"
-                        : "text-neutral-300 hover:bg-neutral-700"
-                    }`}
+                    key={v.nodeId}
+                    onClick={() => handleVariablePillClick(v.name)}
+                    className="px-2 py-0.5 text-[11px] text-[var(--accent)] bg-[var(--accent-subtle)] border border-[var(--accent)]/30 rounded hover:bg-[var(--accent-subtle)] transition-colors"
+                    title={v.value || "(empty)"}
                   >
-                    <div className="font-medium text-[var(--accent)]">@{variable.name}</div>
-                    <div className="text-neutral-500 truncate max-w-[200px]">
-                      {variable.value || "(empty)"}
-                    </div>
+                    @{v.name}
                   </button>
                 ))}
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Resolved preview */}
-        {availableVariables.length > 0 && (
-          <div className="mx-6 mb-4 border border-neutral-700 rounded bg-neutral-900/30 overflow-hidden">
-            <div className="px-4 py-2 bg-neutral-900 border-b border-neutral-700 text-[11px] text-neutral-400 uppercase tracking-wide font-semibold">
-              Resolved Preview
-            </div>
-            <div className="p-4 text-sm text-neutral-300 whitespace-pre-wrap max-h-32 overflow-y-auto leading-relaxed">
-              {resolvedPreview || <span className="text-neutral-500 italic">Empty template</span>}
-            </div>
-          </div>
-        )}
+              {/* Textarea with autocomplete */}
+              <div className="relative flex-1 flex flex-col">
+                <textarea
+                  ref={textareaRef}
+                  value={template}
+                  onChange={autocompleteHandleChange}
+                  onKeyDown={autocompleteHandleKeyDown}
+                  placeholder="Type @ to insert variables..."
+                  className="nodrag nopan nowheel flex-1 w-full p-6 leading-relaxed text-[var(--text-primary)] bg-transparent border-0 resize-none focus:outline-none placeholder:text-[var(--text-muted)]"
+                  style={{ fontSize: `${fontSize}px` }}
+                  autoFocus
+                />
 
-        {/* Footer with buttons */}
-        <div className="flex justify-end gap-3 px-6 pb-6">
-          <button
-            onClick={handleAttemptClose}
-            className="px-4 py-2 text-sm font-medium text-neutral-300 bg-neutral-700 hover:bg-neutral-600 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-neutral-500"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 text-sm font-medium text-[var(--btn-primary-text)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] rounded transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-          >
-            Submit
-          </button>
-        </div>
-
-        {/* Confirmation overlay */}
-        {showConfirmation && (
-          <div
-            className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg"
-            onClick={handleConfirmationBackdropClick}
-          >
-            <div className="relative bg-neutral-800 border border-neutral-600 rounded-lg p-6 mx-4 max-w-sm shadow-xl">
-              <button
-                onClick={handleDismissConfirmation}
-                className="absolute top-3 right-3 text-neutral-400 hover:text-neutral-200 transition-colors focus:outline-none"
-                aria-label="Close"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-
-              <p className="text-neutral-100 text-center mb-6">You have unsaved changes</p>
-              <div className="flex justify-center gap-3">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-neutral-300 bg-neutral-700 hover:bg-neutral-600 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-neutral-500"
-                >
-                  Discard
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  className="px-4 py-2 text-sm font-medium text-[var(--btn-primary-text)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] rounded transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                >
-                  Submit
-                </button>
+                {/* Autocomplete dropdown */}
+                {showAutocomplete && filteredAutocompleteVars.length > 0 && (
+                  <div
+                    className="absolute z-10 bg-[var(--surface-2)] border border-[var(--border)] rounded shadow-xl max-h-40 overflow-y-auto"
+                    style={{
+                      top: autocompletePosition.top + 16,
+                      left: autocompletePosition.left + 24,
+                    }}
+                  >
+                    {filteredAutocompleteVars.map((variable, index) => (
+                      <button
+                        key={variable.nodeId}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleAutocompleteSelect(variable.name);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-[11px] flex flex-col gap-0.5 transition-colors ${
+                          index === selectedAutocompleteIndex
+                            ? "bg-[var(--surface-3)] text-[var(--text-primary)]"
+                            : "text-[var(--text-secondary)] hover:bg-[var(--surface-3)]"
+                        }`}
+                      >
+                        <div className="font-medium text-[var(--accent)]">@{variable.name}</div>
+                        <div className="text-[var(--text-muted)] truncate max-w-[200px]">
+                          {variable.value || "(empty)"}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </div>
+
+            {/* Resolved preview */}
+            {availableVariables.length > 0 && (
+              <div className="mx-6 border border-[var(--border)] rounded bg-[var(--surface-1)]/30 overflow-hidden">
+                <div className="px-4 py-2 bg-[var(--surface-1)] border-b border-[var(--border)] text-[11px] text-[var(--text-secondary)] uppercase tracking-wide font-semibold">
+                  Resolved Preview
+                </div>
+                <div className="p-4 text-sm text-[var(--text-secondary)] whitespace-pre-wrap max-h-32 overflow-y-auto leading-relaxed">
+                  {resolvedPreview || <span className="text-[var(--text-muted)] italic">Empty template</span>}
+                </div>
+              </div>
+            )}
+          </DialogBody>
+
+          <DialogFooter>
+            <DialogButton variant="ghost" onClick={handleAttemptClose}>
+              Cancel
+            </DialogButton>
+            <DialogButton variant="primary" onClick={handleSubmit}>
+              Submit
+            </DialogButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmation} onOpenChange={(open) => {
+        if (!open) handleDismissConfirmation();
+      }}>
+        <DialogContent size="sm">
+          <DialogHeader>
+            <DialogTitle>Unsaved Changes</DialogTitle>
+          </DialogHeader>
+
+          <DialogBody className="text-center">
+            <p className="text-[var(--text-primary)]">
+              You have unsaved changes
+            </p>
+          </DialogBody>
+
+          <DialogFooter>
+            <DialogButton variant="ghost" onClick={onClose}>
+              Discard
+            </DialogButton>
+            <DialogButton variant="primary" onClick={handleSubmit}>
+              Submit
+            </DialogButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
