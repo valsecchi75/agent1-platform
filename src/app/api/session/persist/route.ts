@@ -57,9 +57,12 @@ export async function POST(request: NextRequest) {
       hasUnsavedChanges: boolean;
     }> = [];
 
+    // Resolve userId first
+    const userId = resolveAdminId();
+
     for (const tab of tabs) {
       if (tab.snapshot) {
-        saveSessionWorkflow(tab.id, tab.snapshot);
+        saveSessionWorkflow(userId, tab.id, tab.snapshot);
       }
       tabMeta.push({
         id: tab.id,
@@ -69,11 +72,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Clean up old session files that no longer correspond to open tabs
-    cleanupOldSessionFiles(tabs.map((t: { id: string }) => t.id));
+    cleanupOldSessionFiles(userId, tabs.map((t: { id: string }) => t.id));
 
     // Store lightweight metadata in DB (no base64, just tab IDs + labels)
     if (isDbAvailable()) {
-      const userId = resolveAdminId();
       saveUserSession(userId, {
         tabs: tabMeta,
         activeTabId,

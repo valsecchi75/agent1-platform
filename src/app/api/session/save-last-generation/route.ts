@@ -1,7 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDbAvailable, dbUnavailableResponse } from "@/lib/db-guard";
+import { getDb } from "@/lib/db";
 import { saveLastGenerationWorkflow } from "@/lib/sessionPersistence";
 
 export const maxDuration = 300;
+
+/**
+ * Resolve "admin" username → actual UUID (cached).
+ */
+let cachedAdminId: string | null = null;
+function resolveAdminId(): string {
+  if (cachedAdminId) return cachedAdminId;
+  try {
+    const db = getDb();
+    const row = db
+      .prepare("SELECT id FROM users WHERE username = 'admin' LIMIT 1")
+      .get() as { id: string } | undefined;
+    if (row) {
+      cachedAdminId = row.id;
+      return row.id;
+    }
+  } catch {
+    /* DB unavailable */
+  }
+  return "admin";
+}
 
 /**
  * POST /api/session/save-last-generation
@@ -25,7 +48,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const filePath = saveLastGenerationWorkflow(workflow);
+    const userId = resolveAdminId();
+    const filePath = saveLastGenerationWorkflow(userId, workflow);
 
     return NextResponse.json({
       success: true,

@@ -58,7 +58,7 @@ export async function GET() {
 
     // Load each tab's workflow from disk (with image hydration)
     const hydratedTabs = meta.tabs.map((tabMeta) => {
-      const snapshot = loadSessionWorkflow(tabMeta.id);
+      const snapshot = loadSessionWorkflow(userId, tabMeta.id);
       return {
         id: tabMeta.id,
         label: tabMeta.label,

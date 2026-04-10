@@ -7,7 +7,7 @@
  * back to base64 data URLs.
  *
  * Storage layout:
- *   storage/workflows/__session/
+ *   storage/users/{userId}/workflows/__session/
  *     tab_{id}.json           — workflow snapshot per tab (no base64)
  *     images/{hash}.{ext}     — extracted images (deduplicated by content hash)
  */
@@ -17,14 +17,22 @@ import * as path from "path";
 import crypto from "crypto";
 
 const STORAGE_DIR = path.resolve(process.cwd(), "storage");
-const SESSION_DIR = path.join(STORAGE_DIR, "workflows", "__session");
-const SESSION_IMAGES_DIR = path.join(SESSION_DIR, "images");
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function ensureSessionDirs(): void {
-  if (!fs.existsSync(SESSION_DIR)) fs.mkdirSync(SESSION_DIR, { recursive: true });
-  if (!fs.existsSync(SESSION_IMAGES_DIR)) fs.mkdirSync(SESSION_IMAGES_DIR, { recursive: true });
+function getSessionDir(userId: string): string {
+  return path.join(STORAGE_DIR, "users", userId, "workflows", "__session");
+}
+
+function getSessionImagesDir(userId: string): string {
+  return path.join(getSessionDir(userId), "images");
+}
+
+function ensureSessionDirs(userId: string): void {
+  const sessionDir = getSessionDir(userId);
+  const imagesDir = getSessionImagesDir(userId);
+  if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
+  if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 }
 
 function isBase64DataUrl(str: unknown): str is string {
@@ -46,11 +54,11 @@ function extractBase64(dataUrl: string): { buffer: Buffer; ext: string; mime: st
  * Returns a session reference string: "session-ref:{filename}"
  * Deduplicates by MD5 content hash.
  */
-function saveSessionImage(dataUrl: string): string {
+function saveSessionImage(dataUrl: string, userId: string): string {
   const { buffer, ext } = extractBase64(dataUrl);
   const hash = crypto.createHash("md5").update(buffer).digest("hex");
   const filename = `${hash}.${ext}`;
-  const filePath = path.join(SESSION_IMAGES_DIR, filename);
+  const filePath = path.join(getSessionImagesDir(userId), filename);
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, buffer);
   }
@@ -61,10 +69,10 @@ function saveSessionImage(dataUrl: string): string {
  * Load a session image reference back to a base64 data URL.
  * Returns null if the file doesn't exist.
  */
-function loadSessionImage(ref: string): string | null {
+function loadSessionImage(ref: string, userId: string): string | null {
   if (!ref || !ref.startsWith("session-ref:")) return null;
   const filename = ref.slice("session-ref:".length);
-  const filePath = path.join(SESSION_IMAGES_DIR, filename);
+  const filePath = path.join(getSessionImagesDir(userId), filename);
   if (!fs.existsSync(filePath)) return null;
   const buffer = fs.readFileSync(filePath);
   const ext = path.extname(filename).slice(1);
@@ -80,21 +88,21 @@ function loadSessionImage(ref: string): string | null {
  * Adds `_session*Ref` fields for each extracted image.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function externalizeNodeData(data: any): any {
+function externalizeNodeData(data: any, userId: string): any {
   if (!data) return data;
   const d = { ...data };
 
   // ── Single image fields ──────────────────────────────
   if (isBase64DataUrl(d.image)) {
-    d._sessionImageRef = saveSessionImage(d.image);
+    d._sessionImageRef = saveSessionImage(d.image, userId);
     d.image = null;
   }
   if (isBase64DataUrl(d.sourceImage)) {
-    d._sessionSourceImageRef = saveSessionImage(d.sourceImage);
+    d._sessionSourceImageRef = saveSessionImage(d.sourceImage, userId);
     d.sourceImage = null;
   }
   if (isBase64DataUrl(d.outputImage)) {
-    d._sessionOutputImageRef = saveSessionImage(d.outputImage);
+    d._sessionOutputImageRef = saveSessionImage(d.outputImage, userId);
     d.outputImage = null;
   }
 
@@ -105,7 +113,7 @@ function externalizeNodeData(data: any): any {
       : [];
     d.inputImages = d.inputImages.map((img: unknown, i: number) => {
       if (isBase64DataUrl(img)) {
-        refs[i] = saveSessionImage(img);
+        refs[i] = saveSessionImage(img, userId);
         return null;
       }
       return img;
@@ -121,7 +129,7 @@ function externalizeNodeData(data: any): any {
       if (item && isBase64DataUrl(item.base64)) {
         return {
           ...item,
-          _sessionBase64Ref: saveSessionImage(item.base64 as string),
+          _sessionBase64Ref: saveSessionImage(item.base64 as string, userId),
           base64: null,
         };
       }
@@ -133,7 +141,7 @@ function externalizeNodeData(data: any): any {
   if (Array.isArray(d.outputGallery)) {
     d.outputGallery = d.outputGallery.map((img: unknown) => {
       if (isBase64DataUrl(img)) {
-        return saveSessionImage(img);
+        return saveSessionImage(img, userId);
       }
       return img;
     });
@@ -148,13 +156,13 @@ function externalizeNodeData(data: any): any {
  * Also loads images from storagePath if available but image is null.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function hydrateNodeData(data: any): any {
+function hydrateNodeData(data: any, userId: string): any {
   if (!data) return data;
   const d = { ...data };
 
   // ── Single image fields ──────────────────────────────
   if (d._sessionImageRef) {
-    d.image = loadSessionImage(d._sessionImageRef) || d.image;
+    d.image = loadSessionImage(d._sessionImageRef, userId) || d.image;
     delete d._sessionImageRef;
   }
 
@@ -170,11 +178,11 @@ function hydrateNodeData(data: any): any {
     } catch { /* ignore - file may have been deleted */ }
   }
   if (d._sessionSourceImageRef) {
-    d.sourceImage = loadSessionImage(d._sessionSourceImageRef) || d.sourceImage;
+    d.sourceImage = loadSessionImage(d._sessionSourceImageRef, userId) || d.sourceImage;
     delete d._sessionSourceImageRef;
   }
   if (d._sessionOutputImageRef) {
-    d.outputImage = loadSessionImage(d._sessionOutputImageRef) || d.outputImage;
+    d.outputImage = loadSessionImage(d._sessionOutputImageRef, userId) || d.outputImage;
     delete d._sessionOutputImageRef;
   }
 
@@ -183,7 +191,7 @@ function hydrateNodeData(data: any): any {
     if (!Array.isArray(d.inputImages)) d.inputImages = [];
     d._sessionInputImageRefs.forEach((ref: string, i: number) => {
       if (ref) {
-        const img = loadSessionImage(ref);
+        const img = loadSessionImage(ref, userId);
         if (img) d.inputImages[i] = img;
       }
     });
@@ -194,7 +202,7 @@ function hydrateNodeData(data: any): any {
   if (Array.isArray(d.imageHistory)) {
     d.imageHistory = d.imageHistory.map((item: Record<string, unknown>) => {
       if (item && item._sessionBase64Ref) {
-        const base64 = loadSessionImage(item._sessionBase64Ref as string);
+        const base64 = loadSessionImage(item._sessionBase64Ref as string, userId);
         const result: Record<string, unknown> = { ...item, base64: base64 || item.base64 };
         delete result._sessionBase64Ref;
         return result;
@@ -207,7 +215,7 @@ function hydrateNodeData(data: any): any {
   if (Array.isArray(d.outputGallery)) {
     d.outputGallery = d.outputGallery.map((entry: unknown) => {
       if (typeof entry === "string" && entry.startsWith("session-ref:")) {
-        return loadSessionImage(entry) || entry;
+        return loadSessionImage(entry, userId) || entry;
       }
       return entry;
     });
@@ -222,13 +230,13 @@ function hydrateNodeData(data: any): any {
  * Externalize all nodes in a snapshot object (strip base64, write images).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function externalizeSnapshot(snapshot: any): any {
+export function externalizeSnapshot(snapshot: any, userId: string): any {
   if (!snapshot || !Array.isArray(snapshot.nodes)) return snapshot;
   return {
     ...snapshot,
     nodes: snapshot.nodes.map((node: Record<string, unknown>) => ({
       ...node,
-      data: externalizeNodeData(node.data),
+      data: externalizeNodeData(node.data, userId),
     })),
   };
 }
@@ -237,13 +245,13 @@ export function externalizeSnapshot(snapshot: any): any {
  * Hydrate all nodes in a snapshot object (inject base64 from disk).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function hydrateSnapshot(snapshot: any): any {
+export function hydrateSnapshot(snapshot: any, userId: string): any {
   if (!snapshot || !Array.isArray(snapshot.nodes)) return snapshot;
   return {
     ...snapshot,
     nodes: snapshot.nodes.map((node: Record<string, unknown>) => ({
       ...node,
-      data: hydrateNodeData(node.data),
+      data: hydrateNodeData(node.data, userId),
     })),
   };
 }
@@ -253,12 +261,12 @@ export function hydrateSnapshot(snapshot: any): any {
  * Returns the file path.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function saveSessionWorkflow(tabId: string, snapshot: any): string {
-  ensureSessionDirs();
-  const cleanedSnapshot = externalizeSnapshot(snapshot);
+export function saveSessionWorkflow(userId: string, tabId: string, snapshot: any): string {
+  ensureSessionDirs(userId);
+  const cleanedSnapshot = externalizeSnapshot(snapshot, userId);
   const safeId = tabId.replace(/[^a-zA-Z0-9_-]/g, "_");
   const filename = `tab_${safeId}.json`;
-  const filePath = path.join(SESSION_DIR, filename);
+  const filePath = path.join(getSessionDir(userId), filename);
   fs.writeFileSync(filePath, JSON.stringify(cleanedSnapshot));
   return filePath;
 }
@@ -268,15 +276,15 @@ export function saveSessionWorkflow(tabId: string, snapshot: any): string {
  * Returns the hydrated snapshot, or null if file not found.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function loadSessionWorkflow(tabId: string): any | null {
+export function loadSessionWorkflow(userId: string, tabId: string): any | null {
   const safeId = tabId.replace(/[^a-zA-Z0-9_-]/g, "_");
   const filename = `tab_${safeId}.json`;
-  const filePath = path.join(SESSION_DIR, filename);
+  const filePath = path.join(getSessionDir(userId), filename);
   if (!fs.existsSync(filePath)) return null;
 
   try {
     const raw = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-    return hydrateSnapshot(raw);
+    return hydrateSnapshot(raw, userId);
   } catch {
     return null;
   }
@@ -287,10 +295,10 @@ export function loadSessionWorkflow(tabId: string): any | null {
  * This is called by agent1-save when a generation completes.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function saveLastGenerationWorkflow(snapshot: any): string {
-  ensureSessionDirs();
-  const cleanedSnapshot = externalizeSnapshot(snapshot);
-  const filePath = path.join(SESSION_DIR, "last_generation.json");
+export function saveLastGenerationWorkflow(userId: string, snapshot: any): string {
+  ensureSessionDirs(userId);
+  const cleanedSnapshot = externalizeSnapshot(snapshot, userId);
+  const filePath = path.join(getSessionDir(userId), "last_generation.json");
   fs.writeFileSync(filePath, JSON.stringify(cleanedSnapshot));
   return filePath;
 }
@@ -299,13 +307,13 @@ export function saveLastGenerationWorkflow(snapshot: any): string {
  * Load the "last generation" workflow snapshot.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function loadLastGenerationWorkflow(): any | null {
-  const filePath = path.join(SESSION_DIR, "last_generation.json");
+export function loadLastGenerationWorkflow(userId: string): any | null {
+  const filePath = path.join(getSessionDir(userId), "last_generation.json");
   if (!fs.existsSync(filePath)) return null;
 
   try {
     const raw = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-    return hydrateSnapshot(raw);
+    return hydrateSnapshot(raw, userId);
   } catch {
     return null;
   }
@@ -314,8 +322,8 @@ export function loadLastGenerationWorkflow(): any | null {
 /**
  * Clean up old session files that no longer correspond to open tabs.
  */
-export function cleanupOldSessionFiles(validTabIds: string[]): void {
-  ensureSessionDirs();
+export function cleanupOldSessionFiles(userId: string, validTabIds: string[]): void {
+  ensureSessionDirs(userId);
   const validFiles = new Set(
     validTabIds.map((id) => `tab_${id.replace(/[^a-zA-Z0-9_-]/g, "_")}.json`)
   );
@@ -323,10 +331,11 @@ export function cleanupOldSessionFiles(validTabIds: string[]): void {
   validFiles.add("last_generation.json");
 
   try {
-    const files = fs.readdirSync(SESSION_DIR);
+    const sessionDir = getSessionDir(userId);
+    const files = fs.readdirSync(sessionDir);
     for (const file of files) {
       if (file.endsWith(".json") && !validFiles.has(file)) {
-        fs.unlinkSync(path.join(SESSION_DIR, file));
+        fs.unlinkSync(path.join(sessionDir, file));
       }
     }
   } catch {
