@@ -12,6 +12,7 @@ import {
 import { AdminUserList } from "./AdminUserList";
 import { AdminUserForm } from "./AdminUserForm";
 import { AdminUserStats } from "./AdminUserStats";
+import { AdminSystemInfo } from "./AdminSystemInfo";
 
 interface User {
   id: string;
@@ -215,13 +216,18 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
           tabs={[
             { id: "users", label: "Users" },
             { id: "stats", label: "Stats" },
+            { id: "system", label: "System" },
           ]}
           active={activeTab}
           onChange={handleTabChange}
         />
 
         <DialogBody>
-          {activeTab === "users" ? renderUsersTab() : renderStatsTab()}
+          {activeTab === "users"
+            ? renderUsersTab()
+            : activeTab === "stats"
+            ? renderStatsTab()
+            : <AdminSystemInfo />}
         </DialogBody>
       </DialogContent>
     </Dialog>

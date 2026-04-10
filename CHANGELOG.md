@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- **Multi-user data isolation** — Complete per-user separation of data, API keys, storage, and workflows
+  - Admin panel (Shield icon in header) with user CRUD, per-user stats, role management
+  - User profile dialog with display name editing, password change, personal API key manager
+  - Per-user encrypted API keys (AES-256-GCM, PBKDF2 key derivation, userId as salt)
+  - User-scoped file storage (`storage/users/{userId}/output/images|videos|audio/`)
+  - User-scoped session persistence, reports, gallery, workflow save/load
+  - Idempotent data migration (copies existing files to admin user folder on first run)
+  - `getRequestUser()` JWT-based auth helper on every API route (replaces hardcoded admin lookups)
+  - ENCRYPTION_SECRET auto-generation on first startup
+  - RBAC: admin manages users + sees global data; user sees only own data
+- **Version badge with build info** — Hover the version badge to see commit hash, branch, build date
+- **Build info generation** — `prebuild` script injects commit/branch/date at build time
+- **CHANGELOG.md** — Manual changelog following Keep a Changelog format, viewable in Admin Panel
+
+### Changed
+- Zustand store now has 8 slices (added `authSlice` for current user state)
+- All API routes extract user identity from JWT (removed all `resolveAdminId()` / `getAdminUserId()`)
+- Settings API rewritten for per-user encrypted key storage (no global env fallback)
+- Login route includes `role` in JWT and creates DB records for env-auth users
+- Header shows username button (opens profile) and admin Shield icon (opens admin panel)
+
+---
+
 ## [1.1.2] - 2026-03-12
 
 ### Added

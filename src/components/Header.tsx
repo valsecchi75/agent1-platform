@@ -33,7 +33,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatVersion } from "@/lib/appVersion";
+import { formatVersion, versionLabel, buildInfo } from "@/lib/appVersion";
 import { useTabStore } from "@/store/tabStore";
 import { useWorkflowStore, WorkflowFile } from "@/store/workflowStore";
 
@@ -382,12 +382,21 @@ export function Header() {
             <BrandLogo variant="brand" height="h-3.5" />
             <span className="mx-1.5" style={{ color: "var(--border)" }}>|</span>
             <BrandLogo variant="wordmark" height="h-3.5" />
-            <span
-              className="text-[8px] font-medium tracking-wider uppercase px-1 py-0.5 rounded ml-1.5"
-              style={{ background: "var(--accent-subtle)", color: "var(--accent)" }}
-            >
-              {formatVersion()}
-            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="text-[8px] font-medium tracking-wider uppercase px-1 py-0.5 rounded ml-1.5 cursor-default"
+                  style={{ background: "var(--accent-subtle)", color: "var(--accent)" }}
+                >
+                  {formatVersion()}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                <span className="font-mono">{versionLabel()}</span>
+                <br />
+                <span style={{ opacity: 0.6 }}>Built {buildInfo().date} · {buildInfo().branch}</span>
+              </TooltipContent>
+            </Tooltip>
           </button>
 
           {/* Quick actions */}
