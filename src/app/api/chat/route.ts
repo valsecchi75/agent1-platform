@@ -13,16 +13,21 @@ export const maxDuration = 60; // 1 minute timeout
 
 export async function POST(request: Request) {
   try {
+    // Cast to NextRequest for cookie access (getRequestUser needs cookies)
+    const nextReq = request as unknown as NextRequest;
+    const user = await getRequestUser(nextReq);
+
     const { messages, workflowState, selectedNodeIds } = await request.json() as {
       messages: UIMessage[];
       workflowState?: { nodes: WorkflowNode[]; edges: WorkflowEdge[] };
       selectedNodeIds?: string[];
     };
 
-    // Get API key from environment
-    const apiKey = process.env.GEMINI_API_KEY;
+    // Get API key from per-user storage, with header fallback for backward compatibility
+    const headerKey = (request.headers as any)?.get?.("X-Gemini-API-Key");
+    const apiKey = headerKey || resolveApiKey(user.userId, 'GEMINI_API_KEY');
     if (!apiKey) {
-      return new Response('GEMINI_API_KEY not configured', { status: 500 });
+      return new Response('GEMINI_API_KEY not configured', { status: 403 });
     }
 
     // Extract subgraph if nodes are selected, otherwise use full workflow
@@ -66,6 +71,16 @@ export async function POST(request: Request) {
     // Return the UI message stream response for useChat compatibility
     return result.toUIMessageStreamResponse();
   } catch (error) {
+    // Handle authentication errors
+    if (error instanceof AuthError) {
+      return new Response(error.message, { status: error.status });
+    }
+
+    // Handle API key resolution errors
+    if (error instanceof ApiKeyError) {
+      return new Response(`API key not configured: ${error.keyName}. Add it in Settings > API Keys.`, { status: 403 });
+    }
+
     console.error('[Chat API Error]', error);
 
     if (error instanceof Error && error.message.includes('429')) {
