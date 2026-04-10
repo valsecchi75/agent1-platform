@@ -9,6 +9,7 @@ import Database from "better-sqlite3";
 import { v4 as uuidv4 } from "uuid";
 import { ensureEncryptionSecret } from "./auth/ensureEncryptionSecret";
 import { encryptValue, decryptValue, maskApiKey } from "./auth/encryption";
+import { runMultiUserMigration } from "./migration/migrateToMultiUser";
 import type {
   DbUser,
   DbGeneration,
@@ -84,6 +85,13 @@ export function getDb(): Database.Database {
 
   // Initialize schema if needed
   initializeSchema(dbInstance);
+
+  // Run one-time multi-user migration
+  try {
+    runMultiUserMigration(() => dbInstance!);
+  } catch (err) {
+    console.warn("[migration] Multi-user migration error (non-fatal):", err);
+  }
 
   return dbInstance;
 }
@@ -769,9 +777,13 @@ export function refreshDailyStats(date: string): void {
 
 // ─── Report Generation ──────────────────────────────────────────
 
-export function getReportData(dateRange: DateRange): ReportData {
+export function getReportData(dateRange: DateRange, userId?: string): ReportData {
   const db = getDb();
   const { from, to } = dateRange;
+
+  // Helper to add user filter to SQL queries
+  const userFilter = userId ? " AND user_id = ?" : "";
+  const userParams = userId ? [userId] : [];
 
   // Calculate previous period for comparison
   const fromDate = new Date(from);
@@ -796,17 +808,17 @@ export function getReportData(dateRange: DateRange): ReportData {
         COUNT(*) as total_generations,
         SUM(cost_usd) as total_cost
       FROM generations
-      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ? AND is_deleted = 0
+      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ? AND is_deleted = 0${userFilter}
     `)
-    .get(from, to) as { total_generations: number; total_cost: number };
+    .get(from, to, ...userParams) as { total_generations: number; total_cost: number };
 
   const apiCallsResult = db
     .prepare(`
       SELECT COUNT(*) as total_calls
       FROM api_calls
-      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ?
+      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ?${userFilter}
     `)
-    .get(from, to) as { total_calls: number };
+    .get(from, to, ...userParams) as { total_calls: number };
 
   const totalGenerations = summaryResult.total_generations || 0;
   const totalCostUsd = summaryResult.total_cost || 0;
@@ -821,9 +833,9 @@ export function getReportData(dateRange: DateRange): ReportData {
         COUNT(*) as total_generations,
         SUM(cost_usd) as total_cost
       FROM generations
-      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ? AND is_deleted = 0
+      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ? AND is_deleted = 0${userFilter}
     `)
-    .get(prevFrom, prevTo) as { total_generations: number; total_cost: number };
+    .get(prevFrom, prevTo, ...userParams) as { total_generations: number; total_cost: number };
 
   const prevGenerations = prevResult.total_generations || 0;
   const prevCostUsd = prevResult.total_cost || 0;
@@ -847,11 +859,11 @@ export function getReportData(dateRange: DateRange): ReportData {
         COUNT(*) as count,
         SUM(cost_usd) as cost
       FROM generations
-      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ? AND is_deleted = 0
+      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ? AND is_deleted = 0${userFilter}
       GROUP BY provider
       ORDER BY cost DESC
     `)
-    .all(from, to) as Array<{ provider: string; count: number; cost: number }>;
+    .all(from, to, ...userParams) as Array<{ provider: string; count: number; cost: number }>;
 
   const byProvider: ProviderBreakdown[] = providerResults.map((r) => ({
     provider: r.provider,
@@ -868,11 +880,11 @@ export function getReportData(dateRange: DateRange): ReportData {
         COUNT(*) as count,
         SUM(cost_usd) as cost
       FROM generations
-      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ? AND is_deleted = 0
+      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ? AND is_deleted = 0${userFilter}
       GROUP BY model, provider
       ORDER BY cost DESC
     `)
-    .all(from, to) as Array<{
+    .all(from, to, ...userParams) as Array<{
     model: string;
     provider: string;
     count: number;
@@ -894,11 +906,11 @@ export function getReportData(dateRange: DateRange): ReportData {
         COUNT(*) as generations,
         SUM(cost_usd) as cost
       FROM generations
-      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ? AND is_deleted = 0
+      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ? AND is_deleted = 0${userFilter}
       GROUP BY DATE(created_at)
       ORDER BY date ASC
     `)
-    .all(from, to) as Array<{ date: string; generations: number; cost: number }>;
+    .all(from, to, ...userParams) as Array<{ date: string; generations: number; cost: number }>;
 
   const timeline: DailyTimelinePoint[] = timelineResults.map((r) => ({
     date: r.date,
