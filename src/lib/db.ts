@@ -8,6 +8,7 @@ import * as bcrypt from "bcryptjs";
 import Database from "better-sqlite3";
 import { v4 as uuidv4 } from "uuid";
 import { ensureEncryptionSecret } from "./auth/ensureEncryptionSecret";
+import { encryptValue, decryptValue, maskApiKey } from "./auth/encryption";
 import type {
   DbUser,
   DbGeneration,
@@ -177,6 +178,21 @@ function initializeSchema(db: Database.Database): void {
     )
   `);
 
+  // Create user_api_keys table (encrypted)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_api_keys (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      key_name TEXT NOT NULL,
+      encrypted_value TEXT NOT NULL,
+      iv TEXT NOT NULL,
+      auth_tag TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(user_id, key_name)
+    )
+  `);
+
   // Create indexes for better query performance
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_gen_created ON generations(created_at DESC);
@@ -185,10 +201,22 @@ function initializeSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_gen_loved ON generations(is_loved);
     CREATE INDEX IF NOT EXISTS idx_gen_active ON generations(is_deleted, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_gen_workflow ON generations(workflow_id);
+    CREATE INDEX IF NOT EXISTS idx_gen_user_id ON generations(user_id);
+    CREATE INDEX IF NOT EXISTS idx_gen_user_id_created ON generations(user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_calls_created ON api_calls(created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_calls_gen ON api_calls(generation_id);
+    CREATE INDEX IF NOT EXISTS idx_calls_user_id ON api_calls(user_id);
+    CREATE INDEX IF NOT EXISTS idx_calls_user_id_created ON api_calls(user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_sessions_user ON user_sessions(user_id);
   `);
+
+  // Add user_id column to daily_stats if it doesn't exist
+  try {
+    db.exec(`ALTER TABLE daily_stats ADD COLUMN user_id TEXT REFERENCES users(id) ON DELETE CASCADE`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_daily_stats_user_id ON daily_stats(user_id)`);
+  } catch {
+    // Column already exists
+  }
 }
 
 // ─── User Management ────────────────────────────────────────────
@@ -268,6 +296,87 @@ export function updateLastLogin(userId: string): void {
   db.prepare("UPDATE users SET last_login_at = ? WHERE id = ?").run(now, userId);
 }
 
+// --- User CRUD (multi-user) ---
+
+export function listUsers(): DbUser[] {
+  const db = getDb();
+  return db.prepare('SELECT id, username, display_name, role, created_at, last_login_at FROM users ORDER BY created_at ASC').all() as DbUser[];
+}
+
+export function getUserByUsername(username: string): DbUser | null {
+  const db = getDb();
+  return (db.prepare('SELECT * FROM users WHERE username = ?').get(username) as DbUser) || null;
+}
+
+export function updateUser(userId: string, updates: { display_name?: string; role?: string }): void {
+  const db = getDb();
+  const sets: string[] = [];
+  const params: unknown[] = [];
+  if (updates.display_name !== undefined) {
+    sets.push('display_name = ?');
+    params.push(updates.display_name);
+  }
+  if (updates.role !== undefined) {
+    sets.push('role = ?');
+    params.push(updates.role);
+  }
+  if (sets.length === 0) return;
+  params.push(userId);
+  db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).run(...params);
+}
+
+export function updateUserPassword(userId: string, newPasswordHash: string): void {
+  const db = getDb();
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newPasswordHash, userId);
+}
+
+export function deleteUser(userId: string): void {
+  const db = getDb();
+  db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+}
+
+// --- User API Keys (encrypted) ---
+
+export function setUserApiKey(userId: string, keyName: string, plainValue: string): void {
+  const db = getDb();
+  const { ciphertext, iv, authTag } = encryptValue(plainValue, userId);
+  const id = uuidv4();
+  db.prepare(`
+    INSERT INTO user_api_keys (id, user_id, key_name, encrypted_value, iv, auth_tag, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+    ON CONFLICT(user_id, key_name)
+    DO UPDATE SET encrypted_value = excluded.encrypted_value,
+                  iv = excluded.iv,
+                  auth_tag = excluded.auth_tag,
+                  updated_at = datetime('now')
+  `).run(id, userId, keyName, ciphertext, iv, authTag);
+}
+
+export function getUserApiKey(userId: string, keyName: string): string | null {
+  const db = getDb();
+  const row = db.prepare(
+    'SELECT encrypted_value, iv, auth_tag FROM user_api_keys WHERE user_id = ? AND key_name = ?'
+  ).get(userId, keyName) as { encrypted_value: string; iv: string; auth_tag: string } | undefined;
+  if (!row) return null;
+  return decryptValue(row.encrypted_value, row.iv, row.auth_tag, userId);
+}
+
+export function listUserApiKeys(userId: string): { keyName: string; masked: string; updatedAt: string }[] {
+  const db = getDb();
+  const rows = db.prepare(
+    'SELECT key_name, encrypted_value, iv, auth_tag, updated_at FROM user_api_keys WHERE user_id = ?'
+  ).all(userId) as { key_name: string; encrypted_value: string; iv: string; auth_tag: string; updated_at: string }[];
+  return rows.map(row => {
+    const plain = decryptValue(row.encrypted_value, row.iv, row.auth_tag, userId);
+    return { keyName: row.key_name, masked: maskApiKey(plain), updatedAt: row.updated_at };
+  });
+}
+
+export function deleteUserApiKey(userId: string, keyName: string): void {
+  const db = getDb();
+  db.prepare('DELETE FROM user_api_keys WHERE user_id = ? AND key_name = ?').run(userId, keyName);
+}
+
 // ─── Generation Management ──────────────────────────────────────
 
 export async function insertGeneration(
@@ -324,6 +433,11 @@ export function getGenerations(
   // Build WHERE clause dynamically based on filters
   const whereClauses: string[] = ["is_deleted = 0"];
   const params: unknown[] = [];
+
+  if (filters.userId) {
+    whereClauses.push("user_id = ?");
+    params.push(filters.userId);
+  }
 
   if (filters.provider) {
     whereClauses.push("provider = ?");
@@ -388,6 +502,11 @@ export function getGenerationsCount(filters: GenerationFilters): number {
 
   const whereClauses: string[] = ["is_deleted = 0"];
   const params: unknown[] = [];
+
+  if (filters.userId) {
+    whereClauses.push("user_id = ?");
+    params.push(filters.userId);
+  }
 
   if (filters.provider) {
     whereClauses.push("provider = ?");

@@ -67,6 +67,7 @@ export interface InsertGenerationInput {
 }
 
 export interface GenerationFilters {
+  userId?: string;
   provider?: string;
   model?: string;
   fileType?: "image" | "video";
