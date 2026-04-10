@@ -18,7 +18,9 @@ import {
   RotateCcw,
   Save,
   Settings,
+  Shield,
   Sparkles,
+  User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -36,6 +38,7 @@ import { useTabStore } from "@/store/tabStore";
 import { useWorkflowStore, WorkflowFile } from "@/store/workflowStore";
 
 import { NodePackManager } from "@/components/node-packs";
+import { AdminPanel } from "@/components/admin/AdminPanel";
 import { CostIndicator } from "./CostIndicator";
 import { KeyboardShortcutsDialog } from "./KeyboardShortcutsDialog";
 import { ProjectSetupModal } from "./ProjectSetupModal";
@@ -44,6 +47,7 @@ import { ApiKeyPanel } from "./settings/ApiKeyPanel";
 import { BrandLogo } from "./settings/BrandLogo";
 import { CreditsModal } from "./settings/CreditsModal";
 import { ThemeSwitcher } from "./settings/ThemeSwitcher";
+import { UserProfile } from "./user/UserProfile";
 import { useOnboardingStore } from "@/store/onboardingStore";
 
 function CommentsNavigationIcon() {
@@ -139,12 +143,15 @@ export function Header() {
   const [projectModalMode, setProjectModalMode] = useState<"new" | "settings">("new");
   const [showApiKeys, setShowApiKeys] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
   const [showSaveMenu, setShowSaveMenu] = useState(false);
   const [showSaveAsTemplateModal, setShowSaveAsTemplateModal] = useState(false);
   const [nodePackManagerOpen, setNodePackManagerOpen] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const nodePackBadge = useWorkflowStore((s) => s.nodePackBadgeActive);
   const setNodePackBadge = useWorkflowStore((s) => s.setNodePackBadge);
+  const currentUser = useWorkflowStore((s) => s.currentUser);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const saveMenuRef = useRef<HTMLDivElement>(null);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
@@ -255,6 +262,16 @@ export function Header() {
 
   const settingsButtons = (
     <div className="flex items-center gap-0.5 ml-1 pl-1 border-l border-neutral-700/50">
+      {currentUser?.role === "admin" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" onClick={() => setShowAdminPanel(true)}>
+              <Shield className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Admin Panel</TooltipContent>
+        </Tooltip>
+      )}
       <ThemeSwitcher />
       <Tooltip>
         <TooltipTrigger asChild>
@@ -592,6 +609,16 @@ export function Header() {
           </button>
           <span style={{ color: "var(--text-muted)" }}>·</span>
           <button
+            onClick={() => setShowUserProfile(true)}
+            className="transition-colors text-xs flex items-center gap-1 hover:text-[var(--text-primary)]"
+            style={{ color: "var(--text-muted)" }}
+            title="User Profile"
+          >
+            <User className="w-3 h-3" />
+            {currentUser?.username || 'Profile'}
+          </button>
+          <span style={{ color: "var(--text-muted)" }}>·</span>
+          <button
             onClick={() => {
               document.cookie = "agent1_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
               window.location.href = "/login";
@@ -611,6 +638,7 @@ export function Header() {
       />
       <ApiKeyPanel isOpen={showApiKeys} onClose={() => setShowApiKeys(false)} />
       <CreditsModal isOpen={showCredits} onClose={() => setShowCredits(false)} />
+      <UserProfile open={showUserProfile} onOpenChange={setShowUserProfile} />
       {showSaveAsTemplateModal && (
         <SaveAsTemplateModal
           isOpen={showSaveAsTemplateModal}
@@ -626,6 +654,7 @@ export function Header() {
         />
       )}
       <NodePackManager open={nodePackManagerOpen} onOpenChange={setNodePackManagerOpen} />
+      <AdminPanel open={showAdminPanel} onOpenChange={setShowAdminPanel} />
     </TooltipProvider>
   );
 }
