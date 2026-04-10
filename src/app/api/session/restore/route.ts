@@ -1,28 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { isDbAvailable, dbUnavailableResponse } from "@/lib/db-guard";
-import { loadUserSession, getDb } from "@/lib/db";
+import { loadUserSession } from "@/lib/db";
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
 import { loadSessionWorkflow } from "@/lib/sessionPersistence";
-
-/**
- * Resolve "admin" username → actual UUID (cached).
- */
-let cachedAdminId: string | null = null;
-function resolveAdminId(): string {
-  if (cachedAdminId) return cachedAdminId;
-  try {
-    const db = getDb();
-    const row = db
-      .prepare("SELECT id FROM users WHERE username = 'admin' LIMIT 1")
-      .get() as { id: string } | undefined;
-    if (row) {
-      cachedAdminId = row.id;
-      return row.id;
-    }
-  } catch {
-    /* DB unavailable */
-  }
-  return "admin";
-}
 
 /**
  * GET /api/session/restore
@@ -38,12 +18,12 @@ function resolveAdminId(): string {
  *   }
  * }
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (!isDbAvailable()) return dbUnavailableResponse();
 
   try {
-    const userId = resolveAdminId();
-    const meta = loadUserSession(userId) as {
+    const user = await getRequestUser(request);
+    const meta = loadUserSession(user.userId) as {
       tabs?: Array<{ id: string; label: string; hasUnsavedChanges: boolean }>;
       activeTabId?: string;
     } | null;
@@ -58,7 +38,7 @@ export async function GET() {
 
     // Load each tab's workflow from disk (with image hydration)
     const hydratedTabs = meta.tabs.map((tabMeta) => {
-      const snapshot = loadSessionWorkflow(userId, tabMeta.id);
+      const snapshot = loadSessionWorkflow(user.userId, tabMeta.id);
       return {
         id: tabMeta.id,
         label: tabMeta.label,
@@ -91,12 +71,15 @@ export async function GET() {
         activeTabId,
       },
     });
-  } catch (error) {
-    console.error("[session/restore] Error:", error);
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    console.error("[session/restore] Error:", err);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to restore session",
+        error: err instanceof Error ? err.message : "Failed to restore session",
       },
       { status: 500 }
     );

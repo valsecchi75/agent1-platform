@@ -1,33 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isDbAvailable, dbUnavailableResponse } from "@/lib/db-guard";
-import { saveUserSession, getDb } from "@/lib/db";
+import { saveUserSession } from "@/lib/db";
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
 import {
   saveSessionWorkflow,
   cleanupOldSessionFiles,
 } from "@/lib/sessionPersistence";
 
 export const maxDuration = 300; // 5 min — large snapshots with images
-
-/**
- * Resolve "admin" username → actual UUID (cached).
- */
-let cachedAdminId: string | null = null;
-function resolveAdminId(): string {
-  if (cachedAdminId) return cachedAdminId;
-  try {
-    const db = getDb();
-    const row = db
-      .prepare("SELECT id FROM users WHERE username = 'admin' LIMIT 1")
-      .get() as { id: string } | undefined;
-    if (row) {
-      cachedAdminId = row.id;
-      return row.id;
-    }
-  } catch {
-    /* DB unavailable */
-  }
-  return "admin";
-}
 
 /**
  * POST /api/session/persist
@@ -40,6 +20,7 @@ function resolveAdminId(): string {
  */
 export async function POST(request: NextRequest) {
   try {
+    const user = await getRequestUser(request);
     const body = await request.json();
     const { tabs, activeTabId } = body;
 
@@ -57,12 +38,9 @@ export async function POST(request: NextRequest) {
       hasUnsavedChanges: boolean;
     }> = [];
 
-    // Resolve userId first
-    const userId = resolveAdminId();
-
     for (const tab of tabs) {
       if (tab.snapshot) {
-        saveSessionWorkflow(userId, tab.id, tab.snapshot);
+        saveSessionWorkflow(user.userId, tab.id, tab.snapshot);
       }
       tabMeta.push({
         id: tab.id,
@@ -72,23 +50,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Clean up old session files that no longer correspond to open tabs
-    cleanupOldSessionFiles(userId, tabs.map((t: { id: string }) => t.id));
+    cleanupOldSessionFiles(user.userId, tabs.map((t: { id: string }) => t.id));
 
     // Store lightweight metadata in DB (no base64, just tab IDs + labels)
     if (isDbAvailable()) {
-      saveUserSession(userId, {
+      saveUserSession(user.userId, {
         tabs: tabMeta,
         activeTabId,
       });
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("[session/persist] Error:", error);
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    console.error("[session/persist] Error:", err);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to persist session",
+        error: err instanceof Error ? err.message : "Failed to persist session",
       },
       { status: 500 }
     );

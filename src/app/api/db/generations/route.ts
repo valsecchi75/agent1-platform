@@ -4,20 +4,28 @@ import {
   insertGeneration,
 } from "@/lib/db";
 import { isDbAvailable, dbUnavailableResponse } from "@/lib/db-guard";
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
 import type {
   GenerationFilters,
   InsertGenerationInput,
 } from "@/lib/db-types";
 
 // GET: List generations with optional filters
-// Query params: provider, model, fileType, isLoved, dateFrom, dateTo, limit, offset
+// Query params: provider, model, fileType, isLoved, dateFrom, dateTo, limit, offset, all
 export async function GET(request: NextRequest) {
   if (!isDbAvailable()) return dbUnavailableResponse();
   try {
+    const user = await getRequestUser(request);
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters into GenerationFilters
     const filters: GenerationFilters = {};
+
+    // User isolation: non-admin always sees only their own
+    const isAdminGlobal = user.role === 'admin' && searchParams.get('all') === 'true';
+    if (!isAdminGlobal) {
+      filters.userId = user.userId;
+    }
 
     if (searchParams.has("provider")) {
       filters.provider = searchParams.get("provider") || undefined;
@@ -64,11 +72,14 @@ export async function GET(request: NextRequest) {
     const result = getGenerations(filters);
 
     return NextResponse.json(result, { status: 200 });
-  } catch (error) {
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch generations",
+        error: err instanceof Error ? err.message : "Failed to fetch generations",
       },
       { status: 500 }
     );
@@ -79,11 +90,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   if (!isDbAvailable()) return dbUnavailableResponse();
   try {
+    const user = await getRequestUser(request);
     const body = await request.json();
 
-    // Validate required fields
+    // Validate required fields (but userId will come from JWT, not request body)
     const {
-      userId,
       filePath,
       fileType,
       mimeType,
@@ -95,11 +106,11 @@ export async function POST(request: NextRequest) {
       costUsd,
     } = body;
 
-    if (!userId || !filePath || !fileType || !model || !provider) {
+    if (!filePath || !fileType || !model || !provider) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing required fields: userId, filePath, fileType, model, provider",
+          error: "Missing required fields: filePath, fileType, model, provider",
         },
         { status: 400 }
       );
@@ -116,9 +127,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build input object
+    // Build input object with userId from JWT
     const input: InsertGenerationInput = {
-      userId,
+      userId: user.userId,
       filePath,
       fileType,
       mimeType: mimeType || "application/octet-stream",
@@ -146,11 +157,14 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create generation",
+        error: err instanceof Error ? err.message : "Failed to create generation",
       },
       { status: 500 }
     );
