@@ -1,10 +1,13 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { streamText, convertToModelMessages, UIMessage, stepCountIs } from 'ai';
+import { NextRequest } from 'next/server';
 import { buildWorkflowContext } from '@/lib/chat/contextBuilder';
 import { extractSubgraph } from '@/lib/chat/subgraphExtractor';
 import { createChatTools, buildEditSystemPrompt } from '@/lib/chat/tools';
 import { WorkflowNode } from '@/types';
 import { WorkflowEdge } from '@/types/workflow';
+import { getRequestUser, AuthError } from '@/lib/auth/getRequestUser';
+import { resolveApiKey, ApiKeyError } from '@/lib/auth/resolveApiKey';
 
 export const maxDuration = 60; // 1 minute timeout
 

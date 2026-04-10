@@ -280,10 +280,13 @@ export async function POST(request: NextRequest) {
   const requestId = generateRequestId();
 
   try {
-    // Get user-provided API keys from headers (override env variables)
-    const geminiApiKey = request.headers.get("X-Gemini-API-Key");
-    const openaiApiKey = request.headers.get("X-OpenAI-API-Key");
-    const anthropicApiKey = request.headers.get("X-Anthropic-API-Key");
+    // Extract user from JWT
+    const user = await getRequestUser(request);
+
+    // Get user-provided API keys from headers (override env variables and per-user stored keys)
+    const geminiHeaderKey = request.headers.get("X-Gemini-API-Key");
+    const openaiHeaderKey = request.headers.get("X-OpenAI-API-Key");
+    const anthropicHeaderKey = request.headers.get("X-Anthropic-API-Key");
 
     const body: LLMGenerateRequest = await request.json();
     const {
@@ -317,10 +320,13 @@ export async function POST(request: NextRequest) {
     let text: string;
 
     if (provider === "google") {
+      const geminiApiKey = geminiHeaderKey || getUserApiKey(user.userId, 'GEMINI_API_KEY');
       text = await generateWithGoogle(prompt, model, temperature, maxTokens, images, requestId, geminiApiKey);
     } else if (provider === "openai") {
+      const openaiApiKey = openaiHeaderKey || getUserApiKey(user.userId, 'OPENAI_API_KEY');
       text = await generateWithOpenAI(prompt, model, temperature, maxTokens, images, requestId, openaiApiKey);
     } else if (provider === "anthropic") {
+      const anthropicApiKey = anthropicHeaderKey || getUserApiKey(user.userId, 'ANTHROPIC_API_KEY');
       text = await generateWithAnthropic(prompt, model, temperature, maxTokens, images, requestId, anthropicApiKey);
     } else {
       logger.warn('api.llm', 'Unknown provider requested', { requestId, provider });
@@ -340,6 +346,11 @@ export async function POST(request: NextRequest) {
       text,
     });
   } catch (error) {
+    // Handle authentication errors
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+
     logger.error('api.error', 'LLM generation error', { requestId }, error instanceof Error ? error : undefined);
 
     // Handle rate limiting using shared utility

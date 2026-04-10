@@ -3,7 +3,8 @@ import * as path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/utils/logger";
 import { validateWorkflowPath } from "@/utils/pathValidation";
-import { STORAGE_PATHS, ensureStorageDirs } from "@/lib/storage/fileNaming";
+import { STORAGE_PATHS, ensureStorageDirs, getUserStoragePaths } from "@/lib/storage/fileNaming";
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
 
 export const maxDuration = 300; // 5 minute timeout for large workflow files
 
@@ -12,6 +13,8 @@ export async function POST(request: NextRequest) {
   let directoryPath: string | undefined;
   let filename: string | undefined;
   try {
+    const user = await getRequestUser(request);
+
     const body = await request.json();
     directoryPath = body.directoryPath;
     filename = body.filename;
@@ -37,11 +40,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fall back to storage/workflows/ when no project directory is configured
+    // Fall back to user-scoped workflows directory when no project directory is configured
     if (!directoryPath) {
-      ensureStorageDirs();
-      directoryPath = STORAGE_PATHS.workflows;
-      logger.info('file.save', 'No directoryPath provided, defaulting to storage/workflows', {
+      const userPaths = getUserStoragePaths(user.userId);
+      directoryPath = userPaths.workflows;
+      logger.info('file.save', 'No directoryPath provided, defaulting to user-scoped workflows', {
         directoryPath,
       });
     }
@@ -137,6 +140,12 @@ export async function POST(request: NextRequest) {
       filePath,
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.status }
+      );
+    }
     logger.error('file.error', 'Failed to save workflow', {
       directoryPath,
       filename,
@@ -153,54 +162,71 @@ export async function POST(request: NextRequest) {
 
 // GET: Validate directory path
 export async function GET(request: NextRequest) {
-  const directoryPath = request.nextUrl.searchParams.get("path");
-
-  logger.info('file.load', 'Directory validation request received', {
-    directoryPath,
-  });
-
-  if (!directoryPath) {
-    logger.warn('file.load', 'Directory validation failed: missing path parameter');
-    return NextResponse.json(
-      { success: false, error: "Path parameter required" },
-      { status: 400 }
-    );
-  }
-
-  // Validate path to prevent traversal attacks
-  const pathValidation = validateWorkflowPath(directoryPath);
-  if (!pathValidation.valid) {
-    logger.warn('file.error', 'Directory validation failed: invalid path', {
-      directoryPath,
-      error: pathValidation.error,
-    });
-    return NextResponse.json(
-      { success: false, error: pathValidation.error },
-      { status: 400 }
-    );
-  }
-
   try {
-    const stats = await fs.stat(directoryPath);
-    const isDirectory = stats.isDirectory();
-    logger.info('file.load', 'Directory validation successful', {
+    const user = await getRequestUser(request);
+
+    let directoryPath = request.nextUrl.searchParams.get("path");
+
+    logger.info('file.load', 'Directory validation request received', {
       directoryPath,
-      exists: true,
-      isDirectory,
     });
-    return NextResponse.json({
-      success: true,
-      exists: true,
-      isDirectory,
-    });
+
+    // If no path provided, use user-scoped default
+    if (!directoryPath) {
+      const userPaths = getUserStoragePaths(user.userId);
+      directoryPath = userPaths.workflows;
+      logger.info('file.load', 'No path provided, using user-scoped workflows directory', {
+        directoryPath,
+      });
+    }
+
+    // Validate path to prevent traversal attacks
+    const pathValidation = validateWorkflowPath(directoryPath);
+    if (!pathValidation.valid) {
+      logger.warn('file.error', 'Directory validation failed: invalid path', {
+        directoryPath,
+        error: pathValidation.error,
+      });
+      return NextResponse.json(
+        { success: false, error: pathValidation.error },
+        { status: 400 }
+      );
+    }
+
+    try {
+      const stats = await fs.stat(directoryPath);
+      const isDirectory = stats.isDirectory();
+      logger.info('file.load', 'Directory validation successful', {
+        directoryPath,
+        exists: true,
+        isDirectory,
+      });
+      return NextResponse.json({
+        success: true,
+        exists: true,
+        isDirectory,
+      });
+    } catch (error) {
+      logger.info('file.load', 'Directory does not exist', {
+        directoryPath,
+      });
+      return NextResponse.json({
+        success: true,
+        exists: false,
+        isDirectory: false,
+      });
+    }
   } catch (error) {
-    logger.info('file.load', 'Directory does not exist', {
-      directoryPath,
-    });
-    return NextResponse.json({
-      success: true,
-      exists: false,
-      isDirectory: false,
-    });
+    if (error instanceof AuthError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.status }
+      );
+    }
+    logger.error('file.error', 'Failed to validate directory', {}, error instanceof Error ? error : undefined);
+    return NextResponse.json(
+      { success: false, error: "Failed to validate directory" },
+      { status: 500 }
+    );
   }
 }
