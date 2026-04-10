@@ -922,11 +922,11 @@ export function getReportData(dateRange: DateRange, userId?: string): ReportData
   const recentCallsResults = db
     .prepare(`
       SELECT * FROM api_calls
-      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ?
+      WHERE DATE(created_at) >= ? AND DATE(created_at) <= ?${userFilter}
       ORDER BY created_at DESC
       LIMIT 50
     `)
-    .all(from, to) as DbApiCall[];
+    .all(from, to, ...userParams) as DbApiCall[];
 
   // All-time summary (regardless of date range)
   const allTimeGenResult = db
@@ -936,13 +936,13 @@ export function getReportData(dateRange: DateRange, userId?: string): ReportData
         COALESCE(SUM(cost_usd), 0) as total_cost,
         MIN(created_at) as first_date
       FROM generations
-      WHERE is_deleted = 0
+      WHERE is_deleted = 0${userFilter}
     `)
-    .get() as { total_generations: number; total_cost: number; first_date: string | null };
+    .get(...userParams) as { total_generations: number; total_cost: number; first_date: string | null };
 
   const allTimeCallsResult = db
-    .prepare(`SELECT COUNT(*) as total_calls FROM api_calls`)
-    .get() as { total_calls: number };
+    .prepare(`SELECT COUNT(*) as total_calls FROM api_calls${userFilter ? " WHERE user_id = ?" : ""}`)
+    .get(...userParams) as { total_calls: number };
 
   const allTime: AllTimeSummary = {
     totalGenerations: allTimeGenResult.total_generations || 0,

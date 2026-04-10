@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getReportData } from "@/lib/db";
 import { isDbAvailable, dbUnavailableResponse } from "@/lib/db-guard";
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
 import type { DateRange } from "@/lib/db-types";
 
 // Helper to validate ISO date format (YYYY-MM-DD)
@@ -26,6 +27,8 @@ function daysBetween(from: string, to: string): number {
 export async function GET(request: NextRequest) {
   if (!isDbAvailable()) return dbUnavailableResponse();
   try {
+    const user = await getRequestUser(request);
+
     const { searchParams } = new URL(request.url);
 
     // Get from and to dates
@@ -80,11 +83,22 @@ export async function GET(request: NextRequest) {
     // Build date range
     const dateRange: DateRange = { from, to };
 
-    // Fetch report data
-    const reportData = getReportData(dateRange);
+    // Fetch report data (scoped to user for regular users, unscoped for admin)
+    const reportData = user.role === 'admin'
+      ? getReportData(dateRange)
+      : getReportData(dateRange, user.userId);
 
     return NextResponse.json(reportData, { status: 200 });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: error.message,
+        },
+        { status: error.status }
+      );
+    }
     return NextResponse.json(
       {
         success: false,

@@ -19,6 +19,9 @@ import { generateWithWaveSpeed } from "./providers/wavespeed";
 import { GenerationInput, ModelCapability } from "@/lib/providers/types";
 import { GenerateRequest, GenerateResponse, ModelType, SelectedModel, ProviderType } from "@/types";
 import { apiErrorResponse, isRateLimitError } from "@/lib/api";
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
+import { resolveApiKey, ApiKeyError } from "@/lib/auth/resolveApiKey";
+import { getUserApiKey } from "@/lib/db";
 
 // Re-export for backward compatibility (test file imports from route)
 export const clearFalInputMappingCache = _clearFalInputMappingCache;
@@ -88,6 +91,7 @@ export async function POST(request: NextRequest) {
   console.log(`\n[API:${requestId}] ========== NEW GENERATE REQUEST ==========`);
 
   try {
+    const user = await getRequestUser(request);
     const body: MultiProviderGenerateRequest = await request.json();
     const {
       images,
@@ -140,8 +144,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // User-provided key takes precedence over env variable
-      const replicateApiKey = request.headers.get("X-Replicate-API-Key") || process.env.REPLICATE_API_KEY;
+      // User-provided key takes precedence over env variable, then per-user stored key
+      const replicateApiKey = request.headers.get("X-Replicate-API-Key") || resolveApiKey(user.userId, 'REPLICATE_API_KEY');
       if (!replicateApiKey) {
         return NextResponse.json<GenerateResponse>(
           {
@@ -220,8 +224,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // User-provided key takes precedence over env variable
-      const falApiKey = request.headers.get("X-Fal-API-Key") || process.env.FAL_API_KEY || null;
+      // User-provided key takes precedence over env variable, then per-user stored key (FAL allows null)
+      const falApiKey = request.headers.get("X-Fal-API-Key") || getUserApiKey(user.userId, 'FAL_API_KEY') || process.env.FAL_API_KEY || null;
 
       if (!falApiKey) {
         console.warn(`[API:${requestId}] No FAL API key configured. Proceeding without auth (rate-limited).`);
@@ -295,8 +299,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // User-provided key takes precedence over env variable
-      const kieApiKey = request.headers.get("X-Kie-Key") || process.env.KIE_API_KEY;
+      // User-provided key takes precedence over env variable, then per-user stored key
+      const kieApiKey = request.headers.get("X-Kie-Key") || resolveApiKey(user.userId, 'KIE_API_KEY');
       if (!kieApiKey) {
         return NextResponse.json<GenerateResponse>(
           {
@@ -374,8 +378,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // User-provided key takes precedence over env variable
-      const wavespeedApiKey = request.headers.get("X-WaveSpeed-Key") || process.env.WAVESPEED_API_KEY;
+      // User-provided key takes precedence over env variable, then per-user stored key
+      const wavespeedApiKey = request.headers.get("X-WaveSpeed-Key") || resolveApiKey(user.userId, 'WAVESPEED_API_KEY');
       if (!wavespeedApiKey) {
         return NextResponse.json<GenerateResponse>(
           {
@@ -446,8 +450,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Default: Use Gemini
-    // User-provided key (from settings) takes precedence over env variable
-    const geminiApiKey = request.headers.get("X-Gemini-API-Key") || process.env.GEMINI_API_KEY;
+    // User-provided key (from settings) takes precedence over env variable, then per-user stored key
+    const geminiApiKey = request.headers.get("X-Gemini-API-Key") || resolveApiKey(user.userId, 'GEMINI_API_KEY');
 
     if (!geminiApiKey) {
       return NextResponse.json<GenerateResponse>(
@@ -528,6 +532,19 @@ export async function POST(request: NextRequest) {
       useImageSearch
     );
   } catch (error) {
+    // Handle authentication errors
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+
+    // Handle API key resolution errors
+    if (error instanceof ApiKeyError) {
+      return NextResponse.json<GenerateResponse>({
+        success: false,
+        error: `API key not configured: ${error.keyName}. Add it in Settings > API Keys.`,
+      }, { status: 403 });
+    }
+
     // Extract error information
     let errorMessage = "Generation failed";
     let errorDetails = "";

@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { LLMGenerateRequest, LLMGenerateResponse, LLMModelType } from "@/types";
 import { logger } from "@/utils/logger";
 import { parseDataUrl, isRateLimitError } from "@/lib/api";
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
+import { getUserApiKey } from "@/lib/db";
 
 export const maxDuration = 60; // 1 minute timeout
 
