@@ -1,6 +1,7 @@
 import { readdirSync, statSync, existsSync } from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
 
 interface OutputFile {
   filename: string;
@@ -27,6 +28,8 @@ interface OutputFile {
  */
 export async function GET(req: NextRequest) {
   try {
+    const user = await getRequestUser(req);
+
     const { searchParams } = new URL(req.url);
     const filterType = searchParams.get("type") || "all";
 
@@ -37,7 +40,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const outputBaseDir = path.resolve(process.cwd(), "storage", "output");
+    const outputBaseDir = path.resolve(process.cwd(), "storage", "users", user.userId, "output");
     const files: OutputFile[] = [];
 
     // Helper function to scan a directory
@@ -80,11 +83,59 @@ export async function GET(req: NextRequest) {
       scanDir(path.join(outputBaseDir, "audio"), "audio");
     }
 
+    // For admin users, also scan legacy global paths for backward compatibility
+    if (user.role === "admin") {
+      const globalBaseDir = path.resolve(process.cwd(), "storage", "output");
+      const scanDir = (dirPath: string, fileType: "image" | "video" | "audio") => {
+        if (!existsSync(dirPath)) {
+          return;
+        }
+
+        try {
+          const entries = readdirSync(dirPath);
+          for (const entry of entries) {
+            if (entry === ".gitkeep") continue; // Skip .gitkeep marker
+
+            const fullPath = path.join(dirPath, entry);
+            const stat = statSync(fullPath);
+
+            if (stat.isFile()) {
+              files.push({
+                filename: entry,
+                size: stat.size,
+                type: fileType,
+                timestamp: Math.floor(stat.mtimeMs / 1000),
+                path: `storage/output/${fileType === "image" ? "images" : fileType === "video" ? "videos" : "audio"}/${entry}`,
+              });
+            }
+          }
+        } catch (error) {
+          console.warn(`[output-browser] Failed to scan ${dirPath}:`, error);
+        }
+      };
+
+      if (filterType === "images" || filterType === "all") {
+        scanDir(path.join(globalBaseDir, "images"), "image");
+      }
+      if (filterType === "videos" || filterType === "all") {
+        scanDir(path.join(globalBaseDir, "videos"), "video");
+      }
+      if (filterType === "audio" || filterType === "all") {
+        scanDir(path.join(globalBaseDir, "audio"), "audio");
+      }
+    }
+
     // Sort by timestamp (newest first)
     files.sort((a, b) => b.timestamp - a.timestamp);
 
     return NextResponse.json({ files });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json(
+        { files: [], error: error.message },
+        { status: error.status }
+      );
+    }
     console.error("[output-browser GET] Error:", error);
     return NextResponse.json(
       { files: [], error: "Failed to list output files" },
