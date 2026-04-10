@@ -1,28 +1,6 @@
-import { NextResponse } from "next/server";
-import { isDbAvailable, dbUnavailableResponse } from "@/lib/db-guard";
-import { getDb } from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";
 import { loadLastGenerationWorkflow } from "@/lib/sessionPersistence";
-
-/**
- * Resolve "admin" username → actual UUID (cached).
- */
-let cachedAdminId: string | null = null;
-function resolveAdminId(): string {
-  if (cachedAdminId) return cachedAdminId;
-  try {
-    const db = getDb();
-    const row = db
-      .prepare("SELECT id FROM users WHERE username = 'admin' LIMIT 1")
-      .get() as { id: string } | undefined;
-    if (row) {
-      cachedAdminId = row.id;
-      return row.id;
-    }
-  } catch {
-    /* DB unavailable */
-  }
-  return "admin";
-}
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
 
 /**
  * GET /api/db/last-workflow — Get the last workflow that produced a generation.
@@ -31,10 +9,10 @@ function resolveAdminId(): string {
  * which was saved by the executor after each successful generation.
  * Images are hydrated from extracted files automatically.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const userId = resolveAdminId();
-    const workflow = loadLastGenerationWorkflow(userId);
+    const user = await getRequestUser(request);
+    const workflow = loadLastGenerationWorkflow(user.userId);
 
     if (!workflow) {
       return NextResponse.json({
@@ -49,11 +27,14 @@ export async function GET() {
       workflow,
       workflowName: workflow.name || null,
     });
-  } catch (error) {
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to get last workflow",
+        error: err instanceof Error ? err.message : "Failed to get last workflow",
       },
       { status: 500 }
     );

@@ -1,30 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isDbAvailable, dbUnavailableResponse } from "@/lib/db-guard";
-import { getDb } from "@/lib/db";
 import { saveLastGenerationWorkflow } from "@/lib/sessionPersistence";
+import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
 
 export const maxDuration = 300;
-
-/**
- * Resolve "admin" username → actual UUID (cached).
- */
-let cachedAdminId: string | null = null;
-function resolveAdminId(): string {
-  if (cachedAdminId) return cachedAdminId;
-  try {
-    const db = getDb();
-    const row = db
-      .prepare("SELECT id FROM users WHERE username = 'admin' LIMIT 1")
-      .get() as { id: string } | undefined;
-    if (row) {
-      cachedAdminId = row.id;
-      return row.id;
-    }
-  } catch {
-    /* DB unavailable */
-  }
-  return "admin";
-}
 
 /**
  * POST /api/session/save-last-generation
@@ -38,6 +16,7 @@ function resolveAdminId(): string {
  */
 export async function POST(request: NextRequest) {
   try {
+    const user = await getRequestUser(request);
     const body = await request.json();
     const { workflow } = body;
 
@@ -48,19 +27,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = resolveAdminId();
-    const filePath = saveLastGenerationWorkflow(userId, workflow);
+    const filePath = saveLastGenerationWorkflow(user.userId, workflow);
 
     return NextResponse.json({
       success: true,
       filePath,
     });
-  } catch (error) {
-    console.error("[session/save-last-generation] Error:", error);
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    console.error("[session/save-last-generation] Error:", err);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to save",
+        error: err instanceof Error ? err.message : "Failed to save",
       },
       { status: 500 }
     );
