@@ -1,9 +1,6 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth/jwt';
-
-const ENV_PATH = resolve(process.cwd(), '.env');
+import { getRequestUser, AuthError } from '@/lib/auth/getRequestUser';
+import { listUserApiKeys, setUserApiKey, deleteUserApiKey } from '@/lib/db';
 
 const ALLOWED_KEYS = [
   'GEMINI_API_KEY',
@@ -13,85 +10,64 @@ const ALLOWED_KEYS = [
   'FAL_API_KEY',
   'KIE_API_KEY',
   'WAVESPEED_API_KEY',
-  'PATREON_CLIENT_ID',
-  'PATREON_CLIENT_SECRET',
 ];
 
-function maskKey(value: string | undefined): string {
-  if (!value || value.trim() === '') return 'not configured';
-  if (value.length < 4) return '****';
-  return value.substring(0, 4) + '****';
-}
-
-/** Verify JWT session cookie — returns false if not authenticated */
-async function checkAuth(req: NextRequest): Promise<boolean> {
-  const token = req.cookies.get('agent1_session')?.value;
-  if (!token) return false;
-  const payload = await verifyToken(token);
-  return payload !== null && payload.authenticated === true;
-}
-
 export async function GET(req: NextRequest) {
-  if (!(await checkAuth(req))) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const user = await getRequestUser(req);
+    const keys = listUserApiKeys(user.userId);
+    // Build response: all allowed keys, masked value or empty
+    const result: Record<string, string> = {};
+    for (const keyName of ALLOWED_KEYS) {
+      const found = keys.find(k => k.keyName === keyName);
+      result[keyName] = found ? found.masked : '';
+    }
+    return NextResponse.json(result);
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
-
-  const result: Record<string, string> = {};
-  for (const key of ALLOWED_KEYS) {
-    result[key] = maskKey(process.env[key]);
-  }
-  return NextResponse.json(result);
 }
 
 export async function PUT(req: NextRequest) {
-  if (!(await checkAuth(req))) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  let body: { key?: string; value?: string };
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-  }
+    const user = await getRequestUser(req);
+    const body = await req.json();
+    const { key, value } = body;
 
-  const { key, value } = body;
-
-  if (!key || !ALLOWED_KEYS.includes(key)) {
-    return NextResponse.json({ error: 'Invalid key name' }, { status: 400 });
-  }
-
-  if (typeof value !== 'string' || value.length > 256 || value.includes('\n')) {
-    return NextResponse.json({ error: 'Invalid value' }, { status: 400 });
-  }
-
-  try {
-    let content = '';
-    if (existsSync(ENV_PATH)) {
-      content = readFileSync(ENV_PATH, 'utf-8');
+    if (!key || !ALLOWED_KEYS.includes(key)) {
+      return NextResponse.json({ error: 'Invalid key name' }, { status: 400 });
     }
-
-    // Quote values with special chars
-    const needsQuotes = /[\s#"'\\]/.test(value);
-    const envValue = needsQuotes ? `"${value.replace(/"/g, '\\"')}"` : value;
-
-    // Update or append key
-    const regex = new RegExp(`^${key}=.*$`, 'm');
-    if (regex.test(content)) {
-      content = content.replace(regex, `${key}=${envValue}`);
-    } else {
-      content = content.trimEnd() + `\n${key}=${envValue}\n`;
+    if (!value || typeof value !== 'string') {
+      return NextResponse.json({ error: 'Value required' }, { status: 400 });
     }
-
-    writeFileSync(ENV_PATH, content);
-    process.env[key] = value;
-
+    setUserApiKey(user.userId, key, value.trim());
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('Failed to update .env:', err);
-    return NextResponse.json(
-      { error: 'Failed to update configuration' },
-      { status: 500 }
-    );
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const user = await getRequestUser(req);
+    const body = await req.json();
+    const { key } = body;
+
+    if (!key || !ALLOWED_KEYS.includes(key)) {
+      return NextResponse.json({ error: 'Invalid key name' }, { status: 400 });
+    }
+    deleteUserApiKey(user.userId, key);
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }
