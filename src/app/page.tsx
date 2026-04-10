@@ -17,11 +17,15 @@ export default function Home() {
     (state) => state.initializeAutoSave
   );
   const cleanupAutoSave = useWorkflowStore((state) => state.cleanupAutoSave);
+  const fetchCurrentUser = useWorkflowStore(
+    (state) => state.fetchCurrentUser
+  );
 
   useEffect(() => {
     initializeAutoSave();
+    fetchCurrentUser();
     return () => cleanupAutoSave();
-  }, [initializeAutoSave, cleanupAutoSave]);
+  }, [initializeAutoSave, cleanupAutoSave, fetchCurrentUser]);
 
   // Warn on close if ANY tab has unsaved changes
   useEffect(() => {
