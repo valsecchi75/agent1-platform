@@ -19,45 +19,79 @@ Implement complete per-user data isolation across all layers: middleware, API ro
 
 ## Architecture
 
-### 1. Identity Propagation — Custom Headers in Middleware
+### 1. Identity Propagation — JWT Extraction in Routes
 
-**File:** `src/proxy.ts`
+**Approach:** Each API route extracts user identity directly from the JWT cookie using a shared helper function. This is more secure than header injection because JWT tokens are cryptographically signed and tamper-proof, whereas HTTP headers can be spoofed by clients.
 
-The Edge middleware already verifies the JWT and checks `payload.authenticated`. The change: after verification, inject the user identity into request headers so every API route can read it without re-decoding the JWT.
+**Why not middleware headers:** The Edge middleware (`proxy.ts`) runs in Edge Runtime and could inject headers, but custom headers like `x-user-id` are mutable — a malicious client could set them directly, bypassing the middleware entirely on misconfigured deployments. JWT extraction in each route is tamper-proof by design.
 
-**Headers injected:**
-- `x-user-id` — UUID from JWT `userId` claim
-- `x-user-role` — `admin` or `user` from JWT `role` claim
-- `x-username` — username string
-
-**Fallback for env-only auth:** The login route for env-based auth currently signs a JWT without `userId`. This must be fixed: env-auth users get a synthetic UUID (deterministic from username via UUID v5) and `role: user`. The admin env-user gets `role: admin`.
+**Middleware change** (`src/proxy.ts`): No functional change beyond existing auth check. The middleware continues to verify the JWT and reject unauthenticated requests. It does NOT inject user headers.
 
 **Helper function** (`src/lib/auth/getRequestUser.ts`):
 ```typescript
+import { verifyToken } from './jwt';
+
 export interface RequestUser {
   userId: string;
   username: string;
   role: 'admin' | 'user';
 }
 
-export function getRequestUser(req: NextRequest): RequestUser {
-  const userId = req.headers.get('x-user-id');
-  const username = req.headers.get('x-username');
-  const role = req.headers.get('x-user-role') as 'admin' | 'user';
-  
-  if (!userId || !username || !role) {
-    throw new Error('Missing auth headers — middleware misconfigured');
+export async function getRequestUser(req: NextRequest): Promise<RequestUser> {
+  const token = req.cookies.get('agent1_session')?.value;
+  if (!token) {
+    throw new AuthError(401, 'Not authenticated');
   }
   
-  return { userId, username, role };
+  const payload = await verifyToken(token);
+  if (!payload || !payload.authenticated || !payload.userId) {
+    throw new AuthError(401, 'Invalid token');
+  }
+  
+  return {
+    userId: payload.userId as string,
+    username: payload.username as string,
+    role: (payload.role as 'admin' | 'user') || 'user',
+  };
+}
+
+export async function requireAdmin(req: NextRequest): Promise<RequestUser> {
+  const user = await getRequestUser(req);
+  if (user.role !== 'admin') {
+    throw new AuthError(403, 'Admin access required');
+  }
+  return user;
 }
 ```
 
-Every API route that accesses user-scoped data calls `getRequestUser(req)` and uses the returned `userId` for all DB queries and file operations.
+The JWT is verified once per request via `verifyToken()` (HS256, ~0.1ms). This is negligible overhead compared to the DB/file operations that follow.
+
+Every API route that accesses user-scoped data calls `await getRequestUser(req)` and uses the returned `userId` for all DB queries and file operations.
 
 **Login route update** (`src/app/api/auth/login/route.ts`):
 - DB auth: already includes `userId` in JWT. Add `role` claim from `dbUser.role`.
-- Env auth: generate deterministic UUID for username, include in JWT with `role: 'admin'` for admin username, `role: 'user'` for others.
+- Env auth: at login time, create a real DB user record if one doesn't exist (via `createUser()` with the env username and a hashed password). This ensures every authenticated user has a valid DB row with a real UUID, avoiding FK constraint violations when saving generations. The JWT is then signed with `userId`, `username`, and `role` just like DB auth.
+
+**Env-auth DB record creation** (in login route):
+```typescript
+// Env-auth fallback: ensure user exists in DB
+let dbUser = getUserByUsername(username);
+if (!dbUser) {
+  const userId = await createUser({
+    username,
+    password,  // already validated against env
+    displayName: username,
+    role: username === 'admin' ? 'admin' : 'user',
+  });
+  dbUser = getUserById(userId);
+}
+const token = await signToken({
+  authenticated: true,
+  username: dbUser.username,
+  userId: dbUser.id,
+  role: dbUser.role,
+});
+```
 
 ### 2. Database Changes
 
@@ -81,11 +115,16 @@ CREATE TABLE IF NOT EXISTS user_api_keys (
 
 **Key derivation:** `ENCRYPTION_SECRET` + user_id as salt → PBKDF2 → 256-bit key. Each user's keys are encrypted with a user-specific derived key, so even if two users store the same API key, the ciphertext differs.
 
-#### 2.2 New index on `generations`
+#### 2.2 New indexes
 
 ```sql
+-- Generations: fast per-user queries
 CREATE INDEX IF NOT EXISTS idx_generations_user_id ON generations(user_id);
 CREATE INDEX IF NOT EXISTS idx_generations_user_id_created ON generations(user_id, created_at DESC);
+
+-- API calls: per-user cost reports
+CREATE INDEX IF NOT EXISTS idx_api_calls_user_id ON api_calls(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_calls_user_id_created ON api_calls(user_id, created_at DESC);
 ```
 
 #### 2.3 `daily_stats` — add user_id
@@ -147,19 +186,17 @@ Every route that currently uses `resolveAdminId()` or `getAdminUserId()` gets up
 | `api/user/api-keys` POST | Set an API key |
 | `api/user/api-keys/[keyName]` DELETE | Delete an API key |
 
-#### 3.3 Admin-only middleware guard
+#### 3.3 Admin-only guard
 
-```typescript
-export function requireAdmin(req: NextRequest): RequestUser {
-  const user = getRequestUser(req);
-  if (user.role !== 'admin') {
-    throw new HttpError(403, 'Admin access required');
-  }
-  return user;
-}
-```
+The `requireAdmin()` function is defined in `getRequestUser.ts` (see Section 1). Used in all `api/admin/*` routes. Returns the authenticated user or throws 403.
 
-Used in all `api/admin/*` routes.
+#### 3.4 User deletion handling
+
+When an admin deletes a user:
+1. DB cascade deletes generations, api_calls, user_sessions, user_api_keys (ON DELETE CASCADE)
+2. File cleanup is async: a background job removes `storage/users/{userId}/` directory
+3. The API returns success immediately; file cleanup happens in a `setTimeout(fn, 0)` after response
+4. If file cleanup fails, orphaned directories can be cleaned up manually (logged as warning)
 
 ### 4. API Key Resolution at Generation Time
 
@@ -250,17 +287,33 @@ Session files stored at: `storage/users/{userId}/workflows/__session/tab_{tabId}
 
 ### 6. Data Migration
 
-A one-time migration script runs on first startup after the update:
+A one-time migration script runs on first startup after the update. The migration is designed to be **idempotent and crash-safe**: if the process is interrupted mid-migration, re-running produces the same result without data loss.
 
-1. **Detect migration needed:** Check if `storage/users/` directory exists. If not, run migration.
-2. **Get admin userId** from `users` table.
-3. **Create admin directory** at `storage/users/{adminId}/output/{images,videos,audio}/`.
-4. **Move files:** `storage/output/images/*` → `storage/users/{adminId}/output/images/`  (same for videos, audio, input).
-5. **Update DB paths:** `UPDATE generations SET file_path = REPLACE(file_path, 'output/', 'users/{adminId}/output/')`.
-6. **Move session files:** `storage/workflows/__session/*` → `storage/users/{adminId}/workflows/__session/`.
-7. **Attribute existing data:** `UPDATE generations SET user_id = '{adminId}' WHERE user_id IS NULL OR user_id = 'admin'`.
-8. **Update daily_stats:** `UPDATE daily_stats SET user_id = '{adminId}' WHERE user_id IS NULL`.
-9. **Write migration marker:** Create `storage/.migration-v1-complete` to prevent re-running.
+**File:** `src/lib/migration/migrateToMultiUser.ts`
+
+**Trigger:** Called from `db.ts` initialization, after schema creation. Checks for marker file before running.
+
+**Steps:**
+
+1. **Check marker:** If `storage/.migration-v1-complete` exists → skip (already done).
+2. **Get admin userId** from `users` table. If no admin user exists, skip (fresh install).
+3. **Create target directories:** `storage/users/{adminId}/output/{images,videos,audio}/`, `storage/users/{adminId}/input/`, `storage/users/{adminId}/workflows/__session/`.
+4. **Copy files (not move):** For each file in `storage/output/images/*`, copy to `storage/users/{adminId}/output/images/` using `copyFileSync`. Skip files that already exist in the target (idempotent). Log each file copied. Same for videos, audio, input.
+5. **Copy session files:** `storage/workflows/__session/*` → `storage/users/{adminId}/workflows/__session/`.
+6. **DB updates in a single transaction:**
+   ```sql
+   BEGIN TRANSACTION;
+   UPDATE generations SET file_path = REPLACE(file_path, 'output/', 'users/{adminId}/output/') WHERE file_path NOT LIKE 'users/%';
+   UPDATE generations SET user_id = '{adminId}' WHERE user_id IS NULL OR user_id = 'admin';
+   UPDATE daily_stats SET user_id = '{adminId}' WHERE user_id IS NULL;
+   COMMIT;
+   ```
+7. **Write marker file:** `storage/.migration-v1-complete` with timestamp and admin userId.
+8. **Clean up old directories** (optional, deferred): The old `storage/output/` files are left in place as a backup. A separate cleanup can be run manually after verifying the migration succeeded.
+
+**Why copy not move:** Copying is idempotent — if the process crashes after copying 50 of 100 files, re-running copies the remaining 50 and skips the already-copied ones. Moving is not idempotent: if the process crashes mid-move, some files are in the old location and some in the new, making re-running risky. The old files serve as a backup.
+
+**Why single transaction for DB:** All DB updates are atomic. If any fails, none are applied. On re-run, the `WHERE file_path NOT LIKE 'users/%'` clause ensures already-migrated rows are skipped.
 
 ### 7. Admin Panel UI
 
@@ -326,14 +379,16 @@ Used by:
 
 ## Security Considerations
 
-1. **API keys encrypted at rest** with AES-256-GCM, user-specific derived keys
-2. **No global API key fallback** — each user manages their own keys
-3. **Admin keys invisible** to non-admin users
-4. **File path validation** — output-browser route checks userId ownership
-5. **Client-provided userId ignored** — always use JWT-extracted userId
-6. **Role enforcement** — admin routes reject non-admin users with 403
-7. **ENCRYPTION_SECRET** auto-generated and stored in .env (never committed)
-8. **API key values shown only once** at creation time, then masked forever
+1. **JWT extraction per-route** — user identity comes from cryptographically signed JWT, not spoofable headers
+2. **API keys encrypted at rest** with AES-256-GCM, user-specific derived keys (PBKDF2 with userId salt)
+3. **No global API key fallback** — each user manages their own keys
+4. **Admin keys invisible** to non-admin users — each user sees only their own keys
+5. **File path validation** — output-browser route checks userId ownership before serving files
+6. **Client-provided userId ignored** — always use JWT-extracted userId
+7. **Role enforcement** — admin routes reject non-admin users with 403
+8. **ENCRYPTION_SECRET** auto-generated and stored in .env (never committed)
+9. **API key values shown only once** at creation time, then masked forever
+10. **Encryption key rotation** — if ENCRYPTION_SECRET needs to change, a migration script decrypts all keys with the old secret and re-encrypts with the new one. The `user_api_keys` table includes `created_at` to identify keys needing rotation. This is a manual admin operation, not automated.
 
 ## Risks & Mitigations
 
@@ -357,7 +412,7 @@ Used by:
 ## Files Modified (Summary)
 
 ### Modified
-- `src/proxy.ts` — inject user headers
+- `src/proxy.ts` — no functional change (existing auth check sufficient)
 - `src/lib/db.ts` — new tables, indexes, CRUD functions, encrypted key storage
 - `src/lib/storage/fileNaming.ts` — user-scoped paths
 - `src/lib/sessionPersistence.ts` — user-scoped sessions
