@@ -91,7 +91,24 @@ export async function POST(req: NextRequest) {
 
       if (dbUser) {
         failedAttempts.delete(ip);
-        const token = await signToken({ authenticated: true, username: dbUser.username, userId: dbUser.id, role: dbUser.role });
+
+        // Look up department info for JWT payload
+        let departmentId: string | null = null;
+        let departmentName: string | null = null;
+        if (dbUser.department_id) {
+          try {
+            const { getDepartmentById } = await import('@/lib/departments');
+            const dept = getDepartmentById(dbUser.department_id);
+            if (dept) {
+              departmentId = dept.id;
+              departmentName = dept.name;
+            }
+          } catch {
+            // departments module may not be available yet
+          }
+        }
+
+        const token = await signToken({ authenticated: true, username: dbUser.username, userId: dbUser.id, role: dbUser.role, departmentId, departmentName });
 
         const response = NextResponse.json({ success: true });
         response.cookies.set('agent1_session', token, {
@@ -155,10 +172,28 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Look up department info for env-auth users too
+  let envDepartmentId: string | null = null;
+  let envDepartmentName: string | null = null;
+  if (envUser && (envUser as Record<string, unknown>).department_id) {
+    try {
+      const { getDepartmentById } = await import('@/lib/departments');
+      const dept = getDepartmentById((envUser as Record<string, unknown>).department_id as string);
+      if (dept) {
+        envDepartmentId = dept.id;
+        envDepartmentName = dept.name;
+      }
+    } catch {
+      // departments module may not be available yet
+    }
+  }
+
   const token = await signToken({
     authenticated: true,
     username,
     ...(envUser ? { userId: envUser.id, role: envUser.role } : {}),
+    departmentId: envDepartmentId,
+    departmentName: envDepartmentName,
   });
 
   const response = NextResponse.json({ success: true });

@@ -8,6 +8,8 @@ export async function GET(req: NextRequest) {
       userId: user.userId,
       username: user.username,
       role: user.role,
+      departmentId: user.departmentId,
+      departmentName: user.departmentName,
     });
   } catch (err) {
     if (err instanceof AuthError) {
