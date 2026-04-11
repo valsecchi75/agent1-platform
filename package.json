@@ -1,6 +1,6 @@
 {
   "name": "agent1-from-vision-to-form",
-  "version": "0.9.17-alpha",
+  "version": "0.9.18-alpha",
   "private": true,
   "scripts": {
     "dev": "node server.js",
@@ -29,6 +29,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "@rollup/rollup-linux-x64-gnu": "^4.60.1",
     "@tailwindcss/postcss": "^4.1.17",
     "@xyflow/react": "^12.9.3",
     "ai": "^6.0.49",
