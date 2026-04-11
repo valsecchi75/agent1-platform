@@ -8,7 +8,8 @@ export interface DbUser {
   username: string;
   password_hash: string;
   display_name: string | null;
-  role: "admin" | "user";
+  role: "admin" | "dept_admin" | "user";
+  department_id: string | null;
   created_at: string; // ISO 8601
   last_login_at: string | null;
 }
@@ -17,7 +18,63 @@ export interface CreateUserInput {
   username: string;
   password: string;
   displayName?: string;
-  role?: "admin" | "user";
+  role?: "admin" | "dept_admin" | "user";
+  departmentId?: string;
+}
+
+// ─── Departments ─────────────────────────────────────────────────
+
+export interface DbDepartment {
+  id: string;
+  name: string;
+  description: string | null;
+  budget_monthly: number;
+  budget_used: number;
+  budget_period_start: string | null; // ISO 8601 UTC
+  budget_warning_threshold: number;   // 0.0–1.0, default 0.8
+  budget_soft_limit: number;          // USD overage allowed, default 0
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateDepartmentInput {
+  name: string;
+  description?: string;
+  budgetMonthly?: number;
+  budgetWarningThreshold?: number;
+  budgetSoftLimit?: number;
+}
+
+export interface UpdateDepartmentInput {
+  name?: string;
+  description?: string;
+  budgetMonthly?: number;
+  budgetWarningThreshold?: number;
+  budgetSoftLimit?: number;
+}
+
+export interface DepartmentBudgetStatus {
+  departmentId: string;
+  departmentName: string;
+  budgetMonthly: number;
+  budgetUsed: number;
+  usageRatio: number;          // 0.0–1.0+
+  warningThreshold: number;
+  softLimit: number;
+  periodStart: string;
+  daysRemainingInPeriod: number;
+  isWarning: boolean;
+  isExceeded: boolean;
+}
+
+export interface DepartmentMemberStats {
+  userId: string;
+  username: string;
+  displayName: string | null;
+  role: 'admin' | 'dept_admin' | 'user';
+  totalCost: number;
+  generationCount: number;
+  lastActivity: string | null;
 }
 
 // ─── Generations ─────────────────────────────────────────────────
