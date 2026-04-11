@@ -98,6 +98,38 @@ export function getDb(): Database.Database {
 
 // ─── Schema Initialization ──────────────────────────────────────
 
+function migrateDepartmentSupport(db: Database.Database): void {
+  const columns = db
+    .prepare("PRAGMA table_info(users)")
+    .all() as Array<{ name: string }>;
+  const hasDeptId = columns.some((c) => c.name === "department_id");
+  if (hasDeptId) return; // Already migrated
+
+  db.transaction(() => {
+    db.exec(`
+      CREATE TABLE users_new (
+        id TEXT PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        display_name TEXT,
+        role TEXT DEFAULT 'user' CHECK(role IN ('admin', 'dept_admin', 'user')),
+        department_id TEXT REFERENCES departments(id),
+        created_at TEXT NOT NULL,
+        last_login_at TEXT
+      )
+    `);
+
+    db.exec(`
+      INSERT INTO users_new (id, username, password_hash, display_name, role, created_at, last_login_at)
+      SELECT id, username, password_hash, display_name, role, created_at, last_login_at
+      FROM users
+    `);
+
+    db.exec("DROP TABLE users");
+    db.exec("ALTER TABLE users_new RENAME TO users");
+  })();
+}
+
 function initializeSchema(db: Database.Database): void {
   // Create users table
   db.exec(`
@@ -201,6 +233,25 @@ function initializeSchema(db: Database.Database): void {
     )
   `);
 
+  // ── Departments table ──
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS departments (
+      id TEXT PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      description TEXT,
+      budget_monthly REAL DEFAULT 0,
+      budget_used REAL DEFAULT 0,
+      budget_period_start TEXT,
+      budget_warning_threshold REAL DEFAULT 0.8,
+      budget_soft_limit REAL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `);
+
+  // ── Migrate users table to support departments and dept_admin role ──
+  migrateDepartmentSupport(db);
+
   // Create indexes for better query performance
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_gen_created ON generations(created_at DESC);
@@ -238,8 +289,8 @@ export async function createUser(input: CreateUserInput): Promise<string> {
   const passwordHash = await bcrypt.hash(input.password, 12);
 
   const stmt = db.prepare(`
-    INSERT INTO users (id, username, password_hash, display_name, role, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO users (id, username, password_hash, display_name, role, department_id, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
 
   stmt.run(
@@ -248,6 +299,7 @@ export async function createUser(input: CreateUserInput): Promise<string> {
     passwordHash,
     input.displayName || null,
     input.role || "user",
+    input.departmentId || null,
     now
   );
 
@@ -316,7 +368,7 @@ export function getUserByUsername(username: string): DbUser | null {
   return (db.prepare('SELECT * FROM users WHERE username = ?').get(username) as DbUser) || null;
 }
 
-export function updateUser(userId: string, updates: { display_name?: string; role?: string }): void {
+export function updateUser(userId: string, updates: { display_name?: string; role?: string; department_id?: string | null }): void {
   const db = getDb();
   const sets: string[] = [];
   const params: unknown[] = [];
@@ -327,6 +379,10 @@ export function updateUser(userId: string, updates: { display_name?: string; rol
   if (updates.role !== undefined) {
     sets.push('role = ?');
     params.push(updates.role);
+  }
+  if (updates.department_id !== undefined) {
+    sets.push('department_id = ?');
+    params.push(updates.department_id);
   }
   if (sets.length === 0) return;
   params.push(userId);
