@@ -45,6 +45,7 @@ Extend AGENT 1's user system from a flat admin/user model to a three-tier organi
 | Change | Details |
 |--------|---------|
 | `role` values | `'admin'`, `'dept_admin'`, `'user'` (was: `'admin'`, `'user'`) |
+| `role` CHECK constraint | Must be removed — current schema has `CHECK(role IN ('admin', 'user'))` which blocks `dept_admin`. See migration section for approach. |
 | New column: `department_id` | TEXT, REFERENCES departments(id), nullable |
 
 The relationship is 1:N (one department, many users). No join table needed.
@@ -83,10 +84,16 @@ Executed before every API generation call (in `/api/generate` route):
 3. Lazy reset: if `budget_period_start` is in a previous month, set `budget_used = 0` and `budget_period_start` to 1st of current month
 4. If `budget_monthly = 0`: no budget configured, proceed normally
 5. Calculate `usage_ratio = budget_used / budget_monthly`
-6. If user role is `admin` or `dept_admin`: skip enforcement, proceed (but still return warning info)
-7. If `budget_used + estimated_cost > budget_monthly + budget_soft_limit`: block with `403` and `{ budgetExceeded: true }`
-8. If `usage_ratio >= budget_warning_threshold`: proceed but include `{ budgetWarning: "Department X has used Y% of monthly budget" }`
-9. Otherwise: proceed normally
+6. Estimate generation cost via `calculatePredictedCost()` from `src/utils/costCalculator.ts`, using the selected model's pricing from the providers registry. If pricing is unavailable for the model, assume a safe default of `$0.25` (max single-generation cost across known models)
+7. If user role is `admin`: skip enforcement entirely, proceed (but still return warning info)
+8. If user role is `dept_admin` and department matches their own: skip enforcement, proceed (but still return warning info). If generating on behalf of another department, enforcement applies normally
+9. If `budget_used + estimated_cost > budget_monthly + budget_soft_limit`: block with `403` and `{ budgetExceeded: true }`
+10. If `usage_ratio >= budget_warning_threshold`: proceed but include `{ budgetWarning: "Department X has used Y% of monthly budget" }`
+11. Otherwise: proceed normally
+
+### Concurrency note
+
+With concurrent requests from the same department, two requests may both pass the pre-check before either updates `budget_used`, potentially causing a slight budget overshoot. This is a known and accepted limitation of the lazy pre-check model. The soft limit provides a buffer for this scenario. Since `better-sqlite3` serializes writes (single writer), the post-generation `budget_used` update itself is atomic and consistent — the overshoot is bounded to the cost of one concurrent generation at most.
 
 ### Post-generation update
 
@@ -101,15 +108,17 @@ WHERE id = :department_id
 
 ### Monthly reset (lazy)
 
-No external cron. On every pre-check, if `budget_period_start` < first day of current month:
+No external cron. On every pre-check, if `budget_period_start` < first day of current month (UTC):
 
 ```sql
 UPDATE departments
 SET budget_used = 0,
-    budget_period_start = :first_of_current_month,
+    budget_period_start = :first_of_current_month_utc,
     updated_at = :now
 WHERE id = :department_id
 ```
+
+All budget period dates use UTC to avoid timezone ambiguity. Budget resets on the 1st of each UTC month at 00:00:00 UTC.
 
 ## 4. API Routes
 
@@ -118,7 +127,7 @@ WHERE id = :department_id
 | Route | Methods | Access | Purpose |
 |-------|---------|--------|---------|
 | `/api/admin/departments` | GET, POST | admin (all), dept_admin (GET own) | List/create departments |
-| `/api/admin/departments/[id]` | GET, PUT, DELETE | admin, dept_admin (own) | Detail, update, delete department |
+| `/api/admin/departments/[id]` | GET, PUT, DELETE | admin, dept_admin (own, no DELETE) | Detail, update, delete department |
 | `/api/admin/departments/[id]/members` | GET | admin, dept_admin (own) | List members with individual spend stats |
 | `/api/admin/departments/[id]/budget` | GET | admin, dept_admin (own), user (own dept) | Budget status: monthly, used, percentage, days remaining |
 
@@ -132,12 +141,28 @@ WHERE id = :department_id
 | `POST /api/auth/login` | Include `departmentId` and `departmentName` in JWT payload |
 | `GET /api/auth/me` | Include `departmentId` and `departmentName` in response |
 
+### Updated RequestUser type
+
+In `src/lib/auth/getRequestUser.ts`, extend the `RequestUser` interface:
+
+```typescript
+export interface RequestUser {
+  userId: string;
+  username: string;
+  role: 'admin' | 'dept_admin' | 'user';
+  departmentId: string | null;
+  departmentName: string | null;
+}
+```
+
+`getRequestUser()` must extract `departmentId` and `departmentName` from the JWT payload.
+
 ### New middleware helpers
 
 In `src/lib/auth/getRequestUser.ts`:
 
-- `requireDeptAdmin(req)` — requires `dept_admin` or `admin` role
-- `requireDepartmentAccess(req, deptId)` — verifies user is admin global OR belongs to the specified department
+- `requireDeptAdmin(req)` — requires `dept_admin` or `admin` role, throws 403 otherwise
+- `requireDepartmentAccess(req, deptId)` — verifies user is admin global OR (dept_admin/user belonging to the specified department), throws 403 otherwise
 
 ## 5. Frontend UI
 
@@ -170,7 +195,14 @@ Executed in `db.ts` initialization (same pattern as existing tables):
 
 1. `CREATE TABLE IF NOT EXISTS departments (...)`
 2. `ALTER TABLE users ADD COLUMN department_id TEXT REFERENCES departments(id)` — wrapped in try/catch (fails silently if column exists)
-3. Role field already TEXT without CHECK constraint, `dept_admin` value works immediately
+3. **Role CHECK constraint removal**: The current schema has `CHECK(role IN ('admin', 'user'))` which blocks `dept_admin`. SQLite does not support `ALTER TABLE ... DROP CONSTRAINT`. The migration must recreate the users table:
+   - Create `users_new` with the updated CHECK: `CHECK(role IN ('admin', 'dept_admin', 'user'))`
+   - Copy all data from `users` to `users_new`
+   - Drop `users`
+   - Rename `users_new` to `users`
+   - Recreate indexes
+   - All wrapped in a single transaction for atomicity
+4. **DELETE department guard**: Deleting a department that has members returns `409 Conflict` with message "Cannot delete department with active members. Reassign or remove users first."
 
 ### Existing users
 
@@ -179,6 +211,8 @@ Users with `department_id = NULL` behave exactly as today: no budget constraints
 ### Existing JWT tokens
 
 Tokens without `departmentId` in payload are treated as "unassigned user". Full functionality until next login, when token is re-created with the new fields.
+
+**Known limitation**: `departmentName` in JWT is cached at login time. If a department is renamed, users see the old name until their next login. This is a minor UX issue, not a security concern.
 
 ### File storage
 
