@@ -30,6 +30,15 @@ export interface GenerateResponse {
   model3dUrl?: string; // For 3D models, return GLB URL directly
   contentType?: "image" | "video" | "3d" | "audio";
   error?: string;
+  // Budget enforcement fields
+  budgetWarning?: string;
+  budgetExceeded?: boolean;
+  budgetStatus?: {
+    departmentName: string;
+    budgetMonthly: number;
+    budgetUsed: number;
+    usagePercent: number;
+  };
 }
 
 // API Request/Response types for LLM Text Generation
