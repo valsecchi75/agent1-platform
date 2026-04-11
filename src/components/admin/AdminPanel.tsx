@@ -13,14 +13,29 @@ import { AdminUserList } from "./AdminUserList";
 import { AdminUserForm } from "./AdminUserForm";
 import { AdminUserStats } from "./AdminUserStats";
 import { AdminSystemInfo } from "./AdminSystemInfo";
+import { AdminDepartmentList } from "./AdminDepartmentList";
+import { AdminDepartmentForm } from "./AdminDepartmentForm";
+import { useWorkflowStore } from "@/store/workflowStore";
 
 interface User {
   id: string;
   username: string;
   display_name: string | null;
-  role: "admin" | "user";
+  role: "admin" | "dept_admin" | "user";
+  department_id: string | null;
   created_at: string;
   last_login_at: string | null;
+}
+
+interface Department {
+  id: string;
+  name: string;
+  description: string | null;
+  budget_monthly: number;
+  budget_used: number;
+  budget_warning_threshold: number;
+  budget_soft_limit: number;
+  memberCount: number;
 }
 
 interface AdminPanelProps {
@@ -28,16 +43,22 @@ interface AdminPanelProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type View = "list" | "create" | "edit" | "stats";
+type UserView = "list" | "create" | "edit" | "stats";
+type DeptView = "list" | "create" | "edit";
 
 export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
+  const currentUser = useWorkflowStore((s) => s.currentUser);
+  const isGlobalAdmin = currentUser?.role === "admin";
+
   const [activeTab, setActiveTab] = useState("users");
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [view, setView] = useState<View>("list");
+  const [userView, setUserView] = useState<UserView>("list");
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [statsUser, setStatsUser] = useState<User | null>(null);
+  const [deptView, setDeptView] = useState<DeptView>("list");
+  const [editingDept, setEditingDept] = useState<Department | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -60,19 +81,20 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   useEffect(() => {
     if (open) {
       fetchUsers();
-      setView("list");
+      setUserView("list");
+      setDeptView("list");
       setActiveTab("users");
     }
   }, [open]);
 
   const handleSelectUser = (user: User) => {
     setEditingUser(user);
-    setView("edit");
+    setUserView("edit");
   };
 
   const handleCreateUser = () => {
     setEditingUser(null);
-    setView("create");
+    setUserView("create");
   };
 
   const handleViewStats = (user: User) => {
@@ -81,24 +103,21 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   };
 
   const handleFormSave = () => {
-    setView("list");
+    setUserView("list");
     setEditingUser(null);
     fetchUsers();
   };
 
   const handleFormCancel = () => {
-    setView("list");
+    setUserView("list");
     setEditingUser(null);
   };
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
-    if (tabId === "users") {
-      setView("list");
-    }
-    if (tabId === "stats" && !statsUser && users.length > 0) {
-      setStatsUser(users[0]);
-    }
+    if (tabId === "users") setUserView("list");
+    if (tabId === "departments") setDeptView("list");
+    if (tabId === "stats" && !statsUser && users.length > 0) setStatsUser(users[0]);
   };
 
   const renderUsersTab = () => {
@@ -121,7 +140,7 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
       );
     }
 
-    if (view === "create" || view === "edit") {
+    if (userView === "create" || userView === "edit") {
       return (
         <div>
           <div className="flex items-center gap-2 mb-4">
@@ -133,7 +152,7 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
               &larr; Back
             </button>
             <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-              {view === "edit" && editingUser
+              {userView === "edit" && editingUser
                 ? `Edit ${editingUser.username}`
                 : "Create New User"}
             </h3>
@@ -154,6 +173,50 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
         onSelectUser={handleSelectUser}
         onCreate={handleCreateUser}
         onViewStats={handleViewStats}
+      />
+    );
+  };
+
+  const renderDepartmentsTab = () => {
+    if (deptView === "create" || deptView === "edit") {
+      return (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <button
+              onClick={() => {
+                setDeptView("list");
+                setEditingDept(null);
+              }}
+              className="text-xs px-2 py-1 rounded transition-colors"
+              style={{ background: "var(--surface-3)", color: "var(--text-secondary)" }}
+            >
+              &larr; Back
+            </button>
+            <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+              {deptView === "edit" && editingDept ? `Edit ${editingDept.name}` : "Create Department"}
+            </h3>
+          </div>
+          <AdminDepartmentForm
+            department={editingDept || undefined}
+            onSave={() => {
+              setDeptView("list");
+              setEditingDept(null);
+            }}
+            onCancel={() => {
+              setDeptView("list");
+              setEditingDept(null);
+            }}
+          />
+        </div>
+      );
+    }
+    return (
+      <AdminDepartmentList
+        onEdit={(dept) => {
+          setEditingDept(dept);
+          setDeptView("edit");
+        }}
+        onCreate={() => setDeptView("create")}
       />
     );
   };
@@ -205,6 +268,13 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     );
   };
 
+  const tabs = [
+    ...(isGlobalAdmin ? [{ id: "departments", label: "Departments" }] : []),
+    { id: "users", label: "Users" },
+    { id: "stats", label: "Stats" },
+    { id: "system", label: "System" },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="xl">
@@ -212,22 +282,16 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
           <DialogTitle>Admin Panel</DialogTitle>
         </DialogHeader>
 
-        <DialogTabs
-          tabs={[
-            { id: "users", label: "Users" },
-            { id: "stats", label: "Stats" },
-            { id: "system", label: "System" },
-          ]}
-          active={activeTab}
-          onChange={handleTabChange}
-        />
+        <DialogTabs tabs={tabs} active={activeTab} onChange={handleTabChange} />
 
         <DialogBody>
-          {activeTab === "users"
-            ? renderUsersTab()
-            : activeTab === "stats"
-            ? renderStatsTab()
-            : <AdminSystemInfo />}
+          {activeTab === "departments"
+            ? renderDepartmentsTab()
+            : activeTab === "users"
+              ? renderUsersTab()
+              : activeTab === "stats"
+                ? renderStatsTab()
+                : <AdminSystemInfo />}
         </DialogBody>
       </DialogContent>
     </Dialog>

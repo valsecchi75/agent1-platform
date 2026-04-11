@@ -1,15 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DialogFooter, DialogButton } from "@/components/ui/dialog";
 
 interface User {
   id: string;
   username: string;
   display_name: string | null;
-  role: "admin" | "user";
+  role: "admin" | "dept_admin" | "user";
+  department_id: string | null;
   created_at: string;
   last_login_at: string | null;
+}
+
+interface Department {
+  id: string;
+  name: string;
 }
 
 interface AdminUserFormProps {
@@ -23,9 +29,26 @@ export function AdminUserForm({ user, onSave, onCancel }: AdminUserFormProps) {
   const [username, setUsername] = useState(user?.username || "");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState(user?.display_name || "");
-  const [role, setRole] = useState<"admin" | "user">(user?.role || "user");
+  const [role, setRole] = useState<"admin" | "dept_admin" | "user">(user?.role || "user");
+  const [departmentId, setDepartmentId] = useState(user?.department_id || "");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const res = await fetch("/api/admin/departments");
+        if (res.ok) {
+          const data = await res.json();
+          setDepartments(data.departments || []);
+        }
+      } catch {
+        // Silently fail
+      }
+    };
+    fetchDepartments();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +61,7 @@ export function AdminUserForm({ user, onSave, onCancel }: AdminUserFormProps) {
         const body: Record<string, unknown> = {
           displayName,
           role,
+          departmentId: departmentId || null,
         };
         if (password) {
           body.newPassword = password;
@@ -67,6 +91,7 @@ export function AdminUserForm({ user, onSave, onCancel }: AdminUserFormProps) {
             password,
             displayName,
             role,
+            departmentId: departmentId || null,
           }),
         });
 
@@ -158,7 +183,7 @@ export function AdminUserForm({ user, onSave, onCancel }: AdminUserFormProps) {
         </label>
         <select
           value={role}
-          onChange={(e) => setRole(e.target.value as "admin" | "user")}
+          onChange={(e) => setRole(e.target.value as "admin" | "dept_admin" | "user")}
           className="w-full px-3 py-2 rounded-lg border text-sm transition-colors"
           style={{
             background: "var(--surface-2)",
@@ -167,9 +192,36 @@ export function AdminUserForm({ user, onSave, onCancel }: AdminUserFormProps) {
           }}
         >
           <option value="user">User</option>
+          <option value="dept_admin">Department Admin</option>
           <option value="admin">Admin</option>
         </select>
       </div>
+
+      {(role === "user" || role === "dept_admin") && (
+        <div>
+          <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
+            Department {role === "dept_admin" ? "(required)" : "(optional)"}
+          </label>
+          <select
+            value={departmentId}
+            onChange={(e) => setDepartmentId(e.target.value)}
+            required={role === "dept_admin"}
+            className="w-full px-3 py-2 rounded-lg border text-sm transition-colors"
+            style={{
+              background: "var(--surface-2)",
+              borderColor: "var(--border)",
+              color: "var(--text-primary)",
+            }}
+          >
+            <option value="">— None —</option>
+            {departments.map((dept) => (
+              <option key={dept.id} value={dept.id}>
+                {dept.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <DialogFooter>
         <DialogButton variant="ghost" onClick={onCancel} disabled={isLoading}>

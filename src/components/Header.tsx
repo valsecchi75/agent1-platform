@@ -262,7 +262,7 @@ export function Header() {
 
   const settingsButtons = (
     <div className="flex items-center gap-0.5 ml-1 pl-1 border-l border-neutral-700/50">
-      {currentUser?.role === "admin" && (
+      {(currentUser?.role === "admin" || currentUser?.role === "dept_admin") && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" onClick={() => setShowAdminPanel(true)}>

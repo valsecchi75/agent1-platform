@@ -8,7 +8,8 @@ interface User {
   id: string;
   username: string;
   display_name: string | null;
-  role: "admin" | "user";
+  role: "admin" | "dept_admin" | "user";
+  department_id: string | null;
   created_at: string;
   last_login_at: string | null;
 }
@@ -106,6 +107,9 @@ export function AdminUserList({
                 Role
               </th>
               <th className="text-left px-4 py-2 font-medium" style={{ color: "var(--text-primary)" }}>
+                Department
+              </th>
+              <th className="text-left px-4 py-2 font-medium" style={{ color: "var(--text-primary)" }}>
                 Last Login
               </th>
               <th className="text-right px-4 py-2 font-medium" style={{ color: "var(--text-primary)" }}>
@@ -116,7 +120,7 @@ export function AdminUserList({
           <tbody>
             {users.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center">
+                <td colSpan={6} className="px-4 py-8 text-center">
                   <span style={{ color: "var(--text-muted)" }}>No users yet. Click "Create User" to add one.</span>
                 </td>
               </tr>
@@ -139,15 +143,23 @@ export function AdminUserList({
                     <span
                       className="text-xs px-2 py-1 rounded-full font-medium"
                       style={{
-                        background: user.role === "admin" ? "var(--accent)" : "var(--surface-3)",
-                        color:
+                        background:
                           user.role === "admin"
+                            ? "var(--accent)"
+                            : user.role === "dept_admin"
+                              ? "var(--accent)"
+                              : "var(--surface-3)",
+                        color:
+                          user.role === "admin" || user.role === "dept_admin"
                             ? "var(--btn-primary-text)"
                             : "var(--text-secondary)",
                       }}
                     >
                       {user.role}
                     </span>
+                  </td>
+                  <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>
+                    {user.department_id ? user.department_id.substring(0, 8) : "—"}
                   </td>
                   <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>
                     {formatDate(user.last_login_at)}
