@@ -736,6 +736,19 @@ export function insertGenerationWithCall(
       now
     );
 
+    // Update department budget if user has a department
+    if (apiCallInput.userId) {
+      const userRow = db.prepare('SELECT department_id FROM users WHERE id = ?').get(apiCallInput.userId) as { department_id: string | null } | undefined;
+      if (userRow?.department_id) {
+        db.prepare(`
+          UPDATE departments
+          SET budget_used = budget_used + ?,
+              updated_at = ?
+          WHERE id = ?
+        `).run(apiCallInput.costUsd || 0, now, userRow.department_id);
+      }
+    }
+
     return { generationId, callId };
   });
 

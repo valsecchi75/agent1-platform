@@ -21,7 +21,8 @@ import { GenerateRequest, GenerateResponse, ModelType, SelectedModel, ProviderTy
 import { apiErrorResponse, isRateLimitError } from "@/lib/api";
 import { getRequestUser, AuthError } from "@/lib/auth/getRequestUser";
 import { resolveApiKey, ApiKeyError } from "@/lib/auth/resolveApiKey";
-import { getUserApiKey } from "@/lib/db";
+import { getUserApiKey, getUserById } from "@/lib/db";
+import { checkBudget, getEstimatedCost } from "@/lib/budget";
 
 // Re-export for backward compatibility (test file imports from route)
 export const clearFalInputMappingCache = _clearFalInputMappingCache;
@@ -41,12 +42,21 @@ interface MultiProviderGenerateRequest extends GenerateRequest {
 }
 
 
-function buildMediaResponse(output: { type: string; data: string; url?: string }): NextResponse {
+function buildMediaResponse(
+  output: { type: string; data: string; url?: string },
+  budget?: { budgetWarning?: string; budgetStatus?: GenerateResponse['budgetStatus'] }
+): NextResponse {
+  const budgetFields = budget ? {
+    ...(budget.budgetWarning ? { budgetWarning: budget.budgetWarning } : {}),
+    ...(budget.budgetStatus ? { budgetStatus: budget.budgetStatus } : {}),
+  } : {};
+
   if (output.type === "3d") {
     return NextResponse.json<GenerateResponse>({
       success: true,
       model3dUrl: output.url,
       contentType: "3d",
+      ...budgetFields,
     });
   }
 
@@ -57,6 +67,7 @@ function buildMediaResponse(output: { type: string; data: string; url?: string }
       video: isLarge ? undefined : output.data,
       videoUrl: isLarge ? output.url : undefined,
       contentType: "video",
+      ...budgetFields,
     });
   }
 
@@ -67,6 +78,7 @@ function buildMediaResponse(output: { type: string; data: string; url?: string }
       audio: isLarge ? undefined : output.data,
       audioUrl: isLarge ? output.url : undefined,
       contentType: "audio",
+      ...budgetFields,
     });
   }
 
@@ -74,6 +86,7 @@ function buildMediaResponse(output: { type: string; data: string; url?: string }
     success: true,
     image: output.data,
     contentType: "image",
+    ...budgetFields,
   });
 }
 
@@ -134,6 +147,36 @@ export async function POST(request: NextRequest) {
     // Determine which provider to use
     const provider: ProviderType = selectedModel?.provider || "gemini";
     console.log(`[API:${requestId}] Provider: ${provider}, Model: ${selectedModel?.modelId || model}`);
+
+    // ── Budget pre-check ──
+    const dbUser = getUserById(user.userId);
+    const departmentId = dbUser?.department_id || null;
+
+    const estimatedCost = getEstimatedCost(
+      (selectedModel?.pricing as any)?.perGeneration ?? null
+    );
+
+    const budgetResult = checkBudget({
+      departmentId,
+      role: user.role,
+      estimatedCost,
+    });
+
+    let budgetWarning: string | undefined = undefined;
+    let budgetStatus: GenerateResponse['budgetStatus'] | undefined = undefined;
+
+    if (!budgetResult.allowed) {
+      return NextResponse.json<GenerateResponse>({
+        success: false,
+        error: 'Department budget exceeded. Contact your department admin.',
+        budgetExceeded: true,
+        budgetStatus: budgetResult.budgetStatus,
+      }, { status: 403 });
+    }
+
+    // Store for post-generation response enrichment
+    budgetWarning = budgetResult.budgetWarning;
+    budgetStatus = budgetResult.budgetStatus;
 
     // Route to appropriate provider
     if (provider === "replicate") {
@@ -213,7 +256,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return buildMediaResponse(output);
+      return buildMediaResponse(output, { budgetWarning, budgetStatus });
     }
 
     if (provider === "fal") {
@@ -288,7 +331,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return buildMediaResponse(output);
+      return buildMediaResponse(output, { budgetWarning, budgetStatus });
     }
 
     if (provider === "kie") {
@@ -367,7 +410,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return buildMediaResponse(output);
+      return buildMediaResponse(output, { budgetWarning, budgetStatus });
     }
 
     if (provider === "wavespeed") {
@@ -446,7 +489,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return buildMediaResponse(output);
+      return buildMediaResponse(output, { budgetWarning, budgetStatus });
     }
 
     // Default: Use Gemini
@@ -517,7 +560,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return buildMediaResponse(output);
+      return buildMediaResponse(output, { budgetWarning, budgetStatus });
     }
 
     return await generateWithGemini(
