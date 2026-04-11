@@ -360,7 +360,7 @@ export function updateLastLogin(userId: string): void {
 
 export function listUsers(): DbUser[] {
   const db = getDb();
-  return db.prepare('SELECT id, username, display_name, role, created_at, last_login_at FROM users ORDER BY created_at ASC').all() as DbUser[];
+  return db.prepare('SELECT id, username, display_name, role, department_id, created_at, last_login_at FROM users ORDER BY created_at ASC').all() as DbUser[];
 }
 
 export function getUserByUsername(username: string): DbUser | null {
