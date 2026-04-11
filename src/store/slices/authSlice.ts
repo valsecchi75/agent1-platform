@@ -10,7 +10,9 @@ import { StateCreator } from "zustand";
 export interface CurrentUser {
   userId: string;
   username: string;
-  role: "admin" | "user";
+  role: "admin" | "dept_admin" | "user";
+  departmentId: string | null;
+  departmentName: string | null;
 }
 
 export interface AuthSlice {
@@ -35,6 +37,8 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
             userId: data.userId,
             username: data.username,
             role: data.role,
+            departmentId: data.departmentId || null,
+            departmentName: data.departmentName || null,
           },
           isAuthLoading: false,
         });
