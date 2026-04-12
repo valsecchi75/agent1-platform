@@ -413,4 +413,21 @@ export function UpdateBanner() {
               >
                 <pre
                   className="text-xs leading-relaxed overflow-y-auto max-h-28 mt-2"
-                  style=
+                  style={{
+                    color: 'var(--foreground)',
+                    opacity: 0.55,
+                    whiteSpace: 'pre-wrap',
+                    fontFamily: 'inherit',
+                    margin: 0,
+                  }}
+                >
+                  {updateInfo.releaseNotes}
+                </pre>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
