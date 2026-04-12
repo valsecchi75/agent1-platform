@@ -158,6 +158,17 @@ echo  [OK] Versione finale: !NEW_VERSION!
 echo [INFO] Versione finale: !NEW_VERSION!>> "!LOG_FILE!"
 echo.
 
+REM -- Ask delta or full (if not already forced via --full) --
+if "!FORCE_FULL!"=="0" (
+    echo.
+    echo  Tipo di release ZIP:
+    echo    [d] Delta  - solo file modificati (per auto-update utenti esistenti)
+    echo    [f] Full   - tutti i file (per distribuzione standalone + Candidate Release)
+    echo.
+    set /p "RELEASE_MODE=  Scelta [d]: "
+    if /i "!RELEASE_MODE!"=="f" set "FORCE_FULL=1"
+)
+
 REM -- ZIP_NAME --
 set "ZIP_NAME=agent1-v!NEW_VERSION!.zip"
 
@@ -373,19 +384,14 @@ echo  [OK] Tag v!NEW_VERSION! creato
 
 REM -- Push con auto-upstream --
 echo  Pushing...
-git push --set-upstream origin main 2>nul
+git push origin master:main 2>nul
 if !ERRORLEVEL! NEQ 0 (
-    echo  [AVVISO] Push con upstream fallito, provo push normale...
-    git push 2>nul
-    if !ERRORLEVEL! NEQ 0 (
-        echo.
-        echo  [ATTENZIONE] Push fallito.
-        set /p "FORCE_PUSH=  Fare force push? (s/n): "
-        if /i "!FORCE_PUSH!"=="s" (
-            git push --set-upstream origin main --force 2>nul
-        ) else (
-            echo  Push saltato.
-        )
+    echo  [AVVISO] Push fallito, provo con force...
+    set /p "FORCE_PUSH=  Fare force push? (s/n): "
+    if /i "!FORCE_PUSH!"=="s" (
+        git push origin master:main --force 2>nul
+    ) else (
+        echo  Push saltato.
     )
 )
 

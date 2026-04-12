@@ -25,8 +25,8 @@ function shouldExclude(filePath) {
   const normalized = filePath.replace(/\\/g, '/');
   const basename = path.basename(normalized).toLowerCase();
 
-  // Storage and generated data
-  if (/^storage\//i.test(normalized) || /\/storage\//i.test(normalized)) return true;
+  // Storage and generated data (root-level only, NOT src/lib/storage/)
+  if (/^storage\//i.test(normalized)) return true;
 
   // Database files
   if (/\.(db|sqlite|sqlite3)$/i.test(basename)) return true;
