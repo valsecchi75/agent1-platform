@@ -1,5 +1,5 @@
 'use client';
-
+// Update Banner v0.9.19 — hardened update system
 import { ArrowUp, X, CheckCircle2, AlertCircle, RotateCcw, RefreshCw, SkipForward } from 'lucide-react';
 import { useState } from 'react';
 import { useUpdateCheck } from '@/hooks/useUpdateCheck';
@@ -413,21 +413,4 @@ export function UpdateBanner() {
               >
                 <pre
                   className="text-xs leading-relaxed overflow-y-auto max-h-28 mt-2"
-                  style={{
-                    color: 'var(--foreground)',
-                    opacity: 0.5,
-                    fontFamily: 'inherit',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {updateInfo.releaseNotes}
-                </pre>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
+                  style=

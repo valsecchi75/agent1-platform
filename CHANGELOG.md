@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Full-snapshot backup before update (replaces 2-file backup)
+- Download progress bar with percentage in update banner
+- SSE heartbeat every 15s to prevent proxy timeouts
+- SSE inactivity timeout (180s) with connection-lost detection
+- "Skip this version" button with localStorage persistence
+- Cross-platform restart command detection (Windows/Mac/Linux)
+- Click-to-expand for long error messages in update banner
+- Server-side URL validation against allowed GitHub hosts
+
+### Fixed
+
+- Incomplete rollback only restoring package.json + token.ts — now restores all whitelisted files
+- Infinite build-retry loop after failed update — .update-pending marker cleaned on rollback
+- Client spinner hanging forever when SSE connection drops silently
+- Missing scripts/ directory in release ZIP (GR-016)
+
 ## [1.1.2] - 2026-03-12
 
 ### Added
