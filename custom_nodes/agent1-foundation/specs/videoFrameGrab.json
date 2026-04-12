@@ -1,0 +1,43 @@
+{
+  "nodeType": "videoFrameGrab",
+  "name": "Video Frame Grab",
+  "version": "1.0.0",
+  "category": "video-processing",
+  "tags": ["video", "frame-extraction", "thumbnail", "image-output", "browser-native"],
+  "summary": "Extracts the first or last frame from a video clip as a full-resolution PNG image. Useful for creating thumbnails or feeding video frames into image generation workflows.",
+  "inputs": [
+    {
+      "id": "video",
+      "type": "video",
+      "required": true,
+      "description": "Input video clip to extract a frame from."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "description": "Full-resolution PNG image of the extracted frame."
+    }
+  ],
+  "executionNotes": "Extracts a single frame from video using Canvas API and renders as high-quality PNG. framePosition toggles between 'first' (frame 0) and 'last' (final frame of video). Uses HTML5 video element to decode frame and canvas to capture pixel data. outputImage stores the PNG as base64 or Blob URL. No API calls required; entirely browser-based extraction.",
+  "exampleConnections": [
+    {
+      "from": "veo.video",
+      "to": "videoFrameGrab.video",
+      "scenario": "Extract the last frame of a generated video for use as a thumbnail."
+    },
+    {
+      "from": "videoFrameGrab.image",
+      "to": "nanoBanana.image",
+      "scenario": "Use extracted frame as input for image upscaling or variation generation."
+    },
+    {
+      "from": "videoFrameGrab.image",
+      "to": "outputGallery.image",
+      "scenario": "Display extracted frames in a gallery for quick preview."
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

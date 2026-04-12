@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "name": "Product Shot",
+  "edgeStyle": "curved",
+  "nodes": [
+    {
+      "id": "imageInput-1",
+      "type": "imageInput",
+      "position": {
+        "x": 50,
+        "y": 100
+      },
+      "data": {
+        "image": null,
+        "filename": null,
+        "dimensions": null
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      }
+    },
+    {
+      "id": "imageInput-2",
+      "type": "imageInput",
+      "position": {
+        "x": 50,
+        "y": 430
+      },
+      "data": {
+        "image": null,
+        "filename": null,
+        "dimensions": null
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      }
+    },
+    {
+      "id": "prompt-1",
+      "type": "prompt",
+      "position": {
+        "x": 50,
+        "y": 760
+      },
+      "data": {
+        "prompt": ""
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      }
+    },
+    {
+      "id": "nanoBanana-1",
+      "type": "nanoBanana",
+      "position": {
+        "x": 450,
+        "y": 300
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": null,
+        "outputImage": null,
+        "aspectRatio": "1:1",
+        "resolution": "1K",
+        "model": "nano-banana-2",
+        "useGoogleSearch": false,
+        "useImageSearch": false,
+        "status": "idle",
+        "error": null,
+        "imageHistory": [],
+        "selectedHistoryIndex": -1
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      }
+    },
+    {
+      "id": "output-1",
+      "type": "output",
+      "position": {
+        "x": 850,
+        "y": 290
+      },
+      "data": {
+        "image": null
+      },
+      "style": {
+        "width": 320,
+        "height": 320
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "imageInput-1",
+      "sourceHandle": "image",
+      "target": "nanoBanana-1",
+      "targetHandle": "image"
+    },
+    {
+      "id": "e2",
+      "source": "imageInput-2",
+      "sourceHandle": "image",
+      "target": "nanoBanana-1",
+      "targetHandle": "image"
+    },
+    {
+      "id": "e3",
+      "source": "prompt-1",
+      "sourceHandle": "text",
+      "target": "nanoBanana-1",
+      "targetHandle": "text"
+    },
+    {
+      "id": "e4",
+      "source": "nanoBanana-1",
+      "sourceHandle": "image",
+      "target": "output-1",
+      "targetHandle": "image"
+    }
+  ],
+  "description": "Place product in a new scene or environment",
+  "category": "simple",
+  "tags": [
+    "Gemini"
+  ],
+  "author": "AGENT 1 Preset",
+  "createdAt": "2026-03-21T05:38:50.149Z",
+  "thumbnailUrl": "/workflows/images/product-shot.jpg"
+}

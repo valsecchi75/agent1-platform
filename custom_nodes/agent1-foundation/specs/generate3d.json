@@ -1,0 +1,66 @@
+{
+  "nodeType": "generate3d",
+  "name": "AI 3D Model Generation",
+  "version": "1.0.0",
+  "category": "generation",
+  "tags": ["3d", "generation", "model", "mesh", "ai", "glTF", "usd", "image-to-3d"],
+  "summary": "Multi-provider AI 3D model generation supporting text-to-3D and image-to-3D workflows with glTF/USD export. Primary provider is Kie with fallback support for alternative services, generating production-ready 3D meshes with textures and materials in 15-45 seconds.",
+  "inputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "required": false,
+      "description": "Optional reference image for image-to-3D conversion. Provides visual guidance for shape, color, material properties, and overall composition. Critical for converting photographs or artwork into 3D models.",
+      "default": null
+    },
+    {
+      "id": "text",
+      "type": "text",
+      "required": true,
+      "description": "Text prompt describing the desired 3D object or scene. Can include geometry details, material properties, artistic style, level of detail, and use-case context (e.g., 'game asset', 'product visualization', 'architectural element').",
+      "default": "a detailed 3D asset"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "3d",
+      "type": "object",
+      "description": "3D model URL pointing to glTF (.glb/.gltf) or USD format file. Includes embedded or referenced textures, materials, and PBR properties for real-time or offline rendering."
+    },
+    {
+      "id": "metadata",
+      "type": "object",
+      "description": "3D model metadata including format (glTF/USD), vertex count, texture resolution, bounding box dimensions, material count, generation time, and provider details for asset management."
+    }
+  ],
+  "executionNotes": "This node interfaces with Kie as the primary 3D generation provider, supporting both text-to-3D and image-to-3D conditioning. The selectedModel field is required and routes to appropriate provider. Parameters like polygon_budget (high-poly for render, low-poly for real-time), material_quality (PBR, diffuse, specular), and export_format (glTF binary, glTF+separate textures, USD) are dynamically exposed via inputSchema per model. Outputs are saved to savedFilePath with sanitized savedFilename. Bounding box and vertex count enable downstream LOD (level-of-detail) optimization. Typical generation latency: 15-45 seconds depending on complexity and desired fidelity. Models support immediate import into Three.js, Babylon.js, or professional 3D tools.",
+  "exampleConnections": [
+    {
+      "from": "imageInput.output",
+      "to": "generate3d.image",
+      "scenario": "Photo-to-3D modeling: Convert product photographs, architectural sketches, or concept art into production-ready 3D models for visualization or gaming."
+    },
+    {
+      "from": "nanoBanana.image",
+      "to": "generate3d.image",
+      "scenario": "2D-to-3D conversion pipeline: Generate a 2D image first, then convert to 3D for multi-modal content creation (e.g., concept art → game asset)."
+    },
+    {
+      "from": "textInput.output",
+      "to": "generate3d.text",
+      "scenario": "Direct 3D generation: Create 3D objects from pure text descriptions for rapid prototyping and visualization tasks."
+    },
+    {
+      "from": "llmGenerate.text",
+      "to": "generate3d.text",
+      "scenario": "Prompt engineering for 3D: Use LLM to refine vague concepts into detailed 3D specifications (e.g., 'sculpture of a dragon' → detailed geometric and material properties)."
+    },
+    {
+      "from": "generate3d.3d",
+      "to": "generateVideo.image",
+      "scenario": "3D rendering to video: Render 3D model from multiple angles or with animation, then pipe to video generation for dynamic marketing or AR preview content."
+    }
+  ],
+  "apiProvider": "multi",
+  "requiresApiKey": true
+}

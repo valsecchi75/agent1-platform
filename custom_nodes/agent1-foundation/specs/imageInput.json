@@ -1,0 +1,31 @@
+{
+  "nodeType": "imageInput",
+  "name": "Image Input",
+  "version": "1.0.0",
+  "category": "Input",
+  "tags": ["image", "upload", "data-source"],
+  "summary": "Loads or uploads an image into the workflow as a base64 string. Serves as the starting point for image processing pipelines.",
+  "inputs": [],
+  "outputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "description": "The loaded image as base64 string with metadata (filename, width, height)"
+    }
+  ],
+  "executionNotes": "This is a data source node with no upstream dependencies. Users upload or paste image data directly. The node stores the image in base64 format along with filename and dimensions (width, height).",
+  "exampleConnections": [
+    {
+      "from": "imageInput.image",
+      "to": "nanoBanana.sourceImage",
+      "scenario": "Use an uploaded image as source for AI-powered image generation or transformation"
+    },
+    {
+      "from": "imageInput.image",
+      "to": "splitGrid.sourceImage",
+      "scenario": "Split a reference image into a grid for parallel processing"
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

@@ -1,0 +1,14 @@
+{
+  "nodeType": "annotation",
+  "name": "Annotation",
+  "version": "1.0.0",
+  "category": "Utility",
+  "tags": ["comment", "note", "visual", "documentation"],
+  "summary": "Adds visual notes or comments to the workflow canvas. Purely decorative with no data flow impact.",
+  "inputs": [],
+  "outputs": [],
+  "executionNotes": "This is a purely visual/decorative node used for annotating workflows. It has no execution logic and does not participate in data flow. Users can add text content and choose a shape (rectangle, circle, or diamond) for visual organization.",
+  "exampleConnections": [],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

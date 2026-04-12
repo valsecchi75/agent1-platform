@@ -1,0 +1,43 @@
+{
+  "nodeType": "easeCurve",
+  "name": "Ease Curve",
+  "version": "1.0.0",
+  "category": "video-processing",
+  "tags": ["video", "animation", "easing", "speed-control", "browser-native"],
+  "summary": "Applies speed easing curves to video playback using cubic bezier functions or preset easing modes. Allows variable-speed effects and smooth acceleration/deceleration.",
+  "inputs": [
+    {
+      "id": "video",
+      "type": "video",
+      "required": true,
+      "description": "Input video clip to apply easing curve to."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "video",
+      "type": "video",
+      "description": "Video with applied easing curve and variable playback speed."
+    },
+    {
+      "id": "easeCurve",
+      "type": "easeCurve",
+      "description": "The applied bezier easing curve data, exportable to other nodes for synchronization."
+    }
+  ],
+  "executionNotes": "Implements cubic bezier easing (P0=(0,0), P1=(x1,y1), P2=(x2,y2), P3=(1,1)) stored as bezierHandles [x1, y1, x2, y2]. Preset easing modes include 'ease-in', 'ease-out', 'ease-in-out', 'linear', 'bounce', 'elastic'. If easingPreset is set, bezierHandles are derived from the preset. inheritedFrom tracks upstream easing chains. outputDuration adapts based on speed variations. Progress (0-100) tracks encoding. encoderSupported indicates browser video codec capability. All calculations done in browser using requestAnimationFrame.",
+  "exampleConnections": [
+    {
+      "from": "videoTrim.video",
+      "to": "easeCurve.video",
+      "scenario": "Apply ease-in effect to a trimmed video clip for smooth acceleration."
+    },
+    {
+      "from": "easeCurve.easeCurve",
+      "to": "conditionalSwitch.text",
+      "scenario": "Export easing curve data as JSON for conditional routing or analysis."
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

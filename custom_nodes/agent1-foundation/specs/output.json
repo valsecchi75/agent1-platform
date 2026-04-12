@@ -1,0 +1,54 @@
+{
+  "nodeType": "output",
+  "name": "Output",
+  "version": "1.0.0",
+  "category": "output",
+  "tags": ["output", "terminal", "display", "export"],
+  "summary": "Final workflow output node that displays and saves generated results. Accepts image, video, or audio and supports custom output filenames.",
+  "inputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "required": false,
+      "description": "Optional input image to display and save."
+    },
+    {
+      "id": "video",
+      "type": "video",
+      "required": false,
+      "description": "Optional input video to display and save."
+    },
+    {
+      "id": "audio",
+      "type": "audio",
+      "required": false,
+      "description": "Optional input audio to display and save."
+    }
+  ],
+  "outputs": [],
+  "executionNotes": "Terminal node with no outputs — marks the end of a workflow path. Accepts any single media type (image, video, or audio). contentType is auto-detected from connected input ('image', 'video', or 'audio'). Displays the result in the node UI (thumbnail for images, video player for video, audio player for audio). outputFilename allows custom naming for saved exports; if empty, defaults to timestamp-based name. Supports downloading the final result as a file or viewing in the output gallery.",
+  "exampleConnections": [
+    {
+      "from": "nanoBanana.image",
+      "to": "output.image",
+      "scenario": "Display and save generated image from Nano Banana image generation node."
+    },
+    {
+      "from": "veo.video",
+      "to": "output.video",
+      "scenario": "Display and save generated video from Veo video generation node."
+    },
+    {
+      "from": "wavespeed.audio",
+      "to": "output.audio",
+      "scenario": "Display and save audio generated from Wavespeed audio API."
+    },
+    {
+      "from": "videoStitch.video",
+      "to": "output.video",
+      "scenario": "Save final stitched video to file with custom filename."
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

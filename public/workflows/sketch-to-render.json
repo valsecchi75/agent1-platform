@@ -1,0 +1,108 @@
+{
+  "name": "Sketch to Editorial Render",
+  "description": "Upload a 2D eyewear sketch → Gemini analyzes it → Prompt compiled → Nano Banana generates editorial render",
+  "version": 1,
+  "category": "eyewear",
+  "tags": ["Gemini", "Eyewear", "Editorial"],
+  "author": "AGENT 1",
+  "createdAt": "2026-03-21T00:00:00Z",
+  "edgeStyle": "curved",
+  "nodes": [
+    {
+      "id": "sketch-input",
+      "type": "imageInput",
+      "position": { "x": 50, "y": 150 },
+      "data": {
+        "image": null,
+        "filename": null,
+        "dimensions": null
+      },
+      "style": { "width": 300, "height": 280 }
+    },
+    {
+      "id": "gemini-analysis",
+      "type": "llmGenerate",
+      "position": { "x": 420, "y": 100 },
+      "data": {
+        "inputPrompt": "Analyze this 2D eyewear sketch. Extract: brand DNA cues, structural architecture (frame type, bridge, temples, hinge, lens shape), materials, and manufacturing feasibility. Return a structured JSON with fields: brand_dna, eyewear_structure, manufacturing_notes, prompt_seed.",
+        "inputImages": [],
+        "outputText": null,
+        "provider": "google",
+        "model": "gemini-3.1-pro-preview",
+        "temperature": 0.2,
+        "maxTokens": 2048,
+        "status": "idle",
+        "error": null
+      },
+      "style": { "width": 350, "height": 380 }
+    },
+    {
+      "id": "prompt-compiler",
+      "type": "prompt",
+      "position": { "x": 850, "y": 150 },
+      "data": {
+        "prompt": "A high-end editorial studio photograph of a visionary next-generation optical system, presented as a hyper-realistic 3D photographic render.\n\nCONCEPT & EYEWEAR ARCHITECTURE\n[Gemini analysis output will guide this section]\n\nSTRUCTURAL ENGINEERING & MANUFACTURABILITY\nReal hinge positioning with precise integration. Plausible lens anchoring with controlled bevel transitions.\n\nMATERIALS & MICRO-ENGINEERING PRECISION\nMicroscopic surface grain, precise hinge articulation, subtle micro fasteners. Accurate bevel transitions.\n\nOPTICAL GEOMETRY & LIGHT INTERACTION\nAccurate highlight roll-off. Subtle internal reflections. Coherent coating behavior.\n\nPHOTOGRAPHY & STUDIO LIGHTING\nMedium format aesthetic, 100mm macro equivalent. Large diffused softbox, subtle rim accent.\n\nSPATIAL CONTEXT\nSeamless luxury studio cyclorama. Pearl white background.\n\nGRAPHIC LAYOUT & EDITORIAL UI\nBottom right: small monochrome brand logo. Bottom left: OPTICAL PROTOTYPE technical description."
+      },
+      "style": { "width": 350, "height": 250 }
+    },
+    {
+      "id": "nb-render",
+      "type": "nanoBanana",
+      "position": { "x": 1270, "y": 100 },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": null,
+        "outputImage": null,
+        "aspectRatio": "1:1",
+        "resolution": "2K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "useImageSearch": false,
+        "status": "idle",
+        "error": null,
+        "imageHistory": [],
+        "selectedHistoryIndex": -1
+      },
+      "style": { "width": 320, "height": 320 }
+    },
+    {
+      "id": "preview-output",
+      "type": "output",
+      "position": { "x": 1660, "y": 150 },
+      "data": {
+        "image": null
+      },
+      "style": { "width": 320, "height": 320 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-sketch-to-gemini",
+      "source": "sketch-input",
+      "target": "gemini-analysis",
+      "sourceHandle": "image-output",
+      "targetHandle": "image-input"
+    },
+    {
+      "id": "e-gemini-to-prompt",
+      "source": "gemini-analysis",
+      "target": "prompt-compiler",
+      "sourceHandle": "text-output",
+      "targetHandle": "text-input"
+    },
+    {
+      "id": "e-prompt-to-nb",
+      "source": "prompt-compiler",
+      "target": "nb-render",
+      "sourceHandle": "text-output",
+      "targetHandle": "text-input"
+    },
+    {
+      "id": "e-nb-to-preview",
+      "source": "nb-render",
+      "target": "preview-output",
+      "sourceHandle": "image-output",
+      "targetHandle": "image-input"
+    }
+  ]
+}

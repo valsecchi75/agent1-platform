@@ -1,0 +1,3314 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas-bg: var(--canvas-bg);
+
+  /* ══════════════════════════════════════════════════
+     TAILWIND NEUTRAL REMAP
+     Maps neutral-50..950 to CSS vars so ALL existing
+     Tailwind classes automatically follow the theme.
+     ══════════════════════════════════════════════════ */
+  --color-neutral-50:  var(--tw-neutral-50);
+  --color-neutral-100: var(--tw-neutral-100);
+  --color-neutral-200: var(--tw-neutral-200);
+  --color-neutral-300: var(--tw-neutral-300);
+  --color-neutral-400: var(--tw-neutral-400);
+  --color-neutral-500: var(--tw-neutral-500);
+  --color-neutral-600: var(--tw-neutral-600);
+  --color-neutral-700: var(--tw-neutral-700);
+  --color-neutral-800: var(--tw-neutral-800);
+  --color-neutral-900: var(--tw-neutral-900);
+  --color-neutral-950: var(--tw-neutral-950);
+}
+
+/* ══════════════════════════════════════════════════
+   AGENT 1 — Aurora Theme + Brand Skin System
+
+   Layers:
+   1. Base theme (dark/light) — sets neutral remap + semantic vars
+   2. Brand skin (optional) — overrides accent colors only
+   ══════════════════════════════════════════════════ */
+
+/* ── DARK THEME (default) — AGENT 1 deep navy ── */
+:root,
+[data-theme="dark"] {
+  /* Tailwind neutral remap → navy-tinted dark palette */
+  --tw-neutral-50:  #e8e6e3;
+  --tw-neutral-100: #d0cdc8;
+  --tw-neutral-200: #9ca3b4;
+  --tw-neutral-300: #7d8599;
+  --tw-neutral-400: #6b7490;
+  --tw-neutral-500: #5c6478;
+  --tw-neutral-600: #4a5470;
+  --tw-neutral-700: #2a3040;
+  --tw-neutral-800: #1f2430;
+  --tw-neutral-900: #181c25;
+  --tw-neutral-950: #0c0f14;
+
+  --background: #0c0f14;
+  --foreground: #e8e6e3;
+  --canvas-bg: #12161d;
+
+  --surface-1: #181c25;
+  --surface-2: #1f2430;
+  --surface-3: #282e3a;
+  --border: #2a3040;
+  --border-subtle: #232838;
+
+  --text-primary: #e8e6e3;
+  --text-secondary: #9ca3b4;
+  --text-muted: #5c6478;
+
+  --accent: #c5a44e;
+  --accent-hover: #d4b45e;
+  --accent-vivid: #e0c060;
+  --accent-subtle: rgba(197, 164, 78, 0.12);
+
+  --header-bg: #0f1219;
+  --header-border: #1e2332;
+
+  --node-bg: #181c25;
+  --node-border: #2a3040;
+  --node-header: #1a1f2a;
+
+  --controls-bg: #1a1f2a;
+  --controls-border: #2a3040;
+  --controls-hover: #282e3a;
+
+  --scrollbar-track: #181c25;
+  --scrollbar-thumb: #3a4258;
+  --scrollbar-thumb-hover: #4a5470;
+
+  --handle-color-image: #10b981;
+  --handle-color-text: #4a90d9;
+  --handle-color-3d: #d4953a;
+
+  --edge-color: #4a5470;
+  --edge-selected: #c5a44e;
+
+  /* Modal/dialog */
+  --modal-bg: #181c25;
+  --modal-border: #2a3040;
+  --input-bg: #12161d;
+  --input-border: #2a3040;
+  --input-focus: #4a5470;
+
+  /* Buttons */
+  --btn-primary-bg: var(--accent);
+  --btn-primary-text: #0c0f14;
+  --btn-secondary-bg: #282e3a;
+  --btn-secondary-text: #d0cdc8;
+  --btn-hover: #353c4d;
+
+  /* Node Design 2.0 variables (dark) */
+  --node-bg-v2: rgba(24, 28, 37, 0.88);
+  --node-border-v2: rgba(255, 255, 255, 0.13);
+  --node-border-v2-hover: rgba(255, 255, 255, 0.22);
+  --node-border-v2-selected: rgba(255, 255, 255, 0.35);
+  --node-radius-v2: 12px;
+  --node-shadow-v2: 0 4px 24px rgba(0, 0, 0, 0.28), 0 1px 4px rgba(0, 0, 0, 0.18);
+  --node-header-strip-h: 3px;
+  --node-header-strip-color: var(--accent);
+
+  /* Status / semantic colors */
+  --status-success: #22c55e;
+  --status-warning: #eab308;
+  --status-error: #ef4444;
+  --status-error-bg: rgba(239, 68, 68, 0.15);
+  --status-error-border: rgba(239, 68, 68, 0.3);
+  --status-error-text: #f87171;
+  --delete-bg: #dc2626;
+  --delete-hover: #b91c1c;
+}
+
+/* ── LIGHT THEME — AGENT 1 warm white ── */
+/* CRITICAL: In light theme we INVERT the neutral scale.
+   Dark theme: 100=light text, 900=dark bg
+   Light theme: 100=DARK text, 900=LIGHT bg
+   This makes ALL Tailwind classes automatically correct. */
+[data-theme="light"] {
+  --tw-neutral-50:  #1a1714;
+  --tw-neutral-100: #2a2520;
+  --tw-neutral-200: #4a4540;
+  --tw-neutral-300: #5a5650;
+  --tw-neutral-400: #78736c;
+  --tw-neutral-500: #8a847c;
+  --tw-neutral-600: #a8a29e;
+  --tw-neutral-700: #d4cfc8;
+  --tw-neutral-800: #f0ece6;
+  --tw-neutral-900: #f8f6f2;
+  --tw-neutral-950: #fdfcfa;
+
+  --background: #f5f3f0;
+  --foreground: #1a1a1a;
+  --canvas-bg: #eae7e2;
+
+  --surface-1: #ffffff;
+  --surface-2: #f7f5f2;
+  --surface-3: #ede9e4;
+  --border: #d4cfc8;
+  --border-subtle: #e0dbd5;
+
+  --text-primary: #1a1a1a;
+  --text-secondary: #5a5650;
+  --text-muted: #8a847c;
+
+  --accent: #8b6d2e;
+  --accent-hover: #a07d35;
+  --accent-vivid: #b89030;
+  --accent-subtle: rgba(139, 109, 46, 0.08);
+
+  --header-bg: #ffffff;
+  --header-border: #d4cfc8;
+
+  --node-bg: #ffffff;
+  --node-border: #d4cfc8;
+  --node-header: #f7f5f2;
+
+  --controls-bg: #ffffff;
+  --controls-border: #d4cfc8;
+  --controls-hover: #ede9e4;
+
+  --scrollbar-track: #f0ece8;
+  --scrollbar-thumb: #c4beb6;
+  --scrollbar-thumb-hover: #a8a29e;
+
+  --handle-color-image: #059669;
+  --handle-color-text: #2563eb;
+  --handle-color-3d: #c2760e;
+
+  --edge-color: #a8a29e;
+  --edge-selected: #8b6d2e;
+
+  --modal-bg: #ffffff;
+  --modal-border: #d4cfc8;
+  --input-bg: #f7f5f2;
+  --input-border: #d4cfc8;
+  --input-focus: #a8a29e;
+
+  --btn-primary-bg: var(--accent);
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #ede9e4;
+  --btn-secondary-text: #5a5650;
+  --btn-hover: #e0dbd5;
+
+  /* Node Design 2.0 variables (light) */
+  --node-bg-v2: rgba(255, 255, 255, 0.92);
+  --node-border-v2: rgba(0, 0, 0, 0.10);
+  --node-border-v2-hover: rgba(0, 0, 0, 0.18);
+  --node-border-v2-selected: rgba(0, 0, 0, 0.30);
+  --node-radius-v2: 12px;
+  --node-shadow-v2: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.05);
+  --node-header-strip-h: 3px;
+  --node-header-strip-color: var(--accent);
+
+  /* Status / semantic colors */
+  --status-success: #16a34a;
+  --status-warning: #ca8a04;
+  --status-error: #dc2626;
+  --status-error-bg: rgba(220, 38, 38, 0.1);
+  --status-error-border: rgba(220, 38, 38, 0.25);
+  --status-error-text: #dc2626;
+  --delete-bg: #dc2626;
+  --delete-hover: #b91c1c;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BRAND SKINS — Full Corporate Identity
+   Each skin overrides the ENTIRE visual atmosphere:
+   backgrounds, surfaces, borders, text tones, accents, canvas,
+   nodes, edges — the complete brand DNA translated to UI.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Aurora (default) — Corporate navy + gold ── */
+/* Dark theme defaults already match EL identity — no overrides needed */
+
+html[data-theme="light"][data-skin="aurora"] {
+  --accent: #8a7020;
+  --accent-hover: #9a8030;
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Ember — Bold, high contrast, black/red/white, urban democratic ── */
+html[data-skin="ember"] {
+  --tw-neutral-50:  #f5f5f5;
+  --tw-neutral-100: #e0e0e0;
+  --tw-neutral-200: #a0a0a0;
+  --tw-neutral-300: #808080;
+  --tw-neutral-400: #666666;
+  --tw-neutral-500: #505050;
+  --tw-neutral-600: #404040;
+  --tw-neutral-700: #2a2a2a;
+  --tw-neutral-800: #1a1a1a;
+  --tw-neutral-900: #111111;
+  --tw-neutral-950: #0a0a0a;
+
+  --background: #0a0a0a;
+  --foreground: #f5f5f5;
+  --canvas-bg: #0e0e0e;
+
+  --surface-1: #141414;
+  --surface-2: #1a1a1a;
+  --surface-3: #242424;
+  --border: #2e2e2e;
+  --border-subtle: #222222;
+
+  --text-primary: #f5f5f5;
+  --text-secondary: #a0a0a0;
+  --text-muted: #606060;
+
+  --accent: #D31920;
+  --accent-hover: #e82028;
+  --accent-vivid: #F04050;
+  --accent-subtle: rgba(211, 25, 32, 0.12);
+
+  --header-bg: #0a0a0a;
+  --header-border: #2a2a2a;
+
+  --node-bg: #141414;
+  --node-border: #2e2e2e;
+  --node-header: #1a1a1a;
+
+  --controls-bg: #1a1a1a;
+  --controls-border: #2e2e2e;
+  --controls-hover: #242424;
+
+  --edge-color: #404040;
+  --edge-selected: #D31920;
+
+
+  --modal-bg: #141414;
+  --modal-border: #2e2e2e;
+  --input-bg: #0e0e0e;
+  --input-border: #2e2e2e;
+  --input-focus: #505050;
+  --scrollbar-track: #141414;
+  --scrollbar-thumb: #404040;
+  --scrollbar-thumb-hover: #505050;
+  --btn-secondary-bg: #242424;
+  --btn-secondary-text: #a0a0a0;
+  --btn-hover: #303030;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="ember"] {
+  --tw-neutral-50:  #111111;
+  --tw-neutral-100: #1a1a1a;
+  --tw-neutral-200: #3a3a3a;
+  --tw-neutral-300: #525252;
+  --tw-neutral-400: #737373;
+  --tw-neutral-500: #8a8a8a;
+  --tw-neutral-600: #a3a3a3;
+  --tw-neutral-700: #d4d4d4;
+  --tw-neutral-800: #f0f0f0;
+  --tw-neutral-900: #f8f8f8;
+  --tw-neutral-950: #fafafa;
+
+  --background: #fafafa;
+  --foreground: #0a0a0a;
+  --canvas-bg: #f0f0f0;
+  --surface-1: #ffffff;
+  --surface-2: #f5f5f5;
+  --surface-3: #ebebeb;
+  --border: #d4d4d4;
+  --text-primary: #0a0a0a;
+  --text-secondary: #525252;
+  --text-muted: #737373;
+  --accent: #b01018;
+  --accent-hover: #c81820;
+  --accent-vivid: #d82830;
+  --header-bg: #ffffff;
+  --header-border: #e5e5e5;
+  --node-bg: #ffffff;
+  --node-border: #d4d4d4;
+  --controls-bg: #ffffff;
+  --controls-border: #d4d4d4;
+  --controls-hover: #ebebeb;
+
+  --modal-bg: #ffffff;
+  --modal-border: #d4d4d4;
+  --input-bg: #f5f5f5;
+  --input-border: #d4d4d4;
+  --input-focus: #8a8a8a;
+  --scrollbar-track: #f0f0f0;
+  --scrollbar-thumb: #a3a3a3;
+  --scrollbar-thumb-hover: #8a8a8a;
+  --btn-secondary-bg: #ebebeb;
+  --btn-secondary-text: #525252;
+  --btn-hover: #e0e0e0;
+  --edge-color: #a3a3a3;
+  --edge-selected: #b01018;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Matrix — Technical dark, sport engineering, aggressive geometry ── */
+html[data-skin="matrix"] {
+  --tw-neutral-50:  #e4e6e8;
+  --tw-neutral-100: #c8ccd0;
+  --tw-neutral-200: #8a9098;
+  --tw-neutral-300: #6a7280;
+  --tw-neutral-400: #555d68;
+  --tw-neutral-500: #454d58;
+  --tw-neutral-600: #363e48;
+  --tw-neutral-700: #252c34;
+  --tw-neutral-800: #1a2028;
+  --tw-neutral-900: #14181e;
+  --tw-neutral-950: #0c1014;
+
+  --background: #0c1014;
+  --foreground: #e4e6e8;
+  --canvas-bg: #10141a;
+
+  --surface-1: #14181e;
+  --surface-2: #1a2028;
+  --surface-3: #222a34;
+  --border: #2a3240;
+  --border-subtle: #1e2630;
+
+  --text-primary: #e4e6e8;
+  --text-secondary: #8a9098;
+  --text-muted: #555d68;
+
+  --accent: #4CAF50;
+  --accent-hover: #66bb6a;
+  --accent-vivid: #70D070;
+  --accent-subtle: rgba(76, 175, 80, 0.10);
+
+  --header-bg: #0c1014;
+  --header-border: #1e2630;
+
+  --node-bg: #14181e;
+  --node-border: #2a3240;
+  --node-header: #1a2028;
+
+  --controls-bg: #1a2028;
+  --controls-border: #2a3240;
+  --controls-hover: #222a34;
+
+  --edge-color: #363e48;
+  --edge-selected: #4CAF50;
+
+
+  --modal-bg: #14181e;
+  --modal-border: #2a3240;
+  --input-bg: #10141a;
+  --input-border: #2a3240;
+  --input-focus: #555d68;
+  --scrollbar-track: #14181e;
+  --scrollbar-thumb: #363e48;
+  --scrollbar-thumb-hover: #455058;
+  --btn-secondary-bg: #222a34;
+  --btn-secondary-text: #8a9098;
+  --btn-hover: #2a3440;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="matrix"] {
+  --tw-neutral-50:  #0c1014;
+  --tw-neutral-100: #14181e;
+  --tw-neutral-200: #2a3040;
+  --tw-neutral-300: #454d58;
+  --tw-neutral-400: #6a7280;
+  --tw-neutral-500: #8a9098;
+  --tw-neutral-600: #a4aab4;
+  --tw-neutral-700: #c4c8ce;
+  --tw-neutral-800: #eef0f2;
+  --tw-neutral-900: #f8f9fa;
+  --tw-neutral-950: #f2f3f5;
+
+  --background: #f2f3f5;
+  --foreground: #14181e;
+  --canvas-bg: #e8eaee;
+  --surface-1: #f8f9fa;
+  --surface-2: #eef0f2;
+  --surface-3: #e2e4e8;
+  --border: #c4c8ce;
+  --text-primary: #14181e;
+  --text-secondary: #454d58;
+  --text-muted: #6a7280;
+  --accent: #2e7d32;
+  --header-bg: #f8f9fa;
+  --header-border: #dde0e4;
+  --node-bg: #f8f9fa;
+  --node-border: #c4c8ce;
+  --controls-bg: #f8f9fa;
+  --controls-border: #c4c8ce;
+  --controls-hover: #e2e4e8;
+
+  --modal-bg: #f8f9fa;
+  --modal-border: #c4c8ce;
+  --input-bg: #eef0f2;
+  --input-border: #c4c8ce;
+  --input-focus: #8a9098;
+  --scrollbar-track: #eef0f2;
+  --scrollbar-thumb: #a4aab4;
+  --scrollbar-thumb-hover: #8a9098;
+  --btn-secondary-bg: #e2e4e8;
+  --btn-secondary-text: #454d58;
+  --btn-hover: #d8dce0;
+  --edge-color: #8a9098;
+  --edge-selected: #2e7d32;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Sienna — Warm artisan, Italian havana, honey amber, refined ── */
+html[data-skin="sienna"] {
+  --tw-neutral-50:  #ede6dc;
+  --tw-neutral-100: #d8cfc2;
+  --tw-neutral-200: #b0a08a;
+  --tw-neutral-300: #8a7a68;
+  --tw-neutral-400: #6e6050;
+  --tw-neutral-500: #584c3e;
+  --tw-neutral-600: #443a2e;
+  --tw-neutral-700: #2e2620;
+  --tw-neutral-800: #221c16;
+  --tw-neutral-900: #1a1510;
+  --tw-neutral-950: #120e0a;
+
+  --background: #120e0a;
+  --foreground: #ede6dc;
+  --canvas-bg: #16120e;
+
+  --surface-1: #1a1510;
+  --surface-2: #221c16;
+  --surface-3: #2e2620;
+  --border: #3a3028;
+  --border-subtle: #2a2218;
+
+  --text-primary: #ede6dc;
+  --text-secondary: #b0a08a;
+  --text-muted: #6e6050;
+
+  --accent: #8B572A;
+  --accent-hover: #a06830;
+  --accent-vivid: #C08040;
+  --accent-subtle: rgba(139, 87, 42, 0.15);
+
+  --header-bg: #120e0a;
+  --header-border: #2a2218;
+
+  --node-bg: #1a1510;
+  --node-border: #3a3028;
+  --node-header: #221c16;
+
+  --controls-bg: #221c16;
+  --controls-border: #3a3028;
+  --controls-hover: #2e2620;
+
+  --edge-color: #443a2e;
+  --edge-selected: #8B572A;
+
+
+  --modal-bg: #1a1510;
+  --modal-border: #3a3028;
+  --input-bg: #16120e;
+  --input-border: #3a3028;
+  --input-focus: #6e6050;
+  --scrollbar-track: #1a1510;
+  --scrollbar-thumb: #443a2e;
+  --scrollbar-thumb-hover: #584c3e;
+  --btn-secondary-bg: #2e2620;
+  --btn-secondary-text: #b0a08a;
+  --btn-hover: #3a3028;
+  --btn-primary-text: #ede6dc;
+}
+
+html[data-theme="light"][data-skin="sienna"] {
+  --tw-neutral-50:  #120e0a;
+  --tw-neutral-100: #1a1510;
+  --tw-neutral-200: #3a3028;
+  --tw-neutral-300: #584c3e;
+  --tw-neutral-400: #78706a;
+  --tw-neutral-500: #8a7a68;
+  --tw-neutral-600: #b0a08a;
+  --tw-neutral-700: #d4c8b8;
+  --tw-neutral-800: #f4ede4;
+  --tw-neutral-900: #faf8f4;
+  --tw-neutral-950: #f6f0e8;
+
+  --background: #f6f0e8;
+  --foreground: #2a2018;
+  --canvas-bg: #ece4d8;
+  --surface-1: #faf8f4;
+  --surface-2: #f4ede4;
+  --surface-3: #e8dfd4;
+  --border: #d4c8b8;
+  --text-primary: #2a2018;
+  --text-secondary: #6e6050;
+  --text-muted: #8a7a68;
+  --accent: #724820;
+  --header-bg: #faf8f4;
+  --header-border: #e6ddd0;
+  --node-bg: #faf8f4;
+  --node-border: #d4c8b8;
+  --controls-bg: #faf8f4;
+  --controls-border: #d4c8b8;
+  --controls-hover: #e8dfd4;
+
+  --modal-bg: #faf8f4;
+  --modal-border: #d4c8b8;
+  --input-bg: #f4ede4;
+  --input-border: #d4c8b8;
+  --input-focus: #8a7a68;
+  --scrollbar-track: #f4ede4;
+  --scrollbar-thumb: #b0a08a;
+  --scrollbar-thumb-hover: #8a7a68;
+  --btn-secondary-bg: #e8dfd4;
+  --btn-secondary-text: #6e6050;
+  --btn-hover: #e0d5c8;
+  --edge-color: #b0a08a;
+  --edge-selected: #724820;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Sage — Quiet luxury, muted sage/cognac, vintage LA earth ── */
+html[data-skin="sage"] {
+  --tw-neutral-50:  #e4e6e2;
+  --tw-neutral-100: #ccd0c8;
+  --tw-neutral-200: #9aa098;
+  --tw-neutral-300: #7a8078;
+  --tw-neutral-400: #646a62;
+  --tw-neutral-500: #505650;
+  --tw-neutral-600: #3e4440;
+  --tw-neutral-700: #2a302c;
+  --tw-neutral-800: #1e2420;
+  --tw-neutral-900: #161a18;
+  --tw-neutral-950: #0e1210;
+
+  --background: #0e1210;
+  --foreground: #e4e6e2;
+  --canvas-bg: #121614;
+
+  --surface-1: #161a18;
+  --surface-2: #1e2420;
+  --surface-3: #262e2a;
+  --border: #303830;
+  --border-subtle: #222a24;
+
+  --text-primary: #e4e6e2;
+  --text-secondary: #9aa098;
+  --text-muted: #646a62;
+
+  --accent: #6B705C;
+  --accent-hover: #7c826c;
+  --accent-vivid: #A0A890;
+  --accent-subtle: rgba(107, 112, 92, 0.14);
+
+  --header-bg: #0e1210;
+  --header-border: #222a24;
+
+  --node-bg: #161a18;
+  --node-border: #303830;
+  --node-header: #1e2420;
+
+  --controls-bg: #1e2420;
+  --controls-border: #303830;
+  --controls-hover: #262e2a;
+
+  --edge-color: #3e4440;
+  --edge-selected: #6B705C;
+
+
+  --modal-bg: #161a18;
+  --modal-border: #303830;
+  --input-bg: #121614;
+  --input-border: #303830;
+  --input-focus: #646a62;
+  --scrollbar-track: #161a18;
+  --scrollbar-thumb: #3e4440;
+  --scrollbar-thumb-hover: #505650;
+  --btn-secondary-bg: #262e2a;
+  --btn-secondary-text: #9aa098;
+  --btn-hover: #303830;
+  --btn-primary-text: #e4e6e2;
+}
+
+html[data-theme="light"][data-skin="sage"] {
+  --tw-neutral-50:  #0e1210;
+  --tw-neutral-100: #161a18;
+  --tw-neutral-200: #2a302c;
+  --tw-neutral-300: #3e4440;
+  --tw-neutral-400: #646a62;
+  --tw-neutral-500: #7a8078;
+  --tw-neutral-600: #9aa098;
+  --tw-neutral-700: #c8cec4;
+  --tw-neutral-800: #f0f2ee;
+  --tw-neutral-900: #f8f8f6;
+  --tw-neutral-950: #f4f6f2;
+
+  --background: #f4f6f2;
+  --foreground: #1a1e1a;
+  --canvas-bg: #e8ece4;
+  --surface-1: #f8f8f6;
+  --surface-2: #f0f2ee;
+  --surface-3: #e4e8e0;
+  --border: #c8cec4;
+  --text-primary: #1a1e1a;
+  --text-secondary: #505650;
+  --text-muted: #7a8078;
+  --accent: #545848;
+  --header-bg: #f8f8f6;
+  --header-border: #e0e4dc;
+  --node-bg: #f8f8f6;
+  --node-border: #c8cec4;
+  --controls-bg: #f8f8f6;
+  --controls-border: #c8cec4;
+  --controls-hover: #e4e8e0;
+
+  --modal-bg: #f8f8f6;
+  --modal-border: #c8cec4;
+  --input-bg: #f0f2ee;
+  --input-border: #c8cec4;
+  --input-focus: #7a8078;
+  --scrollbar-track: #f0f2ee;
+  --scrollbar-thumb: #9aa098;
+  --scrollbar-thumb-hover: #7a8078;
+  --btn-secondary-bg: #e4e8e0;
+  --btn-secondary-text: #505650;
+  --btn-hover: #dce0d8;
+  --edge-color: #9aa098;
+  --edge-selected: #545848;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Orchid — Fashion bold, feminine purple, editorial vivid ── */
+html[data-skin="orchid"] {
+  --tw-neutral-50:  #eae4ec;
+  --tw-neutral-100: #d4cad8;
+  --tw-neutral-200: #a094aa;
+  --tw-neutral-300: #7e7288;
+  --tw-neutral-400: #665a70;
+  --tw-neutral-500: #524660;
+  --tw-neutral-600: #403650;
+  --tw-neutral-700: #2c2238;
+  --tw-neutral-800: #201828;
+  --tw-neutral-900: #18121e;
+  --tw-neutral-950: #100c16;
+
+  --background: #100c16;
+  --foreground: #eae4ec;
+  --canvas-bg: #141018;
+
+  --surface-1: #18121e;
+  --surface-2: #201828;
+  --surface-3: #2c2238;
+  --border: #382e48;
+  --border-subtle: #261e30;
+
+  --text-primary: #eae4ec;
+  --text-secondary: #a094aa;
+  --text-muted: #665a70;
+
+  --accent: #7B2D8E;
+  --accent-hover: #9038a4;
+  --accent-vivid: #B858D0;
+  --accent-subtle: rgba(123, 45, 142, 0.14);
+
+  --header-bg: #100c16;
+  --header-border: #261e30;
+
+  --node-bg: #18121e;
+  --node-border: #382e48;
+  --node-header: #201828;
+
+  --controls-bg: #201828;
+  --controls-border: #382e48;
+  --controls-hover: #2c2238;
+
+  --edge-color: #403650;
+  --edge-selected: #7B2D8E;
+
+
+  --modal-bg: #18121e;
+  --modal-border: #382e48;
+  --input-bg: #141018;
+  --input-border: #382e48;
+  --input-focus: #665a70;
+  --scrollbar-track: #18121e;
+  --scrollbar-thumb: #403650;
+  --scrollbar-thumb-hover: #524660;
+  --btn-secondary-bg: #2c2238;
+  --btn-secondary-text: #a094aa;
+  --btn-hover: #382e48;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="orchid"] {
+  --tw-neutral-50:  #100c16;
+  --tw-neutral-100: #18121e;
+  --tw-neutral-200: #2c2238;
+  --tw-neutral-300: #403650;
+  --tw-neutral-400: #665a70;
+  --tw-neutral-500: #7e7288;
+  --tw-neutral-600: #a094aa;
+  --tw-neutral-700: #d0c4d8;
+  --tw-neutral-800: #f4eef8;
+  --tw-neutral-900: #faf8fc;
+  --tw-neutral-950: #f6f0fa;
+
+  --background: #f6f0fa;
+  --foreground: #1e1428;
+  --canvas-bg: #ece4f2;
+  --surface-1: #faf8fc;
+  --surface-2: #f4eef8;
+  --surface-3: #eae0f0;
+  --border: #d0c4d8;
+  --text-primary: #1e1428;
+  --text-secondary: #524660;
+  --text-muted: #7e7288;
+  --accent: #652476;
+  --header-bg: #faf8fc;
+  --header-border: #e6dcea;
+  --node-bg: #faf8fc;
+  --node-border: #d0c4d8;
+  --controls-bg: #faf8fc;
+  --controls-border: #d0c4d8;
+  --controls-hover: #eae0f0;
+
+  --modal-bg: #faf8fc;
+  --modal-border: #d0c4d8;
+  --input-bg: #f4eef8;
+  --input-border: #d0c4d8;
+  --input-focus: #7e7288;
+  --scrollbar-track: #f4eef8;
+  --scrollbar-thumb: #a094aa;
+  --scrollbar-thumb-hover: #7e7288;
+  --btn-secondary-bg: #eae0f0;
+  --btn-secondary-text: #524660;
+  --btn-hover: #e2d8e8;
+  --edge-color: #a094aa;
+  --edge-selected: #652476;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Platinum — Cool silver, professional minimalist ── */
+html[data-skin="platinum"] {
+  --tw-neutral-50:  #efefef;
+  --tw-neutral-100: #e0e0e0;
+  --tw-neutral-200: #b8b8b8;
+  --tw-neutral-300: #9a9a9a;
+  --tw-neutral-400: #808080;
+  --tw-neutral-500: #6a6a6a;
+  --tw-neutral-600: #545454;
+  --tw-neutral-700: #3a3a3a;
+  --tw-neutral-800: #272727;
+  --tw-neutral-900: #1a1a1a;
+  --tw-neutral-950: #0f0f0f;
+
+  --background: #0f0f0f;
+  --foreground: #efefef;
+  --canvas-bg: #141414;
+
+  --surface-1: #1a1a1a;
+  --surface-2: #272727;
+  --surface-3: #333333;
+  --border: #3f3f3f;
+  --border-subtle: #2a2a2a;
+
+  --text-primary: #efefef;
+  --text-secondary: #b8b8b8;
+  --text-muted: #808080;
+
+  --accent: #A0A0A8;
+  --accent-hover: #b0b0b8;
+  --accent-vivid: #C8C8D0;
+  --accent-subtle: rgba(160, 160, 168, 0.12);
+
+  --header-bg: #0f0f0f;
+  --header-border: #2a2a2a;
+
+  --node-bg: #1a1a1a;
+  --node-border: #3f3f3f;
+  --node-header: #272727;
+
+  --controls-bg: #272727;
+  --controls-border: #3f3f3f;
+  --controls-hover: #333333;
+
+  --edge-color: #545454;
+  --edge-selected: #A0A0A8;
+
+
+  --modal-bg: #1a1a1a;
+  --modal-border: #3f3f3f;
+  --input-bg: #141414;
+  --input-border: #3f3f3f;
+  --input-focus: #6a6a6a;
+  --scrollbar-track: #1a1a1a;
+  --scrollbar-thumb: #545454;
+  --scrollbar-thumb-hover: #6a6a6a;
+  --btn-secondary-bg: #333333;
+  --btn-secondary-text: #b8b8b8;
+  --btn-hover: #3f3f3f;
+  --btn-primary-text: #0f0f0f;
+}
+
+html[data-theme="light"][data-skin="platinum"] {
+  --tw-neutral-50:  #0f0f0f;
+  --tw-neutral-100: #1a1a1a;
+  --tw-neutral-200: #3a3a3a;
+  --tw-neutral-300: #545454;
+  --tw-neutral-400: #808080;
+  --tw-neutral-500: #9a9a9a;
+  --tw-neutral-600: #b8b8b8;
+  --tw-neutral-700: #d8d8d8;
+  --tw-neutral-800: #f0f0f0;
+  --tw-neutral-900: #f7f7f7;
+  --tw-neutral-950: #fbfbfb;
+
+  --background: #fbfbfb;
+  --foreground: #1a1a1a;
+  --canvas-bg: #f0f0f0;
+  --surface-1: #f7f7f7;
+  --surface-2: #f0f0f0;
+  --surface-3: #e5e5e5;
+  --border: #d8d8d8;
+  --text-primary: #1a1a1a;
+  --text-secondary: #545454;
+  --text-muted: #808080;
+  --accent: #808080;
+  --header-bg: #f7f7f7;
+  --header-border: #e0e0e0;
+  --node-bg: #f7f7f7;
+  --node-border: #d8d8d8;
+  --controls-bg: #f7f7f7;
+  --controls-border: #d8d8d8;
+  --controls-hover: #e5e5e5;
+
+  --modal-bg: #f7f7f7;
+  --modal-border: #d8d8d8;
+  --input-bg: #f0f0f0;
+  --input-border: #d8d8d8;
+  --input-focus: #9a9a9a;
+  --scrollbar-track: #f0f0f0;
+  --scrollbar-thumb: #b8b8b8;
+  --scrollbar-thumb-hover: #9a9a9a;
+  --btn-secondary-bg: #e5e5e5;
+  --btn-secondary-text: #545454;
+  --btn-hover: #dcdcdc;
+  --edge-color: #b8b8b8;
+  --edge-selected: #808080;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Abyss — Deep navy blue, ocean depths ── */
+html[data-skin="abyss"] {
+  --tw-neutral-50:  #d4dfe8;
+  --tw-neutral-100: #b4c8d8;
+  --tw-neutral-200: #7a9acc;
+  --tw-neutral-300: #5c7fa8;
+  --tw-neutral-400: #4a6a8a;
+  --tw-neutral-500: #3a5578;
+  --tw-neutral-600: #2c4560;
+  --tw-neutral-700: #1d3444;
+  --tw-neutral-800: #142530;
+  --tw-neutral-900: #0e1820;
+  --tw-neutral-950: #081015;
+
+  --background: #081015;
+  --foreground: #d4dfe8;
+  --canvas-bg: #0d151c;
+
+  --surface-1: #0e1820;
+  --surface-2: #142530;
+  --surface-3: #1a2d3c;
+  --border: #283c50;
+  --border-subtle: #1a2838;
+
+  --text-primary: #d4dfe8;
+  --text-secondary: #7a9acc;
+  --text-muted: #4a6a8a;
+
+  --accent: #1B3A5C;
+  --accent-hover: #254a72;
+  --accent-vivid: #5090C0;
+  --accent-subtle: rgba(27, 58, 92, 0.12);
+
+  --header-bg: #081015;
+  --header-border: #1a2838;
+
+  --node-bg: #0e1820;
+  --node-border: #283c50;
+  --node-header: #142530;
+
+  --controls-bg: #142530;
+  --controls-border: #283c50;
+  --controls-hover: #1a2d3c;
+
+  --edge-color: #2c4560;
+  --edge-selected: #1B3A5C;
+
+
+  --modal-bg: #0e1820;
+  --modal-border: #283c50;
+  --input-bg: #0d151c;
+  --input-border: #283c50;
+  --input-focus: #4a6a8a;
+  --scrollbar-track: #0e1820;
+  --scrollbar-thumb: #2c4560;
+  --scrollbar-thumb-hover: #3a5578;
+  --btn-secondary-bg: #1a2d3c;
+  --btn-secondary-text: #7a9acc;
+  --btn-hover: #243848;
+  --btn-primary-text: #d4dfe8;
+}
+
+html[data-theme="light"][data-skin="abyss"] {
+  --tw-neutral-50:  #081015;
+  --tw-neutral-100: #0e1820;
+  --tw-neutral-200: #1d3444;
+  --tw-neutral-300: #2c4560;
+  --tw-neutral-400: #4a6a8a;
+  --tw-neutral-500: #5c7fa8;
+  --tw-neutral-600: #7a9acc;
+  --tw-neutral-700: #b0c8e0;
+  --tw-neutral-800: #e4ecf3;
+  --tw-neutral-900: #f0f4f8;
+  --tw-neutral-950: #f5f7fa;
+
+  --background: #f5f7fa;
+  --foreground: #0e1820;
+  --canvas-bg: #e8ecf1;
+  --surface-1: #f0f4f8;
+  --surface-2: #e4ecf3;
+  --surface-3: #d6e0e8;
+  --border: #b0c8e0;
+  --text-primary: #0e1820;
+  --text-secondary: #2c4560;
+  --text-muted: #5c7fa8;
+  --accent: #0f2540;
+  --header-bg: #f0f4f8;
+  --header-border: #d0dce6;
+  --node-bg: #f0f4f8;
+  --node-border: #b0c8e0;
+  --controls-bg: #f0f4f8;
+  --controls-border: #b0c8e0;
+  --controls-hover: #d6e0e8;
+
+  --modal-bg: #f0f4f8;
+  --modal-border: #b0c8e0;
+  --input-bg: #e4ecf3;
+  --input-border: #b0c8e0;
+  --input-focus: #5c7fa8;
+  --scrollbar-track: #e4ecf3;
+  --scrollbar-thumb: #7a9acc;
+  --scrollbar-thumb-hover: #5c7fa8;
+  --btn-secondary-bg: #d6e0e8;
+  --btn-secondary-text: #2c4560;
+  --btn-hover: #ccd8e4;
+  --edge-color: #7a9acc;
+  --edge-selected: #0f2540;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Amber — Rich gold, heritage luxury ── */
+html[data-skin="amber"] {
+  --tw-neutral-50:  #ede8e0;
+  --tw-neutral-100: #d9cfc2;
+  --tw-neutral-200: #b5a590;
+  --tw-neutral-300: #8f8070;
+  --tw-neutral-400: #735e52;
+  --tw-neutral-500: #5e4a3c;
+  --tw-neutral-600: #4a3a2e;
+  --tw-neutral-700: #342820;
+  --tw-neutral-800: #251c16;
+  --tw-neutral-900: #1a1410;
+  --tw-neutral-950: #0f0a08;
+
+  --background: #0f0a08;
+  --foreground: #ede8e0;
+  --canvas-bg: #13100c;
+
+  --surface-1: #1a1410;
+  --surface-2: #251c16;
+  --surface-3: #322820;
+  --border: #3e3428;
+  --border-subtle: #2a2218;
+
+  --text-primary: #ede8e0;
+  --text-secondary: #b5a590;
+  --text-muted: #735e52;
+
+  --accent: #B8860B;
+  --accent-hover: #d4a61a;
+  --accent-vivid: #E8B820;
+  --accent-subtle: rgba(184, 134, 11, 0.15);
+
+  --header-bg: #0f0a08;
+  --header-border: #2a2218;
+
+  --node-bg: #1a1410;
+  --node-border: #3e3428;
+  --node-header: #251c16;
+
+  --controls-bg: #251c16;
+  --controls-border: #3e3428;
+  --controls-hover: #322820;
+
+  --edge-color: #4a3a2e;
+  --edge-selected: #B8860B;
+
+
+  --modal-bg: #1a1410;
+  --modal-border: #3e3428;
+  --input-bg: #13100c;
+  --input-border: #3e3428;
+  --input-focus: #735e52;
+  --scrollbar-track: #1a1410;
+  --scrollbar-thumb: #4a3a2e;
+  --scrollbar-thumb-hover: #5e4a3c;
+  --btn-secondary-bg: #322820;
+  --btn-secondary-text: #b5a590;
+  --btn-hover: #3e3428;
+  --btn-primary-text: #ede8e0;
+}
+
+html[data-theme="light"][data-skin="amber"] {
+  --tw-neutral-50:  #0f0a08;
+  --tw-neutral-100: #1a1410;
+  --tw-neutral-200: #342820;
+  --tw-neutral-300: #4a3a2e;
+  --tw-neutral-400: #735e52;
+  --tw-neutral-500: #8f8070;
+  --tw-neutral-600: #b5a590;
+  --tw-neutral-700: #d4c4b4;
+  --tw-neutral-800: #f0e8e0;
+  --tw-neutral-900: #f8f4f0;
+  --tw-neutral-950: #fcfaf8;
+
+  --background: #fcfaf8;
+  --foreground: #2a1f18;
+  --canvas-bg: #ede5d8;
+  --surface-1: #f8f4f0;
+  --surface-2: #f0e8e0;
+  --surface-3: #e4d8c8;
+  --border: #d4c4b4;
+  --text-primary: #2a1f18;
+  --text-secondary: #5e4a3c;
+  --text-muted: #8f8070;
+  --accent: #8b5a00;
+  --header-bg: #f8f4f0;
+  --header-border: #e0d4c4;
+  --node-bg: #f8f4f0;
+  --node-border: #d4c4b4;
+  --controls-bg: #f8f4f0;
+  --controls-border: #d4c4b4;
+  --controls-hover: #e4d8c8;
+
+  --modal-bg: #f8f4f0;
+  --modal-border: #d4c4b4;
+  --input-bg: #f0e8e0;
+  --input-border: #d4c4b4;
+  --input-focus: #8f8070;
+  --scrollbar-track: #f0e8e0;
+  --scrollbar-thumb: #b5a590;
+  --scrollbar-thumb-hover: #8f8070;
+  --btn-secondary-bg: #e4d8c8;
+  --btn-secondary-text: #5e4a3c;
+  --btn-hover: #dcd0c0;
+  --edge-color: #b5a590;
+  --edge-selected: #8b5a00;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Ocean — Teal cyan, tropical waters ── */
+html[data-skin="ocean"] {
+  --tw-neutral-50:  #dfe6e6;
+  --tw-neutral-100: #c4d4d4;
+  --tw-neutral-200: #8ab4b4;
+  --tw-neutral-300: #6a9898;
+  --tw-neutral-400: #577d7d;
+  --tw-neutral-500: #456b6b;
+  --tw-neutral-600: #365555;
+  --tw-neutral-700: #264242;
+  --tw-neutral-800: #1a3030;
+  --tw-neutral-900: #0f2220;
+  --tw-neutral-950: #081514;
+
+  --background: #081514;
+  --foreground: #dfe6e6;
+  --canvas-bg: #0d1a1a;
+
+  --surface-1: #0f2220;
+  --surface-2: #1a3030;
+  --surface-3: #213e3e;
+  --border: #2f4c4c;
+  --border-subtle: #1f3838;
+
+  --text-primary: #dfe6e6;
+  --text-secondary: #8ab4b4;
+  --text-muted: #577d7d;
+
+  --accent: #008B8B;
+  --accent-hover: #00a4a4;
+  --accent-vivid: #30D8D8;
+  --accent-subtle: rgba(0, 139, 139, 0.12);
+
+  --header-bg: #081514;
+  --header-border: #1f3838;
+
+  --node-bg: #0f2220;
+  --node-border: #2f4c4c;
+  --node-header: #1a3030;
+
+  --controls-bg: #1a3030;
+  --controls-border: #2f4c4c;
+  --controls-hover: #213e3e;
+
+  --edge-color: #365555;
+  --edge-selected: #008B8B;
+
+
+  --modal-bg: #0f2220;
+  --modal-border: #2f4c4c;
+  --input-bg: #0d1a1a;
+  --input-border: #2f4c4c;
+  --input-focus: #577d7d;
+  --scrollbar-track: #0f2220;
+  --scrollbar-thumb: #365555;
+  --scrollbar-thumb-hover: #456b6b;
+  --btn-secondary-bg: #213e3e;
+  --btn-secondary-text: #8ab4b4;
+  --btn-hover: #2a4848;
+  --btn-primary-text: #dfe6e6;
+}
+
+html[data-theme="light"][data-skin="ocean"] {
+  --tw-neutral-50:  #081514;
+  --tw-neutral-100: #0f2220;
+  --tw-neutral-200: #264242;
+  --tw-neutral-300: #365555;
+  --tw-neutral-400: #577d7d;
+  --tw-neutral-500: #6a9898;
+  --tw-neutral-600: #8ab4b4;
+  --tw-neutral-700: #b8d4d4;
+  --tw-neutral-800: #e0ecec;
+  --tw-neutral-900: #f0f6f6;
+  --tw-neutral-950: #f5fafa;
+
+  --background: #f5fafa;
+  --foreground: #0f2220;
+  --canvas-bg: #e8f0f0;
+  --surface-1: #f0f6f6;
+  --surface-2: #e0ecec;
+  --surface-3: #d0e4e4;
+  --border: #b8d4d4;
+  --text-primary: #0f2220;
+  --text-secondary: #365555;
+  --text-muted: #6a9898;
+  --accent: #006b6b;
+  --header-bg: #f0f6f6;
+  --header-border: #d4e0e0;
+  --node-bg: #f0f6f6;
+  --node-border: #b8d4d4;
+  --controls-bg: #f0f6f6;
+  --controls-border: #b8d4d4;
+  --controls-hover: #d0e4e4;
+
+  --modal-bg: #f0f6f6;
+  --modal-border: #b8d4d4;
+  --input-bg: #e0ecec;
+  --input-border: #b8d4d4;
+  --input-focus: #6a9898;
+  --scrollbar-track: #e0ecec;
+  --scrollbar-thumb: #8ab4b4;
+  --scrollbar-thumb-hover: #6a9898;
+  --btn-secondary-bg: #d0e4e4;
+  --btn-secondary-text: #365555;
+  --btn-hover: #c4d8d8;
+  --edge-color: #8ab4b4;
+  --edge-selected: #006b6b;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Ignite — Pure black, warm orange, agno-inspired minimal ── */
+html[data-skin="ignite"] {
+  --tw-neutral-50:  #f0f0f0;
+  --tw-neutral-100: #d0d0d0;
+  --tw-neutral-200: #999999;
+  --tw-neutral-300: #777777;
+  --tw-neutral-400: #555555;
+  --tw-neutral-500: #444444;
+  --tw-neutral-600: #333333;
+  --tw-neutral-700: #222222;
+  --tw-neutral-800: #151515;
+  --tw-neutral-900: #0e0e0e;
+  --tw-neutral-950: #080808;
+
+  --background: #080808;
+  --foreground: #f0f0f0;
+  --canvas-bg: #0a0a0a;
+
+  --surface-1: #0e0e0e;
+  --surface-2: #151515;
+  --surface-3: #1e1e1e;
+  --border: #252525;
+  --border-subtle: #1a1a1a;
+
+  --text-primary: #f0f0f0;
+  --text-secondary: #999999;
+  --text-muted: #555555;
+
+  --accent: #E8530E;
+  --accent-hover: #FF6B2B;
+  --accent-vivid: #FF8040;
+  --accent-subtle: rgba(232, 83, 14, 0.12);
+
+  --header-bg: #080808;
+  --header-border: #1a1a1a;
+
+  --node-bg: #0e0e0e;
+  --node-border: #252525;
+  --node-header: #151515;
+
+  --controls-bg: #151515;
+  --controls-border: #252525;
+  --controls-hover: #1e1e1e;
+
+  --edge-color: #333333;
+  --edge-selected: #E8530E;
+
+  --modal-bg: #0e0e0e;
+  --modal-border: #252525;
+  --input-bg: #0a0a0a;
+  --input-border: #252525;
+  --input-focus: #444444;
+  --scrollbar-track: #0e0e0e;
+  --scrollbar-thumb: #333333;
+  --scrollbar-thumb-hover: #444444;
+  --btn-secondary-bg: #1e1e1e;
+  --btn-secondary-text: #999999;
+  --btn-hover: #282828;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="ignite"] {
+  --tw-neutral-50:  #111111;
+  --tw-neutral-100: #1a1a1a;
+  --tw-neutral-200: #333333;
+  --tw-neutral-300: #555555;
+  --tw-neutral-400: #777777;
+  --tw-neutral-500: #888888;
+  --tw-neutral-600: #aaaaaa;
+  --tw-neutral-700: #d0d0d0;
+  --tw-neutral-800: #f0f0f0;
+  --tw-neutral-900: #f8f8f8;
+  --tw-neutral-950: #fcfcfc;
+
+  --background: #fcfcfc;
+  --foreground: #111111;
+  --canvas-bg: #f0f0f0;
+  --surface-1: #ffffff;
+  --surface-2: #f8f8f8;
+  --surface-3: #f0f0f0;
+  --border: #e0e0e0;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-muted: #888888;
+  --accent: #C0440A;
+  --accent-hover: #D85010;
+  --accent-vivid: #E86020;
+  --accent-subtle: rgba(192, 68, 10, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #e8e8e8;
+  --node-bg: #ffffff;
+  --node-border: #e0e0e0;
+  --controls-bg: #ffffff;
+  --controls-border: #e0e0e0;
+  --controls-hover: #f0f0f0;
+
+  --modal-bg: #ffffff;
+  --modal-border: #e0e0e0;
+  --input-bg: #f8f8f8;
+  --input-border: #e0e0e0;
+  --input-focus: #aaaaaa;
+  --scrollbar-track: #f0f0f0;
+  --scrollbar-thumb: #cccccc;
+  --scrollbar-thumb-hover: #aaaaaa;
+  --btn-secondary-bg: #f0f0f0;
+  --btn-secondary-text: #555555;
+  --btn-hover: #e8e8e8;
+  --edge-color: #cccccc;
+  --edge-selected: #C0440A;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Flux — React Flow iconic pink, node-editor heritage ── */
+html[data-skin="flux"] {
+  --tw-neutral-50:  #f0eef2;
+  --tw-neutral-100: #d0ccd5;
+  --tw-neutral-200: #9590a0;
+  --tw-neutral-300: #706880;
+  --tw-neutral-400: #504868;
+  --tw-neutral-500: #403858;
+  --tw-neutral-600: #302848;
+  --tw-neutral-700: #221c38;
+  --tw-neutral-800: #18122a;
+  --tw-neutral-900: #100c20;
+  --tw-neutral-950: #0a0816;
+
+  --background: #0a0816;
+  --foreground: #f0eef2;
+  --canvas-bg: #0e0b1a;
+
+  --surface-1: #140f24;
+  --surface-2: #1a142e;
+  --surface-3: #221c38;
+  --border: #2e2648;
+  --border-subtle: #1e1832;
+
+  --text-primary: #f0eef2;
+  --text-secondary: #9590a0;
+  --text-muted: #504868;
+
+  --accent: #FF0072;
+  --accent-hover: #FF2A8E;
+  --accent-vivid: #FF4DA6;
+  --accent-subtle: rgba(255, 0, 114, 0.12);
+
+  --header-bg: #0a0816;
+  --header-border: #1e1832;
+
+  --node-bg: #140f24;
+  --node-border: #2e2648;
+  --node-header: #1a142e;
+
+  --controls-bg: #1a142e;
+  --controls-border: #2e2648;
+  --controls-hover: #221c38;
+
+  --edge-color: #403858;
+  --edge-selected: #FF0072;
+
+  --modal-bg: #140f24;
+  --modal-border: #2e2648;
+  --input-bg: #0e0b1a;
+  --input-border: #2e2648;
+  --input-focus: #504868;
+  --scrollbar-track: #140f24;
+  --scrollbar-thumb: #403858;
+  --scrollbar-thumb-hover: #504868;
+  --btn-secondary-bg: #221c38;
+  --btn-secondary-text: #9590a0;
+  --btn-hover: #2e2648;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="flux"] {
+  --tw-neutral-50:  #100c20;
+  --tw-neutral-100: #1a142e;
+  --tw-neutral-200: #3a3450;
+  --tw-neutral-300: #585070;
+  --tw-neutral-400: #787090;
+  --tw-neutral-500: #8a85a0;
+  --tw-neutral-600: #a8a0b8;
+  --tw-neutral-700: #d0ccd8;
+  --tw-neutral-800: #f0eef4;
+  --tw-neutral-900: #f8f6fa;
+  --tw-neutral-950: #fcfaff;
+
+  --background: #fcfaff;
+  --foreground: #100c20;
+  --canvas-bg: #f0eef4;
+  --surface-1: #ffffff;
+  --surface-2: #f8f6fa;
+  --surface-3: #f0eef4;
+  --border: #d8d4e0;
+  --text-primary: #100c20;
+  --text-secondary: #585070;
+  --text-muted: #8a85a0;
+  --accent: #D00060;
+  --accent-hover: #E00070;
+  --accent-vivid: #FF0080;
+  --accent-subtle: rgba(208, 0, 96, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #e8e4f0;
+  --node-bg: #ffffff;
+  --node-border: #d8d4e0;
+  --controls-bg: #ffffff;
+  --controls-border: #d8d4e0;
+  --controls-hover: #f0eef4;
+
+  --modal-bg: #ffffff;
+  --modal-border: #d8d4e0;
+  --input-bg: #f8f6fa;
+  --input-border: #d8d4e0;
+  --input-focus: #a8a0b8;
+  --scrollbar-track: #f0eef4;
+  --scrollbar-thumb: #b8b4c0;
+  --scrollbar-thumb-hover: #a8a0b8;
+  --btn-secondary-bg: #f0eef4;
+  --btn-secondary-text: #585070;
+  --btn-hover: #e8e4f0;
+  --edge-color: #b8b4c0;
+  --edge-selected: #D00060;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Neon — Electric cyan glow, React-inspired terminal hacker ── */
+html[data-skin="neon"] {
+  --tw-neutral-50:  #e8f4f8;
+  --tw-neutral-100: #c0d8e0;
+  --tw-neutral-200: #7098a8;
+  --tw-neutral-300: #507888;
+  --tw-neutral-400: #385868;
+  --tw-neutral-500: #2a4858;
+  --tw-neutral-600: #1e3848;
+  --tw-neutral-700: #142a38;
+  --tw-neutral-800: #0e1e28;
+  --tw-neutral-900: #0a141c;
+  --tw-neutral-950: #060e14;
+
+  --background: #060e14;
+  --foreground: #e8f4f8;
+  --canvas-bg: #081218;
+
+  --surface-1: #0c1820;
+  --surface-2: #0e1e28;
+  --surface-3: #142a38;
+  --border: #1e3848;
+  --border-subtle: #122230;
+
+  --text-primary: #e8f4f8;
+  --text-secondary: #7098a8;
+  --text-muted: #385868;
+
+  --accent: #61DAFB;
+  --accent-hover: #7AE4FF;
+  --accent-vivid: #90EEFF;
+  --accent-subtle: rgba(97, 218, 251, 0.12);
+
+  --header-bg: #060e14;
+  --header-border: #122230;
+
+  --node-bg: #0c1820;
+  --node-border: #1e3848;
+  --node-header: #0e1e28;
+
+  --controls-bg: #0e1e28;
+  --controls-border: #1e3848;
+  --controls-hover: #142a38;
+
+  --edge-color: #2a4858;
+  --edge-selected: #61DAFB;
+
+  --modal-bg: #0c1820;
+  --modal-border: #1e3848;
+  --input-bg: #081218;
+  --input-border: #1e3848;
+  --input-focus: #385868;
+  --scrollbar-track: #0c1820;
+  --scrollbar-thumb: #2a4858;
+  --scrollbar-thumb-hover: #385868;
+  --btn-secondary-bg: #142a38;
+  --btn-secondary-text: #7098a8;
+  --btn-hover: #1e3848;
+  --btn-primary-text: #060e14;
+}
+
+html[data-theme="light"][data-skin="neon"] {
+  --tw-neutral-50:  #0a141c;
+  --tw-neutral-100: #0e1e28;
+  --tw-neutral-200: #283848;
+  --tw-neutral-300: #405868;
+  --tw-neutral-400: #607888;
+  --tw-neutral-500: #7898a8;
+  --tw-neutral-600: #90b0c0;
+  --tw-neutral-700: #c0d8e0;
+  --tw-neutral-800: #e8f0f4;
+  --tw-neutral-900: #f4f8fa;
+  --tw-neutral-950: #f8fcfe;
+
+  --background: #f8fcfe;
+  --foreground: #0a141c;
+  --canvas-bg: #e8f0f4;
+  --surface-1: #ffffff;
+  --surface-2: #f4f8fa;
+  --surface-3: #e8f0f4;
+  --border: #c0d8e0;
+  --text-primary: #0a141c;
+  --text-secondary: #405868;
+  --text-muted: #7898a8;
+  --accent: #0098C8;
+  --accent-hover: #00AAE0;
+  --accent-vivid: #00BBF0;
+  --accent-subtle: rgba(0, 152, 200, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #d8e8f0;
+  --node-bg: #ffffff;
+  --node-border: #c0d8e0;
+  --controls-bg: #ffffff;
+  --controls-border: #c0d8e0;
+  --controls-hover: #e8f0f4;
+
+  --modal-bg: #ffffff;
+  --modal-border: #c0d8e0;
+  --input-bg: #f4f8fa;
+  --input-border: #c0d8e0;
+  --input-focus: #90b0c0;
+  --scrollbar-track: #e8f0f4;
+  --scrollbar-thumb: #a0c0d0;
+  --scrollbar-thumb-hover: #90b0c0;
+  --btn-secondary-bg: #e8f0f4;
+  --btn-secondary-text: #405868;
+  --btn-hover: #d8e8f0;
+  --edge-color: #a0c0d0;
+  --edge-selected: #0098C8;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Svelte — Warm transition orange, Svelte Flow brand spirit ── */
+html[data-skin="svelte"] {
+  --tw-neutral-50:  #f4ede8;
+  --tw-neutral-100: #d8c8b8;
+  --tw-neutral-200: #a08878;
+  --tw-neutral-300: #806858;
+  --tw-neutral-400: #604840;
+  --tw-neutral-500: #503830;
+  --tw-neutral-600: #402820;
+  --tw-neutral-700: #301c14;
+  --tw-neutral-800: #20140e;
+  --tw-neutral-900: #180e08;
+  --tw-neutral-950: #100a06;
+
+  --background: #100a06;
+  --foreground: #f4ede8;
+  --canvas-bg: #140e0a;
+
+  --surface-1: #1c1410;
+  --surface-2: #20180e;
+  --surface-3: #2c2018;
+  --border: #3a2c22;
+  --border-subtle: #261c14;
+
+  --text-primary: #f4ede8;
+  --text-secondary: #a08878;
+  --text-muted: #604840;
+
+  --accent: #FF3E00;
+  --accent-hover: #FF5820;
+  --accent-vivid: #FF7040;
+  --accent-subtle: rgba(255, 62, 0, 0.12);
+
+  --header-bg: #100a06;
+  --header-border: #261c14;
+
+  --node-bg: #1c1410;
+  --node-border: #3a2c22;
+  --node-header: #20180e;
+
+  --controls-bg: #20180e;
+  --controls-border: #3a2c22;
+  --controls-hover: #2c2018;
+
+  --edge-color: #503830;
+  --edge-selected: #FF3E00;
+
+  --modal-bg: #1c1410;
+  --modal-border: #3a2c22;
+  --input-bg: #140e0a;
+  --input-border: #3a2c22;
+  --input-focus: #604840;
+  --scrollbar-track: #1c1410;
+  --scrollbar-thumb: #503830;
+  --scrollbar-thumb-hover: #604840;
+  --btn-secondary-bg: #2c2018;
+  --btn-secondary-text: #a08878;
+  --btn-hover: #3a2c22;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="svelte"] {
+  --tw-neutral-50:  #180e08;
+  --tw-neutral-100: #20140e;
+  --tw-neutral-200: #402e20;
+  --tw-neutral-300: #604838;
+  --tw-neutral-400: #806858;
+  --tw-neutral-500: #988878;
+  --tw-neutral-600: #b0a090;
+  --tw-neutral-700: #d8ccc0;
+  --tw-neutral-800: #f0e8e0;
+  --tw-neutral-900: #f8f2ec;
+  --tw-neutral-950: #fdf8f4;
+
+  --background: #fdf8f4;
+  --foreground: #180e08;
+  --canvas-bg: #f0e8e0;
+  --surface-1: #ffffff;
+  --surface-2: #f8f2ec;
+  --surface-3: #f0e8e0;
+  --border: #d8ccc0;
+  --text-primary: #180e08;
+  --text-secondary: #604838;
+  --text-muted: #988878;
+  --accent: #D03000;
+  --accent-hover: #E03800;
+  --accent-vivid: #F04500;
+  --accent-subtle: rgba(208, 48, 0, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #e8dcd0;
+  --node-bg: #ffffff;
+  --node-border: #d8ccc0;
+  --controls-bg: #ffffff;
+  --controls-border: #d8ccc0;
+  --controls-hover: #f0e8e0;
+
+  --modal-bg: #ffffff;
+  --modal-border: #d8ccc0;
+  --input-bg: #f8f2ec;
+  --input-border: #d8ccc0;
+  --input-focus: #b0a090;
+  --scrollbar-track: #f0e8e0;
+  --scrollbar-thumb: #c0b4a8;
+  --scrollbar-thumb-hover: #b0a090;
+  --btn-secondary-bg: #f0e8e0;
+  --btn-secondary-text: #604838;
+  --btn-hover: #e8dcd0;
+  --edge-color: #c0b4a8;
+  --edge-selected: #D03000;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Cobalt — Deep IDE blue, developer workstation feel ── */
+html[data-skin="cobalt"] {
+  --tw-neutral-50:  #e8ecf4;
+  --tw-neutral-100: #c0c8d8;
+  --tw-neutral-200: #7888a8;
+  --tw-neutral-300: #586888;
+  --tw-neutral-400: #3c4e6e;
+  --tw-neutral-500: #2e3e5e;
+  --tw-neutral-600: #20304e;
+  --tw-neutral-700: #16243c;
+  --tw-neutral-800: #0e1a2e;
+  --tw-neutral-900: #0a1220;
+  --tw-neutral-950: #060c18;
+
+  --background: #060c18;
+  --foreground: #e8ecf4;
+  --canvas-bg: #08101e;
+
+  --surface-1: #0c1628;
+  --surface-2: #0e1a2e;
+  --surface-3: #16243c;
+  --border: #20304e;
+  --border-subtle: #142040;
+
+  --text-primary: #e8ecf4;
+  --text-secondary: #7888a8;
+  --text-muted: #3c4e6e;
+
+  --accent: #2979FF;
+  --accent-hover: #448AFF;
+  --accent-vivid: #5C9BFF;
+  --accent-subtle: rgba(41, 121, 255, 0.12);
+
+  --header-bg: #060c18;
+  --header-border: #142040;
+
+  --node-bg: #0c1628;
+  --node-border: #20304e;
+  --node-header: #0e1a2e;
+
+  --controls-bg: #0e1a2e;
+  --controls-border: #20304e;
+  --controls-hover: #16243c;
+
+  --edge-color: #2e3e5e;
+  --edge-selected: #2979FF;
+
+  --modal-bg: #0c1628;
+  --modal-border: #20304e;
+  --input-bg: #08101e;
+  --input-border: #20304e;
+  --input-focus: #3c4e6e;
+  --scrollbar-track: #0c1628;
+  --scrollbar-thumb: #2e3e5e;
+  --scrollbar-thumb-hover: #3c4e6e;
+  --btn-secondary-bg: #16243c;
+  --btn-secondary-text: #7888a8;
+  --btn-hover: #20304e;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="cobalt"] {
+  --tw-neutral-50:  #0a1220;
+  --tw-neutral-100: #0e1a2e;
+  --tw-neutral-200: #283850;
+  --tw-neutral-300: #405870;
+  --tw-neutral-400: #607890;
+  --tw-neutral-500: #7890a8;
+  --tw-neutral-600: #98b0c8;
+  --tw-neutral-700: #c8d4e0;
+  --tw-neutral-800: #e8eef4;
+  --tw-neutral-900: #f4f6fa;
+  --tw-neutral-950: #f8fafd;
+
+  --background: #f8fafd;
+  --foreground: #0a1220;
+  --canvas-bg: #e8eef4;
+  --surface-1: #ffffff;
+  --surface-2: #f4f6fa;
+  --surface-3: #e8eef4;
+  --border: #c8d4e0;
+  --text-primary: #0a1220;
+  --text-secondary: #405870;
+  --text-muted: #7890a8;
+  --accent: #1565C0;
+  --accent-hover: #1976D2;
+  --accent-vivid: #2196F3;
+  --accent-subtle: rgba(21, 101, 192, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #d8e0ec;
+  --node-bg: #ffffff;
+  --node-border: #c8d4e0;
+  --controls-bg: #ffffff;
+  --controls-border: #c8d4e0;
+  --controls-hover: #e8eef4;
+
+  --modal-bg: #ffffff;
+  --modal-border: #c8d4e0;
+  --input-bg: #f4f6fa;
+  --input-border: #c8d4e0;
+  --input-focus: #98b0c8;
+  --scrollbar-track: #e8eef4;
+  --scrollbar-thumb: #a8b8d0;
+  --scrollbar-thumb-hover: #98b0c8;
+  --btn-secondary-bg: #e8eef4;
+  --btn-secondary-text: #405870;
+  --btn-hover: #d8e0ec;
+  --edge-color: #a8b8d0;
+  --edge-selected: #1565C0;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Coral — Soft creative coral, warm studio energy ── */
+html[data-skin="coral"] {
+  --tw-neutral-50:  #f4ecea;
+  --tw-neutral-100: #d8c4c0;
+  --tw-neutral-200: #a08888;
+  --tw-neutral-300: #806868;
+  --tw-neutral-400: #604848;
+  --tw-neutral-500: #503838;
+  --tw-neutral-600: #402828;
+  --tw-neutral-700: #301c1c;
+  --tw-neutral-800: #201414;
+  --tw-neutral-900: #180e0e;
+  --tw-neutral-950: #100808;
+
+  --background: #100808;
+  --foreground: #f4ecea;
+  --canvas-bg: #140c0c;
+
+  --surface-1: #1c1212;
+  --surface-2: #201616;
+  --surface-3: #2c1e1e;
+  --border: #3a2828;
+  --border-subtle: #261a1a;
+
+  --text-primary: #f4ecea;
+  --text-secondary: #a08888;
+  --text-muted: #604848;
+
+  --accent: #FF6B6B;
+  --accent-hover: #FF8585;
+  --accent-vivid: #FF9E9E;
+  --accent-subtle: rgba(255, 107, 107, 0.12);
+
+  --header-bg: #100808;
+  --header-border: #261a1a;
+
+  --node-bg: #1c1212;
+  --node-border: #3a2828;
+  --node-header: #201616;
+
+  --controls-bg: #201616;
+  --controls-border: #3a2828;
+  --controls-hover: #2c1e1e;
+
+  --edge-color: #503838;
+  --edge-selected: #FF6B6B;
+
+  --modal-bg: #1c1212;
+  --modal-border: #3a2828;
+  --input-bg: #140c0c;
+  --input-border: #3a2828;
+  --input-focus: #604848;
+  --scrollbar-track: #1c1212;
+  --scrollbar-thumb: #503838;
+  --scrollbar-thumb-hover: #604848;
+  --btn-secondary-bg: #2c1e1e;
+  --btn-secondary-text: #a08888;
+  --btn-hover: #3a2828;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="coral"] {
+  --tw-neutral-50:  #180e0e;
+  --tw-neutral-100: #201414;
+  --tw-neutral-200: #402e2e;
+  --tw-neutral-300: #604848;
+  --tw-neutral-400: #806868;
+  --tw-neutral-500: #988888;
+  --tw-neutral-600: #b8a0a0;
+  --tw-neutral-700: #d8ccc8;
+  --tw-neutral-800: #f0e8e8;
+  --tw-neutral-900: #f8f2f2;
+  --tw-neutral-950: #fdf8f8;
+
+  --background: #fdf8f8;
+  --foreground: #180e0e;
+  --canvas-bg: #f0e8e8;
+  --surface-1: #ffffff;
+  --surface-2: #f8f2f2;
+  --surface-3: #f0e8e8;
+  --border: #d8c8c8;
+  --text-primary: #180e0e;
+  --text-secondary: #604848;
+  --text-muted: #988888;
+  --accent: #D04040;
+  --accent-hover: #E04848;
+  --accent-vivid: #F05050;
+  --accent-subtle: rgba(208, 64, 64, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #e8d8d8;
+  --node-bg: #ffffff;
+  --node-border: #d8c8c8;
+  --controls-bg: #ffffff;
+  --controls-border: #d8c8c8;
+  --controls-hover: #f0e8e8;
+
+  --modal-bg: #ffffff;
+  --modal-border: #d8c8c8;
+  --input-bg: #f8f2f2;
+  --input-border: #d8c8c8;
+  --input-focus: #b8a0a0;
+  --scrollbar-track: #f0e8e8;
+  --scrollbar-thumb: #c0b0b0;
+  --scrollbar-thumb-hover: #b8a0a0;
+  --btn-secondary-bg: #f0e8e8;
+  --btn-secondary-text: #604848;
+  --btn-hover: #e8d8d8;
+  --edge-color: #c0b0b0;
+  --edge-selected: #D04040;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Moss — Deep forest green, organic node garden ── */
+html[data-skin="moss"] {
+  --tw-neutral-50:  #e8f0ec;
+  --tw-neutral-100: #c0d4c8;
+  --tw-neutral-200: #78a088;
+  --tw-neutral-300: #588068;
+  --tw-neutral-400: #3e604c;
+  --tw-neutral-500: #30503e;
+  --tw-neutral-600: #224030;
+  --tw-neutral-700: #183024;
+  --tw-neutral-800: #102018;
+  --tw-neutral-900: #0a1810;
+  --tw-neutral-950: #06100a;
+
+  --background: #06100a;
+  --foreground: #e8f0ec;
+  --canvas-bg: #08140e;
+
+  --surface-1: #0e1c14;
+  --surface-2: #122218;
+  --surface-3: #1a3024;
+  --border: #244030;
+  --border-subtle: #163020;
+
+  --text-primary: #e8f0ec;
+  --text-secondary: #78a088;
+  --text-muted: #3e604c;
+
+  --accent: #2D6A4F;
+  --accent-hover: #3D7A5F;
+  --accent-vivid: #4D8A6F;
+  --accent-subtle: rgba(45, 106, 79, 0.12);
+
+  --header-bg: #06100a;
+  --header-border: #163020;
+
+  --node-bg: #0e1c14;
+  --node-border: #244030;
+  --node-header: #122218;
+
+  --controls-bg: #122218;
+  --controls-border: #244030;
+  --controls-hover: #1a3024;
+
+  --edge-color: #30503e;
+  --edge-selected: #2D6A4F;
+
+  --modal-bg: #0e1c14;
+  --modal-border: #244030;
+  --input-bg: #08140e;
+  --input-border: #244030;
+  --input-focus: #3e604c;
+  --scrollbar-track: #0e1c14;
+  --scrollbar-thumb: #30503e;
+  --scrollbar-thumb-hover: #3e604c;
+  --btn-secondary-bg: #1a3024;
+  --btn-secondary-text: #78a088;
+  --btn-hover: #244030;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="moss"] {
+  --tw-neutral-50:  #0a1810;
+  --tw-neutral-100: #102018;
+  --tw-neutral-200: #283c30;
+  --tw-neutral-300: #405848;
+  --tw-neutral-400: #607868;
+  --tw-neutral-500: #789888;
+  --tw-neutral-600: #98b8a8;
+  --tw-neutral-700: #c4d8cc;
+  --tw-neutral-800: #e8f0ec;
+  --tw-neutral-900: #f4f8f6;
+  --tw-neutral-950: #f8fcfa;
+
+  --background: #f8fcfa;
+  --foreground: #0a1810;
+  --canvas-bg: #e8f0ec;
+  --surface-1: #ffffff;
+  --surface-2: #f4f8f6;
+  --surface-3: #e8f0ec;
+  --border: #c4d8cc;
+  --text-primary: #0a1810;
+  --text-secondary: #405848;
+  --text-muted: #789888;
+  --accent: #1B5038;
+  --accent-hover: #256044;
+  --accent-vivid: #2D6A4F;
+  --accent-subtle: rgba(27, 80, 56, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #d4e4d8;
+  --node-bg: #ffffff;
+  --node-border: #c4d8cc;
+  --controls-bg: #ffffff;
+  --controls-border: #c4d8cc;
+  --controls-hover: #e8f0ec;
+
+  --modal-bg: #ffffff;
+  --modal-border: #c4d8cc;
+  --input-bg: #f4f8f6;
+  --input-border: #c4d8cc;
+  --input-focus: #98b8a8;
+  --scrollbar-track: #e8f0ec;
+  --scrollbar-thumb: #a8c4b4;
+  --scrollbar-thumb-hover: #98b8a8;
+  --btn-secondary-bg: #e8f0ec;
+  --btn-secondary-text: #405848;
+  --btn-hover: #d4e4d8;
+  --edge-color: #a8c4b4;
+  --edge-selected: #1B5038;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Zinc — Cool gunmetal, minimal industrial precision ── */
+html[data-skin="zinc"] {
+  --tw-neutral-50:  #f0f0f2;
+  --tw-neutral-100: #d4d4d8;
+  --tw-neutral-200: #9898a0;
+  --tw-neutral-300: #71717a;
+  --tw-neutral-400: #52525b;
+  --tw-neutral-500: #3f3f46;
+  --tw-neutral-600: #27272a;
+  --tw-neutral-700: #1c1c1f;
+  --tw-neutral-800: #131316;
+  --tw-neutral-900: #0c0c0e;
+  --tw-neutral-950: #09090b;
+
+  --background: #09090b;
+  --foreground: #f0f0f2;
+  --canvas-bg: #0c0c0e;
+
+  --surface-1: #131316;
+  --surface-2: #18181b;
+  --surface-3: #1c1c1f;
+  --border: #27272a;
+  --border-subtle: #1e1e21;
+
+  --text-primary: #f0f0f2;
+  --text-secondary: #9898a0;
+  --text-muted: #52525b;
+
+  --accent: #71717A;
+  --accent-hover: #8888A0;
+  --accent-vivid: #A1A1AA;
+  --accent-subtle: rgba(113, 113, 122, 0.12);
+
+  --header-bg: #09090b;
+  --header-border: #1e1e21;
+
+  --node-bg: #131316;
+  --node-border: #27272a;
+  --node-header: #18181b;
+
+  --controls-bg: #18181b;
+  --controls-border: #27272a;
+  --controls-hover: #1c1c1f;
+
+  --edge-color: #3f3f46;
+  --edge-selected: #A1A1AA;
+
+  --modal-bg: #131316;
+  --modal-border: #27272a;
+  --input-bg: #0c0c0e;
+  --input-border: #27272a;
+  --input-focus: #52525b;
+  --scrollbar-track: #131316;
+  --scrollbar-thumb: #3f3f46;
+  --scrollbar-thumb-hover: #52525b;
+  --btn-secondary-bg: #1c1c1f;
+  --btn-secondary-text: #9898a0;
+  --btn-hover: #27272a;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="zinc"] {
+  --tw-neutral-50:  #0c0c0e;
+  --tw-neutral-100: #18181b;
+  --tw-neutral-200: #3f3f46;
+  --tw-neutral-300: #52525b;
+  --tw-neutral-400: #71717a;
+  --tw-neutral-500: #8888a0;
+  --tw-neutral-600: #a1a1aa;
+  --tw-neutral-700: #d4d4d8;
+  --tw-neutral-800: #ececee;
+  --tw-neutral-900: #f4f4f5;
+  --tw-neutral-950: #fafafa;
+
+  --background: #fafafa;
+  --foreground: #09090b;
+  --canvas-bg: #ececee;
+  --surface-1: #ffffff;
+  --surface-2: #f4f4f5;
+  --surface-3: #ececee;
+  --border: #d4d4d8;
+  --text-primary: #09090b;
+  --text-secondary: #52525b;
+  --text-muted: #8888a0;
+  --accent: #52525B;
+  --accent-hover: #636370;
+  --accent-vivid: #71717A;
+  --accent-subtle: rgba(82, 82, 91, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #e4e4e7;
+  --node-bg: #ffffff;
+  --node-border: #d4d4d8;
+  --controls-bg: #ffffff;
+  --controls-border: #d4d4d8;
+  --controls-hover: #ececee;
+
+  --modal-bg: #ffffff;
+  --modal-border: #d4d4d8;
+  --input-bg: #f4f4f5;
+  --input-border: #d4d4d8;
+  --input-focus: #a1a1aa;
+  --scrollbar-track: #ececee;
+  --scrollbar-thumb: #b8b8c0;
+  --scrollbar-thumb-hover: #a1a1aa;
+  --btn-secondary-bg: #ececee;
+  --btn-secondary-text: #52525b;
+  --btn-hover: #e4e4e7;
+  --edge-color: #b8b8c0;
+  --edge-selected: #52525B;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Indigo — Night violet creative, modern SaaS energy ── */
+html[data-skin="indigo"] {
+  --tw-neutral-50:  #eeeef8;
+  --tw-neutral-100: #cccce0;
+  --tw-neutral-200: #8888b0;
+  --tw-neutral-300: #686890;
+  --tw-neutral-400: #484870;
+  --tw-neutral-500: #383860;
+  --tw-neutral-600: #282850;
+  --tw-neutral-700: #1e1e40;
+  --tw-neutral-800: #141430;
+  --tw-neutral-900: #0e0e24;
+  --tw-neutral-950: #08081a;
+
+  --background: #08081a;
+  --foreground: #eeeef8;
+  --canvas-bg: #0a0a20;
+
+  --surface-1: #101028;
+  --surface-2: #141430;
+  --surface-3: #1a1a3c;
+  --border: #28284e;
+  --border-subtle: #1a1a38;
+
+  --text-primary: #eeeef8;
+  --text-secondary: #8888b0;
+  --text-muted: #484870;
+
+  --accent: #6366F1;
+  --accent-hover: #7C7FF6;
+  --accent-vivid: #9598FF;
+  --accent-subtle: rgba(99, 102, 241, 0.12);
+
+  --header-bg: #08081a;
+  --header-border: #1a1a38;
+
+  --node-bg: #101028;
+  --node-border: #28284e;
+  --node-header: #141430;
+
+  --controls-bg: #141430;
+  --controls-border: #28284e;
+  --controls-hover: #1a1a3c;
+
+  --edge-color: #383860;
+  --edge-selected: #6366F1;
+
+  --modal-bg: #101028;
+  --modal-border: #28284e;
+  --input-bg: #0a0a20;
+  --input-border: #28284e;
+  --input-focus: #484870;
+  --scrollbar-track: #101028;
+  --scrollbar-thumb: #383860;
+  --scrollbar-thumb-hover: #484870;
+  --btn-secondary-bg: #1a1a3c;
+  --btn-secondary-text: #8888b0;
+  --btn-hover: #28284e;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="indigo"] {
+  --tw-neutral-50:  #0e0e24;
+  --tw-neutral-100: #141430;
+  --tw-neutral-200: #303050;
+  --tw-neutral-300: #484870;
+  --tw-neutral-400: #686890;
+  --tw-neutral-500: #8080a8;
+  --tw-neutral-600: #a0a0c0;
+  --tw-neutral-700: #cccce0;
+  --tw-neutral-800: #eaeaf4;
+  --tw-neutral-900: #f4f4fa;
+  --tw-neutral-950: #fafaff;
+
+  --background: #fafaff;
+  --foreground: #08081a;
+  --canvas-bg: #eaeaf4;
+  --surface-1: #ffffff;
+  --surface-2: #f4f4fa;
+  --surface-3: #eaeaf4;
+  --border: #d0d0e0;
+  --text-primary: #08081a;
+  --text-secondary: #484870;
+  --text-muted: #8080a8;
+  --accent: #4F46E5;
+  --accent-hover: #5B52F0;
+  --accent-vivid: #6366F1;
+  --accent-subtle: rgba(79, 70, 229, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #dcdcec;
+  --node-bg: #ffffff;
+  --node-border: #d0d0e0;
+  --controls-bg: #ffffff;
+  --controls-border: #d0d0e0;
+  --controls-hover: #eaeaf4;
+
+  --modal-bg: #ffffff;
+  --modal-border: #d0d0e0;
+  --input-bg: #f4f4fa;
+  --input-border: #d0d0e0;
+  --input-focus: #a0a0c0;
+  --scrollbar-track: #eaeaf4;
+  --scrollbar-thumb: #b0b0c8;
+  --scrollbar-thumb-hover: #a0a0c0;
+  --btn-secondary-bg: #eaeaf4;
+  --btn-secondary-text: #484870;
+  --btn-hover: #dcdcec;
+  --edge-color: #b0b0c8;
+  --edge-selected: #4F46E5;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Rose — Dusty editorial pink, fashion-tech energy ── */
+html[data-skin="rose"] {
+  --tw-neutral-50:  #f4eaee;
+  --tw-neutral-100: #d8c0ca;
+  --tw-neutral-200: #a08090;
+  --tw-neutral-300: #806070;
+  --tw-neutral-400: #604050;
+  --tw-neutral-500: #503040;
+  --tw-neutral-600: #402030;
+  --tw-neutral-700: #301620;
+  --tw-neutral-800: #200e16;
+  --tw-neutral-900: #180a10;
+  --tw-neutral-950: #10060a;
+
+  --background: #10060a;
+  --foreground: #f4eaee;
+  --canvas-bg: #140a0e;
+
+  --surface-1: #1c1018;
+  --surface-2: #20141c;
+  --surface-3: #2c1c26;
+  --border: #3a2832;
+  --border-subtle: #261a22;
+
+  --text-primary: #f4eaee;
+  --text-secondary: #a08090;
+  --text-muted: #604050;
+
+  --accent: #E11D48;
+  --accent-hover: #F43060;
+  --accent-vivid: #FF4575;
+  --accent-subtle: rgba(225, 29, 72, 0.12);
+
+  --header-bg: #10060a;
+  --header-border: #261a22;
+
+  --node-bg: #1c1018;
+  --node-border: #3a2832;
+  --node-header: #20141c;
+
+  --controls-bg: #20141c;
+  --controls-border: #3a2832;
+  --controls-hover: #2c1c26;
+
+  --edge-color: #503040;
+  --edge-selected: #E11D48;
+
+  --modal-bg: #1c1018;
+  --modal-border: #3a2832;
+  --input-bg: #140a0e;
+  --input-border: #3a2832;
+  --input-focus: #604050;
+  --scrollbar-track: #1c1018;
+  --scrollbar-thumb: #503040;
+  --scrollbar-thumb-hover: #604050;
+  --btn-secondary-bg: #2c1c26;
+  --btn-secondary-text: #a08090;
+  --btn-hover: #3a2832;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="rose"] {
+  --tw-neutral-50:  #180a10;
+  --tw-neutral-100: #200e16;
+  --tw-neutral-200: #402830;
+  --tw-neutral-300: #604050;
+  --tw-neutral-400: #806070;
+  --tw-neutral-500: #988088;
+  --tw-neutral-600: #b8a0a8;
+  --tw-neutral-700: #d8c8d0;
+  --tw-neutral-800: #f0e8ec;
+  --tw-neutral-900: #f8f2f4;
+  --tw-neutral-950: #fdf8fa;
+
+  --background: #fdf8fa;
+  --foreground: #180a10;
+  --canvas-bg: #f0e8ec;
+  --surface-1: #ffffff;
+  --surface-2: #f8f2f4;
+  --surface-3: #f0e8ec;
+  --border: #d8c8d0;
+  --text-primary: #180a10;
+  --text-secondary: #604050;
+  --text-muted: #988088;
+  --accent: #BE123C;
+  --accent-hover: #D01848;
+  --accent-vivid: #E11D48;
+  --accent-subtle: rgba(190, 18, 60, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #e8d8e0;
+  --node-bg: #ffffff;
+  --node-border: #d8c8d0;
+  --controls-bg: #ffffff;
+  --controls-border: #d8c8d0;
+  --controls-hover: #f0e8ec;
+
+  --modal-bg: #ffffff;
+  --modal-border: #d8c8d0;
+  --input-bg: #f8f2f4;
+  --input-border: #d8c8d0;
+  --input-focus: #b8a0a8;
+  --scrollbar-track: #f0e8ec;
+  --scrollbar-thumb: #c0b0b8;
+  --scrollbar-thumb-hover: #b8a0a8;
+  --btn-secondary-bg: #f0e8ec;
+  --btn-secondary-text: #604050;
+  --btn-hover: #e8d8e0;
+  --edge-color: #c0b0b8;
+  --edge-selected: #BE123C;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ── Carbon — Pure graphite + electric orange, industrial precision ── */
+html[data-skin="carbon"] {
+  --tw-neutral-50:  #f0ece8;
+  --tw-neutral-100: #d0c8c0;
+  --tw-neutral-200: #989088;
+  --tw-neutral-300: #787068;
+  --tw-neutral-400: #585050;
+  --tw-neutral-500: #484040;
+  --tw-neutral-600: #383030;
+  --tw-neutral-700: #282220;
+  --tw-neutral-800: #1a1614;
+  --tw-neutral-900: #120e0c;
+  --tw-neutral-950: #0a0808;
+
+  --background: #0a0808;
+  --foreground: #f0ece8;
+  --canvas-bg: #0e0c0a;
+
+  --surface-1: #141210;
+  --surface-2: #1a1614;
+  --surface-3: #221e1c;
+  --border: #2e2a28;
+  --border-subtle: #1e1a18;
+
+  --text-primary: #f0ece8;
+  --text-secondary: #989088;
+  --text-muted: #585050;
+
+  --accent: #F97316;
+  --accent-hover: #FB8C30;
+  --accent-vivid: #FCA44A;
+  --accent-subtle: rgba(249, 115, 22, 0.12);
+
+  --header-bg: #0a0808;
+  --header-border: #1e1a18;
+
+  --node-bg: #141210;
+  --node-border: #2e2a28;
+  --node-header: #1a1614;
+
+  --controls-bg: #1a1614;
+  --controls-border: #2e2a28;
+  --controls-hover: #221e1c;
+
+  --edge-color: #484040;
+  --edge-selected: #F97316;
+
+  --modal-bg: #141210;
+  --modal-border: #2e2a28;
+  --input-bg: #0e0c0a;
+  --input-border: #2e2a28;
+  --input-focus: #585050;
+  --scrollbar-track: #141210;
+  --scrollbar-thumb: #484040;
+  --scrollbar-thumb-hover: #585050;
+  --btn-secondary-bg: #221e1c;
+  --btn-secondary-text: #989088;
+  --btn-hover: #2e2a28;
+  --btn-primary-text: #ffffff;
+}
+
+html[data-theme="light"][data-skin="carbon"] {
+  --tw-neutral-50:  #120e0c;
+  --tw-neutral-100: #1a1614;
+  --tw-neutral-200: #383030;
+  --tw-neutral-300: #585050;
+  --tw-neutral-400: #787068;
+  --tw-neutral-500: #908880;
+  --tw-neutral-600: #a8a098;
+  --tw-neutral-700: #d0c8c0;
+  --tw-neutral-800: #ece8e4;
+  --tw-neutral-900: #f6f4f2;
+  --tw-neutral-950: #faf8f6;
+
+  --background: #faf8f6;
+  --foreground: #0a0808;
+  --canvas-bg: #ece8e4;
+  --surface-1: #ffffff;
+  --surface-2: #f6f4f2;
+  --surface-3: #ece8e4;
+  --border: #d4d0cc;
+  --text-primary: #0a0808;
+  --text-secondary: #585050;
+  --text-muted: #908880;
+  --accent: #C25D10;
+  --accent-hover: #D86A18;
+  --accent-vivid: #EA7820;
+  --accent-subtle: rgba(194, 93, 16, 0.08);
+  --header-bg: #ffffff;
+  --header-border: #e4e0dc;
+  --node-bg: #ffffff;
+  --node-border: #d4d0cc;
+  --controls-bg: #ffffff;
+  --controls-border: #d4d0cc;
+  --controls-hover: #ece8e4;
+
+  --modal-bg: #ffffff;
+  --modal-border: #d4d0cc;
+  --input-bg: #f6f4f2;
+  --input-border: #d4d0cc;
+  --input-focus: #a8a098;
+  --scrollbar-track: #ece8e4;
+  --scrollbar-thumb: #b8b0a8;
+  --scrollbar-thumb-hover: #a8a098;
+  --btn-secondary-bg: #ece8e4;
+  --btn-secondary-text: #585050;
+  --btn-hover: #e4e0dc;
+  --edge-color: #b8b0a8;
+  --edge-selected: #C25D10;
+
+  --btn-primary-text: #ffffff;
+}
+
+/* ══════════════════════════════════════════════════
+   BRAND SKIN APPLICATION — Forces --accent onto UI elements
+   These rules make the skin color VISIBLE across the app.
+   ══════════════════════════════════════════════════ */
+
+/* ── VERSION BADGE — Uses vivid accent for visibility ── */
+.badge-vivid {
+  color: var(--accent-vivid) !important;
+  background: var(--accent-subtle) !important;
+}
+
+/* ── SELECTED NODE — Rotating light glow ── */
+@keyframes node-glow-rotate {
+  from { --glow-angle: 0deg; }
+  to   { --glow-angle: 360deg; }
+}
+
+@property --glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.react-flow__node.selected {
+  /* Remove default React Flow selection box-shadow */
+  box-shadow: none !important;
+}
+
+/* Rotating glow pseudo-element */
+.react-flow__node.selected > :first-child {
+  position: relative;
+}
+
+.react-flow__node.selected::before {
+  content: "";
+  position: absolute;
+  /* Extend top to encompass the floating header (28px above node + 2px padding) */
+  inset: -30px -2px -2px -2px;
+  border-radius: 10px;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--glow-angle),
+    transparent 0%,
+    transparent 55%,
+    var(--node-custom-color, var(--accent)) 72%,
+    color-mix(in srgb, var(--node-custom-color, var(--accent)) 70%, transparent) 85%,
+    transparent 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: node-glow-rotate 3s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Outer glow shadow — uses custom node color if set, otherwise accent */
+.react-flow__node.selected::after {
+  content: "";
+  position: absolute;
+  /* Extend top to encompass the floating header (28px above node + 4px padding) */
+  inset: -32px -4px -4px -4px;
+  border-radius: 14px;
+  box-shadow: 0 0 18px 4px color-mix(in srgb, var(--node-custom-color, var(--accent)) 30%, transparent),
+              0 0 6px 1px color-mix(in srgb, var(--node-custom-color, var(--accent)) 15%, transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── MODAL GLOW — Unified rotating accent glow for all Dialog modals ── */
+/* Implemented as a real DOM element (not pseudo) so it works with any
+   position scheme and overflow settings on the DialogContent parent. */
+.modal-glow-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px; /* rounded-xl (12px) + 2px */
+  padding: 2px;
+  background: conic-gradient(
+    from var(--glow-angle, 0deg),
+    transparent 0%,
+    transparent 55%,
+    var(--accent) 72%,
+    color-mix(in srgb, var(--accent) 60%, transparent) 83%,
+    transparent 95%,
+    transparent 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: node-glow-rotate 6s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Soft ambient shadow behind the glow ring */
+.modal-glow-ring::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 18px;
+  box-shadow:
+    0 0 20px 4px color-mix(in srgb, var(--accent) 10%, transparent),
+    0 0 50px 12px color-mix(in srgb, var(--accent) 5%, transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── WELCOME MODAL — Rotating light glow border (same as login/nodes) ── */
+.welcome-glow {
+  position: relative;
+}
+
+/* Rotating conic-gradient ring — 2px visible border sweeping around the modal */
+.welcome-glow::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px; /* rounded-xl (12px) + 2px offset */
+  padding: 2px;
+  background: conic-gradient(
+    from var(--glow-angle, 0deg),
+    transparent 0%,
+    transparent 55%,
+    var(--accent) 72%,
+    color-mix(in srgb, var(--accent) 60%, transparent) 83%,
+    transparent 95%,
+    transparent 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: node-glow-rotate 6s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Soft outer ambient glow */
+.welcome-glow::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 18px;
+  box-shadow:
+    0 0 20px 4px color-mix(in srgb, var(--accent) 10%, transparent),
+    0 0 50px 12px color-mix(in srgb, var(--accent) 5%, transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── RUN BUTTONS — prominent accent color everywhere ── */
+/* ControlPanel Run buttons (play icon + "Run" text) */
+button:has(> svg path[d="M8 5v14l11-7z"]) {
+  background-color: var(--accent) !important;
+  color: var(--btn-primary-text) !important;
+  border-color: var(--accent) !important;
+}
+button:has(> svg path[d="M8 5v14l11-7z"]):hover:not(:disabled) {
+  background-color: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+}
+button:has(> svg path[d="M8 5v14l11-7z"]):disabled {
+  opacity: 0.5;
+}
+
+/* FloatingNodeHeader Run button */
+.react-flow__node button:has(> svg path[d="M8 5v14l11-7z"]) {
+  background-color: var(--accent) !important;
+  color: var(--btn-primary-text) !important;
+  border-color: var(--accent) !important;
+}
+
+/* Node "Run" / action buttons inside nodes (blue/purple variants) */
+.react-flow__node button[class*="bg-blue-"],
+.react-flow__node button[class*="bg-purple-"],
+.react-flow__node button[class*="bg-indigo-"] {
+  background-color: var(--accent) !important;
+  color: var(--btn-primary-text) !important;
+}
+.react-flow__node button[class*="bg-blue-"]:hover,
+.react-flow__node button[class*="bg-purple-"]:hover,
+.react-flow__node button[class*="bg-indigo-"]:hover {
+  background-color: var(--accent-hover) !important;
+}
+
+/* Header active/accent elements */
+header button[class*="text-blue-"],
+header span[class*="text-blue-"],
+header a[class*="text-blue-"] {
+  color: var(--accent) !important;
+}
+
+/* Focus rings */
+*:focus-visible {
+  outline-color: var(--accent) !important;
+}
+
+/* Text selection */
+::selection {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+/* Loading spinner / progress indicators */
+[class*="border-blue-500"] {
+  border-color: var(--accent) !important;
+}
+
+/* Blue badges → accent color */
+[class*="bg-blue-500/20"],
+[class*="bg-blue-500\\/20"] {
+  background: var(--accent-subtle) !important;
+}
+[class*="text-blue-400"],
+[class*="text-blue-500"] {
+  color: var(--accent) !important;
+}
+
+/* Purple badges (like BETA) → accent */
+[class*="bg-purple-"],
+[class*="text-purple-"] {
+  background-color: var(--accent-subtle) !important;
+  color: var(--accent) !important;
+}
+
+/* Floating Action Bar — accent on active states */
+.react-flow ~ div button[class*="bg-blue-"],
+.react-flow ~ div button[class*="bg-purple-"] {
+  background-color: var(--accent) !important;
+  color: var(--btn-primary-text) !important;
+}
+
+/* Quickstart/Welcome modal buttons */
+button[class*="bg-blue-600"],
+button[class*="bg-blue-500"],
+button[class*="bg-purple-600"],
+button[class*="bg-purple-500"] {
+  background-color: var(--accent) !important;
+  color: var(--btn-primary-text) !important;
+}
+button[class*="bg-blue-600"]:hover,
+button[class*="bg-blue-500"]:hover,
+button[class*="bg-purple-600"]:hover,
+button[class*="bg-purple-500"]:hover {
+  background-color: var(--accent-hover) !important;
+}
+
+/* Range sliders / toggles */
+input[type="range"]::-webkit-slider-thumb {
+  background: var(--accent) !important;
+}
+
+/* Unsaved changes dot */
+span[class*="bg-red-500"][class*="rounded-full"][class*="w-2"] {
+  background: var(--accent) !important;
+}
+
+/* Link-style accent */
+a[class*="text-blue-"],
+a[class*="text-purple-"],
+a[class*="text-indigo-"] {
+  color: var(--accent) !important;
+}
+
+/* ══════════════════════════════════════════════════
+   UNIVERSAL NEUTRAL OVERRIDES
+   Applied always — ensures Tailwind neutral classes
+   follow the --tw-neutral-* CSS vars from active theme+skin.
+   These catch ALL bg/text/border neutral classes in the app.
+   ══════════════════════════════════════════════════ */
+
+/* Background */
+.bg-neutral-50  { background-color: var(--tw-neutral-50)  !important; }
+.bg-neutral-100 { background-color: var(--tw-neutral-100) !important; }
+.bg-neutral-200 { background-color: var(--tw-neutral-200) !important; }
+.bg-neutral-300 { background-color: var(--tw-neutral-300) !important; }
+.bg-neutral-400 { background-color: var(--tw-neutral-400) !important; }
+.bg-neutral-500 { background-color: var(--tw-neutral-500) !important; }
+.bg-neutral-600 { background-color: var(--tw-neutral-600) !important; }
+.bg-neutral-700 { background-color: var(--tw-neutral-700) !important; }
+.bg-neutral-800 { background-color: var(--tw-neutral-800) !important; }
+.bg-neutral-900 { background-color: var(--tw-neutral-900) !important; }
+.bg-neutral-950 { background-color: var(--tw-neutral-950) !important; }
+
+/* Hover backgrounds */
+.hover\:bg-neutral-700:hover { background-color: var(--tw-neutral-700) !important; }
+.hover\:bg-neutral-800:hover { background-color: var(--tw-neutral-800) !important; }
+
+/* Text */
+.text-neutral-50  { color: var(--tw-neutral-50)  !important; }
+.text-neutral-100 { color: var(--tw-neutral-100) !important; }
+.text-neutral-200 { color: var(--tw-neutral-200) !important; }
+.text-neutral-300 { color: var(--tw-neutral-300) !important; }
+.text-neutral-400 { color: var(--tw-neutral-400) !important; }
+.text-neutral-500 { color: var(--tw-neutral-500) !important; }
+.text-neutral-600 { color: var(--tw-neutral-600) !important; }
+.text-neutral-700 { color: var(--tw-neutral-700) !important; }
+.text-neutral-800 { color: var(--tw-neutral-800) !important; }
+.text-neutral-900 { color: var(--tw-neutral-900) !important; }
+.text-neutral-950 { color: var(--tw-neutral-950) !important; }
+
+/* Hover text */
+.hover\:text-neutral-100:hover { color: var(--tw-neutral-100) !important; }
+.hover\:text-neutral-200:hover { color: var(--tw-neutral-200) !important; }
+.hover\:text-neutral-300:hover { color: var(--tw-neutral-300) !important; }
+
+/* Borders */
+.border-neutral-500 { border-color: var(--tw-neutral-500) !important; }
+.border-neutral-600 { border-color: var(--tw-neutral-600) !important; }
+.border-neutral-700 { border-color: var(--tw-neutral-700) !important; }
+.border-neutral-800 { border-color: var(--tw-neutral-800) !important; }
+.border-neutral-900 { border-color: var(--tw-neutral-900) !important; }
+
+/* Hover borders */
+.hover\:border-neutral-500:hover { border-color: var(--tw-neutral-500) !important; }
+.hover\:border-neutral-600:hover { border-color: var(--tw-neutral-600) !important; }
+
+/* Divide */
+.divide-neutral-700 > * + * { border-color: var(--tw-neutral-700) !important; }
+.divide-neutral-800 > * + * { border-color: var(--tw-neutral-800) !important; }
+
+/* Placeholder */
+.placeholder\:text-neutral-400::placeholder { color: var(--tw-neutral-400) !important; }
+.placeholder\:text-neutral-500::placeholder { color: var(--tw-neutral-500) !important; }
+
+/* Ring */
+.ring-neutral-800 { --tw-ring-color: var(--tw-neutral-800) !important; }
+.ring-neutral-900 { --tw-ring-color: var(--tw-neutral-900) !important; }
+
+/* Opacity variants with neutral (common in the codebase) */
+.bg-neutral-700\/50 { background-color: color-mix(in srgb, var(--tw-neutral-700) 50%, transparent) !important; }
+.bg-neutral-800\/40 { background-color: color-mix(in srgb, var(--tw-neutral-800) 40%, transparent) !important; }
+.bg-neutral-800\/50 { background-color: color-mix(in srgb, var(--tw-neutral-800) 50%, transparent) !important; }
+.border-neutral-700\/50 { border-color: color-mix(in srgb, var(--tw-neutral-700) 50%, transparent) !important; }
+
+html {
+  /* Required for overscroll-behavior to work in Chrome on macOS */
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Prevent browser back/forward swipe navigation on macOS */
+  overscroll-behavior-x: none;
+  /* Prevent touch gestures from triggering navigation */
+  touch-action: pan-y pinch-zoom;
+}
+
+/* React Flow customizations */
+.react-flow {
+  /* Prevent browser back/forward swipe navigation when panning */
+  overscroll-behavior-x: none;
+  touch-action: none;
+}
+
+.react-flow__node {
+  font-family: inherit;
+  overflow: visible !important;
+}
+
+/* Ensure handle labels are visible outside node bounds */
+.react-flow__node .handle-label {
+  z-index: 20;
+}
+
+/* ── CURSOR DIFFERENTIATION ──
+   Canvas panning  = crosshair / move (4-arrow)
+   Node hover      = grab (open hand)
+   Node dragging   = grabbing (closed hand)
+   Handles         = crosshair (connecting)
+   This helps users distinguish "I'm moving the canvas" from "I'm moving a node" */
+
+/* Canvas default: crosshair — signals "click to pan or select" */
+.react-flow__pane {
+  cursor: crosshair !important;
+}
+
+/* Canvas while actively panning — 4-way arrow */
+.react-flow__pane.dragging,
+.react-flow__pane:active {
+  cursor: all-scroll !important;
+}
+
+/* Hand tool mode: grab cursor on canvas pane — signals "I can drag the canvas" */
+.canvas-hand-mode .react-flow__pane {
+  cursor: grab !important;
+}
+.canvas-hand-mode .react-flow__pane.dragging,
+.canvas-hand-mode .react-flow__pane:active {
+  cursor: grabbing !important;
+}
+
+/* Nodes: open hand on hover — signals "I can drag this" */
+.react-flow__node {
+  cursor: grab !important;
+}
+
+/* Nodes: closed hand while dragging */
+.react-flow__node.dragging,
+.react-flow__node:active {
+  cursor: grabbing !important;
+}
+
+/* Node content areas that shouldn't show grab (inputs, buttons, etc) */
+.react-flow__node input,
+.react-flow__node textarea,
+.react-flow__node select,
+.react-flow__node button,
+.react-flow__node a,
+.react-flow__node .nodrag {
+  cursor: default !important;
+}
+.react-flow__node button:hover,
+.react-flow__node a:hover {
+  cursor: pointer !important;
+}
+
+/* Handles: crosshair — signals "I can connect" */
+.react-flow__handle {
+  cursor: crosshair !important;
+}
+
+/* Selection rectangle: crosshair */
+.react-flow__selectionpane {
+  cursor: crosshair !important;
+}
+
+/* Edge hover: pointer */
+.react-flow__edge {
+  cursor: pointer !important;
+}
+
+/* Resize handles */
+.react-flow__resize-control {
+  cursor: nwse-resize !important;
+}
+
+/* Skip hit-testing on images inside nodes — parent containers handle all
+   click/hover events. Prevents expensive bitmap decoding during mouse movement. */
+.react-flow__node img {
+  pointer-events: none;
+}
+
+/* During active panning or node dragging, disable pointer events on all node
+   content to eliminate expensive browser hit-testing against the DOM tree.
+   The class is toggled on <html> via direct DOM access (no React re-render). */
+.canvas-interacting .react-flow__node > * {
+  pointer-events: none;
+}
+
+/* Remove default React Flow styling for output nodes to match custom nodes */
+.react-flow__node-output {
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Switch dimming - nodes downstream of disabled Switch outputs */
+.react-flow__node.switch-dimmed {
+  opacity: 0.4;
+  transition: opacity 250ms ease-in-out;
+}
+
+.react-flow__node:not(.switch-dimmed) {
+  transition: opacity 250ms ease-in-out;
+}
+
+/* Base handle styles — sits ON the node border, fully visible */
+.react-flow__handle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--node-bg, #181c25);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 3px rgba(0, 0, 0, 0.25);
+  z-index: 20;
+}
+
+/* Larger invisible hit area for easier clicking */
+.react-flow__handle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+/* Center handle on the node border edge */
+.react-flow__handle-left {
+  left: -6px;
+}
+
+.react-flow__handle-right {
+  right: -6px;
+}
+
+/* Handle labels — hidden globally via toggle in FloatingNodeHeader */
+.handle-labels-hidden .handle-label {
+  display: none !important;
+}
+
+/* Default handle color (no data-handletype) */
+.react-flow__handle {
+  background: #6b7280;
+}
+
+/* Image handles - soft green */
+.react-flow__handle[data-handletype="image"],
+.react-flow__handle[data-handletype="reference"] {
+  background: var(--handle-color-image);
+}
+
+/* Text handles - soft blue */
+.react-flow__handle[data-handletype="text"] {
+  background: var(--handle-color-text);
+}
+
+/* 3D handles - orange */
+.react-flow__handle[data-handletype="3d"] {
+  background: var(--handle-color-3d);
+}
+
+/* Audio handles - violet */
+.react-flow__handle[data-handletype="audio"] {
+  background: rgb(167, 139, 250);
+}
+
+/* Video handles - white */
+.react-flow__handle[data-handletype="video"] {
+  background: #ffffff;
+}
+
+.react-flow__edge-path {
+  stroke: var(--edge-color);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: var(--edge-selected);
+}
+
+/* Hide resize handles but show resize cursor on edges */
+.react-flow__resize-control {
+  opacity: 0 !important;
+  pointer-events: auto !important;
+}
+
+.react-flow__resize-control.left,
+.react-flow__resize-control.right {
+  cursor: ew-resize !important;
+  width: 16px !important;
+}
+
+.react-flow__resize-control.top,
+.react-flow__resize-control.bottom {
+  cursor: ns-resize !important;
+  height: 16px !important;
+}
+
+.react-flow__resize-control.top.left,
+.react-flow__resize-control.bottom.right {
+  cursor: nwse-resize !important;
+}
+
+.react-flow__resize-control.top.right,
+.react-flow__resize-control.bottom.left {
+  cursor: nesw-resize !important;
+}
+
+/* React Flow Controls — theme-aware */
+.react-flow__controls {
+  background: var(--controls-bg) !important;
+  border: 1px solid var(--controls-border) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15) !important;
+}
+
+.react-flow__controls-button {
+  background: var(--controls-bg) !important;
+  border-bottom: 1px solid var(--controls-border) !important;
+}
+
+.react-flow__controls-button svg {
+  fill: var(--text-secondary) !important;
+}
+
+.react-flow__controls-button svg path {
+  fill: var(--text-secondary) !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--controls-hover) !important;
+}
+
+.react-flow__controls-button:hover svg,
+.react-flow__controls-button:hover svg path {
+  fill: var(--text-primary) !important;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+
+/* Custom scrollbar — theme-aware */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Make the multi-selection box pass through pointer events so we can still
+   interact with handles, resize controls, and other node elements */
+.react-flow__nodesselection-rect {
+  pointer-events: none !important;
+}
+
+/* Edge pulse animation for loading connectors */
+@keyframes flowPulse {
+  0% {
+    stroke-dashoffset: 50;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Fan animation for image history */
+@keyframes fanEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translate(0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translate(var(--fan-x), var(--fan-y));
+  }
+}
+
+@keyframes fanExit {
+  0% {
+    opacity: 1;
+    transform: scale(1) translate(var(--fan-x), var(--fan-y));
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3) translate(0, 0);
+  }
+}
+
+.animate-fan-enter {
+  animation: fanEnter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-fan-exit {
+  animation: fanExit 0.15s ease-in forwards;
+}
+
+/* ── Dashboard entrance (post-login transition) ── */
+@keyframes dashboard-entrance-fade {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ══════════════════════════════════════════════════
+   NODE DESIGN 2.0
+   Modern visual language with glassmorphism, accent
+   strip, and per-node color customization.
+   Activated via html[data-node-design="v2"]
+   ══════════════════════════════════════════════════ */
+
+/* --- V2 node wrapper overrides --- */
+html[data-node-design="v2"] .react-flow__node .node-v2-shell {
+  background: var(--node-bg-v2);
+  border: 1.5px solid var(--node-border-v2);
+  border-radius: var(--node-radius-v2);
+  box-shadow: var(--node-shadow-v2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  overflow: visible;
+}
+
+/* Accent top strip for v2 */
+html[data-node-design="v2"] .react-flow__node .node-v2-shell::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: var(--node-header-strip-h);
+  border-radius: 0 0 2px 2px;
+  background: var(--node-header-strip-color);
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+  z-index: 1;
+}
+
+/* V2 node hover */
+html[data-node-design="v2"] .react-flow__node:hover .node-v2-shell {
+  border-color: var(--node-border-v2-hover);
+}
+html[data-node-design="v2"] .react-flow__node:hover .node-v2-shell::before {
+  opacity: 1;
+}
+
+/* V2 selected node — glow uses accent strip color */
+html[data-node-design="v2"] .react-flow__node.selected .node-v2-shell {
+  border-color: var(--node-border-v2-selected);
+}
+html[data-node-design="v2"] .react-flow__node.selected .node-v2-shell::before {
+  opacity: 1;
+  height: 4px;
+}
+
+/* V2 glow border-radius bump to match larger radius */
+html[data-node-design="v2"] .react-flow__node.selected::before {
+  border-radius: calc(var(--node-radius-v2) + 1.5px);
+}
+html[data-node-design="v2"] .react-flow__node.selected::after {
+  border-radius: calc(var(--node-radius-v2) + 3px);
+}
+
+/* ── Minimized node (pill) — glow uses fully round radius ── */
+.react-flow__node.node-minimized.selected::before {
+  border-radius: 9999px;
+}
+.react-flow__node.node-minimized.selected::after {
+  border-radius: 9999px;
+}
+
+/* ── Minimized node children — hide everything except ReactFlow handles ── */
+.node-minimized-children > *:not(.react-flow__handle) {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.node-minimized-children .react-flow__handle {
+  visibility: visible !important;
+  pointer-events: auto !important;
+  /* Center handles vertically on the pill (50%) */
+  top: 50% !important;
+}
+/* Hide handle labels on minimized nodes */
+.node-minimized-children .handle-label {
+  display: none !important;
+}
+
+/* ── Per-node color: accent mode (border + strip only, no interior fill) ── */
+html .react-flow__node .node-color-accent {
+  border-color: color-mix(in srgb, var(--node-custom-color) 50%, transparent) !important;
+}
+html .react-flow__node .node-color-accent::before {
+  background: var(--node-custom-color) !important;
+  opacity: 1 !important;
+}
+
+/* ── Per-node color: tint mode (fills entire node interior) ── */
+/* Background: strong tint at ~22% over the base node bg */
+html .react-flow__node .node-color-tint {
+  border-color: color-mix(in srgb, var(--node-custom-color) 45%, transparent) !important;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--node-custom-color) 35%, var(--tw-neutral-900)) 0%,
+      color-mix(in srgb, var(--node-custom-color) 22%, var(--tw-neutral-800)) 56px,
+      color-mix(in srgb, var(--node-custom-color) 18%, var(--tw-neutral-800)) 100%
+    ) !important;
+}
+
+/* Strip inherits the node color in tint mode */
+html .react-flow__node .node-color-tint::before {
+  background: var(--node-custom-color) !important;
+  opacity: 1 !important;
+}
+
+/* Tint mode glow on selection */
+html .react-flow__node.selected .node-color-tint {
+  box-shadow: 0 0 20px 3px color-mix(in srgb, var(--node-custom-color) 20%, transparent);
+}
+
+/* ── Light theme adjustments for tint mode ── */
+[data-theme="light"] .react-flow__node .node-color-tint {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--node-custom-color) 22%, var(--tw-neutral-800)) 0%,
+      color-mix(in srgb, var(--node-custom-color) 12%, var(--tw-neutral-800)) 56px,
+      color-mix(in srgb, var(--node-custom-color) 8%, var(--tw-neutral-800)) 100%
+    ) !important;
+  border-color: color-mix(in srgb, var(--node-custom-color) 35%, transparent) !important;
+}
+
+/* ── Bypass overlay (ComfyUI-style Ctrl+B) ── */
+.node-bypassed-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 5px,
+    rgba(0, 0, 0, 0.25) 5px,
+    rgba(0, 0, 0, 0.25) 6px
+  );
+}
+
+.node-bypassed-border {
+  border-color: #525252 !important;
+  box-shadow: none !important;
+}

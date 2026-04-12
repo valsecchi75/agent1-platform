@@ -1,0 +1,43 @@
+{
+  "nodeType": "array",
+  "name": "Array",
+  "version": "1.0.0",
+  "category": "Transform",
+  "tags": ["text", "array", "split", "delimiter"],
+  "summary": "Converts text into an ordered array of items using delimiter, newline, or regex splitting. Outputs the full array and individual items.",
+  "inputs": [
+    {
+      "id": "text",
+      "type": "text",
+      "required": true,
+      "description": "Input text to split into array items"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "text",
+      "type": "text",
+      "description": "Full array as JSON string representation"
+    },
+    {
+      "id": "selectedItem",
+      "type": "text",
+      "description": "Individual array item selected by selectedOutputIndex"
+    }
+  ],
+  "executionNotes": "Splits input text based on splitMode: 'delimiter' (uses custom delimiter), 'newline' (splits by \\n), or 'regex' (uses regexPattern). Can trim whitespace from items and optionally remove empty entries. The selectedOutputIndex parameter allows selecting a specific array item for downstream connections.",
+  "exampleConnections": [
+    {
+      "from": "array.text",
+      "to": "promptConstructor.text",
+      "scenario": "Pass array of prompts as a structured list to a prompt builder"
+    },
+    {
+      "from": "array.selectedItem",
+      "to": "nanoBanana.prompt",
+      "scenario": "Use selected array item as prompt for image generation"
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

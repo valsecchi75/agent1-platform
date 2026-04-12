@@ -1,0 +1,53 @@
+{
+  "nodeType": "showAnything",
+  "name": "Show Anything",
+  "version": "1.0.0",
+  "category": "utility/display",
+  "tags": ["show", "anything", "preview", "debug", "text", "image", "video", "audio", "json", "universal"],
+  "summary": "Universal preview node that accepts any input type (image, text, video, audio, JSON) and auto-detects the content type for display. Inspired by ComfyUI's 'easy showAnything' node. Renders images inline, plays video/audio with controls, and displays text/JSON in a scrollable monospace view.",
+  "inputs": [
+    {
+      "id": "anything",
+      "type": "any",
+      "required": false,
+      "description": "Any content — image, text, video, audio, or JSON. Type is auto-detected from the data format."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "description": "Pass-through output when content is an image."
+    },
+    {
+      "id": "text",
+      "type": "text",
+      "description": "Pass-through output when content is text, JSON, or non-image data."
+    }
+  ],
+  "executionNotes": "Display-only node. Content is received automatically via useEffect when upstream data changes — no manual execution required. Content type detection: base64 image data or image URLs → 'image', video data/URLs → 'video', audio data/URLs → 'audio', valid JSON → 'json' (displayed pretty-printed), everything else → 'text'. A content-type badge is shown in the header. The output handle ID dynamically switches between 'image' and 'text' based on detected type.",
+  "exampleConnections": [
+    {
+      "from": "llmGenerate.text",
+      "to": "showAnything.anything",
+      "scenario": "Preview LLM-generated text output."
+    },
+    {
+      "from": "morpheusModelManagement.description",
+      "to": "showAnything.anything",
+      "scenario": "Display the physiognomic description of a selected talent."
+    },
+    {
+      "from": "morpheusModelManagement.metadata",
+      "to": "showAnything.anything",
+      "scenario": "View the full JSON metadata of a selected talent."
+    },
+    {
+      "from": "nanoBanana.image",
+      "to": "showAnything.anything",
+      "scenario": "Preview a generated image with auto-type detection."
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

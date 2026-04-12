@@ -1,0 +1,38 @@
+# ============================================
+# AGENT 1 Distribution Whitelist
+# Directories (trailing /) = include recursively
+# Files = exact match
+# Lines starting with # are comments
+# ============================================
+
+# Application source code
+src/
+
+# Static assets
+public/
+
+# Core node packs (always updated)
+custom_nodes/agent1-foundation/
+custom_nodes/agent1_neural_atelier/
+custom_nodes/morpheus-model-management/
+
+# Configuration files
+package.json
+package-lock.json
+next.config.ts
+tsconfig.json
+tailwind.config.ts
+postcss.config.mjs
+components.json
+
+# Server & launch scripts
+server.js
+start.bat
+start.sh
+
+# Build scripts (required by prebuild npm hook — GR-016)
+scripts/
+
+# Only the whitelist file itself — needed by updateEngine.ts to know what to replace.
+# NEVER include release/ entirely: Token.txt (GitHub PAT) and dev scripts must not be distributed.
+release/.releaseinclude

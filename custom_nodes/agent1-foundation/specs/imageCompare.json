@@ -1,0 +1,38 @@
+{
+  "nodeType": "imageCompare",
+  "name": "Image Compare",
+  "version": "1.0.0",
+  "category": "Utility",
+  "tags": ["image", "comparison", "before-after", "visual"],
+  "summary": "Side-by-side image comparison viewer with draggable slider control. Useful for before/after analysis.",
+  "inputs": [
+    {
+      "id": "imageA",
+      "type": "image",
+      "required": true,
+      "description": "First image for comparison (left side)"
+    },
+    {
+      "id": "imageB",
+      "type": "image",
+      "required": true,
+      "description": "Second image for comparison (right side)"
+    }
+  ],
+  "outputs": [],
+  "executionNotes": "Display-only node with no data output. Renders two images side-by-side with an interactive draggable slider that reveals more or less of each image for visual comparison. Does not produce output data and does not participate in computation flow.",
+  "exampleConnections": [
+    {
+      "from": "imageInput.image",
+      "to": "imageCompare.imageA",
+      "scenario": "Compare an original image with a generated variation"
+    },
+    {
+      "from": "nanoBanana.image",
+      "to": "imageCompare.imageB",
+      "scenario": "Compare AI-generated output against reference image"
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

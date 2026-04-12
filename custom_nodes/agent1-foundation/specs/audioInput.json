@@ -1,0 +1,33 @@
+{
+  "nodeType": "audioInput",
+  "name": "Audio Input",
+  "version": "1.0.0",
+  "category": "Input",
+  "tags": ["audio", "upload", "data-source"],
+  "summary": "Loads or uploads an audio file into the workflow. Stores duration, format (MIME type), and base64-encoded audio data.",
+  "inputs": [
+    {
+      "id": "audio",
+      "type": "audio",
+      "required": false,
+      "description": "Optional upstream audio connection (for audio processing chains)"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "audio",
+      "type": "audio",
+      "description": "The audio file as base64 data URL with metadata (filename, duration, MIME format)"
+    }
+  ],
+  "executionNotes": "Accepts uploaded audio files or audio from upstream nodes. Stores the audio as a data URL (base64-encoded) along with filename, duration in seconds, and MIME format (e.g., 'audio/mp3', 'audio/wav').",
+  "exampleConnections": [
+    {
+      "from": "audioInput.audio",
+      "to": "wavespeed.sourceAudio",
+      "scenario": "Use uploaded audio as input for audio processing or transformation via Wavespeed API"
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

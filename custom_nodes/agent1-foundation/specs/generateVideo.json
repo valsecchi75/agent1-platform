@@ -1,0 +1,66 @@
+{
+  "nodeType": "generateVideo",
+  "name": "AI Video Generation",
+  "version": "1.0.0",
+  "category": "generation",
+  "tags": ["video", "generation", "ai", "motion", "temporal", "multi-provider", "image-to-video"],
+  "summary": "Multi-provider AI video generation supporting text-to-video and image-to-video workflows with temporal consistency. Primary provider is Veo 3.1 (Google) with fallback support for fal.ai and Replicate models, generating coherent video clips with specified duration and codec in 10-30 seconds.",
+  "inputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "required": false,
+      "description": "Optional keyframe image for image-to-video generation. Serves as the starting visual reference for motion generation. If provided, video generation will maintain visual coherence with this frame.",
+      "default": null
+    },
+    {
+      "id": "text",
+      "type": "text",
+      "required": true,
+      "description": "Text prompt describing the desired video motion, scene, narrative arc, or visual effects. Can include camera directions, lighting, emotional tone, and temporal descriptors (e.g., 'slow pan', 'dynamic cut').",
+      "default": "a cinematic scene with smooth camera movement"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "video",
+      "type": "video",
+      "description": "Generated video output as URL (streaming) or data URL (embedded). Includes frame sequence encoded in H.264 or VP9 depending on provider."
+    },
+    {
+      "id": "metadata",
+      "type": "object",
+      "description": "Video metadata including duration (seconds), frame rate (24/30/60 fps), codec, resolution, generation time, and provider information for downstream video processing."
+    }
+  ],
+  "executionNotes": "This node wraps multiple video generation providers, with Veo 3.1 as the primary engine due to superior temporal coherence and visual quality. Falls back to fal.ai and Replicate video models if Veo is unavailable. The selectedModel field is required (no legacy fallback) and controls provider routing at execution time. Parameters like duration (2-60 seconds), frame_rate (24/30/60), and motion_intensity are dynamically populated per model via inputSchema. Video history carousel stores recent generations for quick shot selection and style continuity. Supports both direct prompt generation and image-to-video conditioning for consistent narrative extension. Typical latency: 10-30 seconds depending on duration and model.",
+  "exampleConnections": [
+    {
+      "from": "imageInput.output",
+      "to": "generateVideo.image",
+      "scenario": "Image-to-video continuation: Convert a still photograph or generated image into a smooth 5-second video clip with directional motion and atmospheric effects."
+    },
+    {
+      "from": "nanoBanana.image",
+      "to": "generateVideo.image",
+      "scenario": "Generated image animation: Take the output of image generation node and extend it into video for dynamic content creation or marketing material."
+    },
+    {
+      "from": "textInput.output",
+      "to": "generateVideo.text",
+      "scenario": "Direct video generation: Create video directly from a text prompt describing cinematic scenes, product demonstrations, or narrative sequences."
+    },
+    {
+      "from": "llmGenerate.text",
+      "to": "generateVideo.text",
+      "scenario": "LLM-enhanced prompting: Use an LLM to expand short story beats into rich video prompts, enabling iterative narrative generation."
+    },
+    {
+      "from": "generateVideo.video",
+      "to": "generateAudio.text",
+      "scenario": "Video-to-audio synthesis: Generate video first, then create synchronized audio/music narration based on video description."
+    }
+  ],
+  "apiProvider": "multi",
+  "requiresApiKey": true
+}

@@ -1,0 +1,38 @@
+{
+  "nodeType": "previewImage",
+  "name": "Preview Image",
+  "version": "1.0.0",
+  "category": "utility/display",
+  "tags": ["preview", "image", "display", "viewer", "debug"],
+  "summary": "Simple image preview node that displays an image received from an upstream connection. Accepts one image input and renders it with an optional label. Pass-through output allows chaining to downstream nodes.",
+  "inputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "required": false,
+      "description": "Image to preview (base64 or URL). Auto-receives from upstream when connected."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "image",
+      "type": "image",
+      "description": "Pass-through of the received image — allows chaining to other nodes."
+    }
+  ],
+  "executionNotes": "Display-only node. Content is received automatically via useEffect when upstream data changes — no manual execution required. The node renders the image with object-contain scaling (max 400px height). An optional text label field allows annotating the preview. Equivalent to ComfyUI's 'Preview Image' node.",
+  "exampleConnections": [
+    {
+      "from": "nanoBanana.image",
+      "to": "previewImage.image",
+      "scenario": "Preview a generated image before passing it to further processing."
+    },
+    {
+      "from": "morpheusModelManagement.image",
+      "to": "previewImage.image",
+      "scenario": "Preview the selected talent's image from Morpheus catalog."
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

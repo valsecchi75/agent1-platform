@@ -1,0 +1,43 @@
+{
+  "nodeType": "router",
+  "name": "Router",
+  "version": "1.0.0",
+  "category": "routing",
+  "tags": ["routing", "passthrough", "dynamic-types", "fanout", "organization"],
+  "summary": "Pure passthrough routing node with dynamic multi-type handles. Routes any data type (image, text, audio, video, 3d) from input to multiple outputs without transformation.",
+  "inputs": [
+    {
+      "id": "input",
+      "type": "any",
+      "required": true,
+      "description": "Dynamic input handle accepting any data type. Type is inferred from the connected upstream node."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "output",
+      "type": "any",
+      "description": "Dynamic output handle(s) with type matching the input. Multiple outputs can be created to fan out the input to multiple downstream nodes."
+    }
+  ],
+  "executionNotes": "Router is a stateless passthrough node — it performs no transformation or computation. Data flows directly from input to output(s). All routing logic is derived from ReactFlow edge connections. Handles are dynamically typed based on connected edges. Users can fan-out a single input to multiple outputs (one-to-many) or consolidate multiple inputs to one output (many-to-one). Useful for organizing large workflows and reducing visual clutter.",
+  "exampleConnections": [
+    {
+      "from": "veo.video",
+      "to": "router.input",
+      "scenario": "Route video output from Veo to multiple downstream nodes (stitch, trim, frame-grab)."
+    },
+    {
+      "from": "router.output",
+      "to": "videoStitch.video",
+      "scenario": "Fan out a single video stream to multiple processing steps."
+    },
+    {
+      "from": "nanoBanana.image",
+      "to": "router.input",
+      "scenario": "Route generated image to both gallery display and further image processing."
+    }
+  ],
+  "apiProvider": null,
+  "requiresApiKey": false
+}

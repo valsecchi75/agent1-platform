@@ -1,0 +1,1477 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { EnvStatusResponse } from "@/app/api/env-status/route";
+import { ModelSearchDialog } from "@/components/modals/ModelSearchDialog";
+import { BrandLogo } from "@/components/settings/BrandLogo";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTabs,
+  DialogBody,
+  DialogFooter,
+  DialogButton,
+} from "@/components/ui/dialog";
+import { useInlineParameters } from "@/hooks/useInlineParameters";
+import { ProviderModel } from "@/lib/providers/types";
+import { loadNodeDefaults, saveNodeDefaults } from "@/store/utils/localStorage";
+import { generateWorkflowId, useWorkflowStore } from "@/store/workflowStore";
+import { ProviderType, ProviderSettings, NodeDefaultsConfig, LLMProvider, LLMModelType } from "@/types";
+import { CanvasNavigationSettings, PanMode, ZoomMode, SelectionMode } from "@/types/canvas";
+
+// LLM provider and model options (mirrored from LLMGenerateNode)
+const LLM_PROVIDERS: { value: LLMProvider; label: string }[] = [
+  { value: "google", label: "Google" },
+  { value: "openai", label: "OpenAI" },
+  { value: "anthropic", label: "Anthropic" },
+];
+
+const LLM_MODELS: Record<LLMProvider, { value: LLMModelType; label: string }[]> = {
+  google: [
+    { value: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro" },
+    { value: "gemini-3-flash-preview", label: "Gemini 3 Flash" },
+    { value: "gemini-3.1-flash-lite-preview", label: "Gemini 3.1 Flash-Lite" },
+  ],
+  openai: [
+    { value: "gpt-4.1-mini", label: "GPT-4.1 Mini" },
+    { value: "gpt-4.1-nano", label: "GPT-4.1 Nano" },
+  ],
+  anthropic: [
+    { value: "claude-sonnet-4.5", label: "Claude Sonnet 4.5" },
+    { value: "claude-haiku-4.5", label: "Claude Haiku 4.5" },
+    { value: "claude-opus-4.6", label: "Claude Opus 4.6" },
+  ],
+};
+
+// Provider icons
+const GeminiIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+  </svg>
+);
+
+const ReplicateIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 1000 1000" fill="currentColor">
+    <polygon points="1000,427.6 1000,540.6 603.4,540.6 603.4,1000 477,1000 477,427.6" />
+    <polygon points="1000,213.8 1000,327 364.8,327 364.8,1000 238.4,1000 238.4,213.8" />
+    <polygon points="1000,0 1000,113.2 126.4,113.2 126.4,1000 0,1000 0,0" />
+  </svg>
+);
+
+const FalIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 1855 1855" fill="currentColor">
+    <path fillRule="evenodd" clipRule="evenodd" d="M1181.65 78C1212.05 78 1236.42 101.947 1239.32 131.261C1265.25 392.744 1480.07 600.836 1750.02 625.948C1780.28 628.764 1805 652.366 1805 681.816V1174.18C1805 1203.63 1780.28 1227.24 1750.02 1230.05C1480.07 1255.16 1265.25 1463.26 1239.32 1724.74C1236.42 1754.05 1212.05 1778 1181.65 1778H673.354C642.951 1778 618.585 1754.05 615.678 1724.74C589.754 1463.26 374.927 1255.16 104.984 1230.05C74.7212 1227.24 50 1203.63 50 1174.18V681.816C50 652.366 74.7213 628.764 104.984 625.948C374.927 600.836 589.754 392.744 615.678 131.261C618.585 101.946 642.951 78 673.353 78H1181.65ZM402.377 926.561C402.377 1209.41 638.826 1438.71 930.501 1438.71C1222.18 1438.71 1458.63 1209.41 1458.63 926.561C1458.63 643.709 1222.18 414.412 930.501 414.412C638.826 414.412 402.377 643.709 402.377 926.561Z" />
+  </svg>
+);
+
+const WaveSpeedIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 512 512" fill="currentColor">
+    <path d="M308.946 153.758C314.185 153.758 318.268 158.321 317.516 163.506C306.856 237.02 270.334 302.155 217.471 349.386C211.398 354.812 203.458 357.586 195.315 357.586H127.562C117.863 357.586 110.001 349.724 110.001 340.025V333.552C110.001 326.82 113.882 320.731 119.792 317.505C176.087 286.779 217.883 232.832 232.32 168.537C234.216 160.09 241.509 153.758 250.167 153.758H308.946Z" />
+    <path d="M183.573 153.758C188.576 153.758 192.592 157.94 192.069 162.916C187.11 210.12 160.549 250.886 122.45 275.151C116.916 278.676 110 274.489 110 267.928V171.318C110 161.62 117.862 153.758 127.56 153.758H183.573Z" />
+    <path d="M414.815 153.758C425.503 153.758 433.734 163.232 431.799 173.743C420.697 234.038 398.943 290.601 368.564 341.414C362.464 351.617 351.307 357.586 339.419 357.586H274.228C266.726 357.586 262.611 348.727 267.233 342.819C306.591 292.513 334.86 233.113 348.361 168.295C350.104 159.925 357.372 153.758 365.922 153.758H414.815Z" />
+  </svg>
+);
+
+// Get provider icon component
+const getProviderIcon = (provider: ProviderType) => {
+  switch (provider) {
+    case "gemini":
+      return <GeminiIcon />;
+    case "replicate":
+      return <ReplicateIcon />;
+    case "fal":
+      return <FalIcon />;
+    case "wavespeed":
+      return <WaveSpeedIcon />;
+    default:
+      return null;
+  }
+};
+
+interface ProjectSetupModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (id: string, name: string, directoryPath: string) => void;
+  mode: "new" | "settings";
+}
+
+/** Node Design toggle — reads/writes Zustand reactively */
+function NodeDesignToggle() {
+  const nodeDesignMode = useWorkflowStore((s) => s.nodeDesignMode);
+  const setNodeDesignMode = useWorkflowStore((s) => s.setNodeDesignMode);
+  return (
+    <div className="p-3 bg-[var(--surface-1)] rounded-lg border border-[var(--border)]">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-[var(--text-primary)]">Node Design</span>
+          <p className="text-xs text-[var(--text-secondary)]">Visual style for all nodes on the canvas</p>
+        </div>
+        <div className="flex gap-1 p-0.5 bg-[var(--surface-2)] rounded-md">
+          {([
+            { value: "classic" as const, label: "Classic" },
+            { value: "v2" as const, label: "Design 2.0" },
+          ]).map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setNodeDesignMode(option.value)}
+              className={`flex-1 px-2 py-1.5 text-xs rounded transition-all duration-150 ${
+                nodeDesignMode === option.value
+                  ? "bg-[var(--surface-3)] text-[var(--text-primary)] font-medium"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ProjectSetupModal({
+  isOpen,
+  onClose,
+  onSave,
+  mode,
+}: ProjectSetupModalProps) {
+  const sanitizeProjectFolderName = (projectName: string): string => {
+    return projectName
+      .trim()
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
+      .replace(/\.+$/g, "")
+      .trim();
+  };
+
+  const joinPathForPlatform = (basePath: string, folderName: string): string => {
+    const trimmedBase = basePath.trim();
+    const separator = /^[A-Za-z]:[\\\/]/.test(trimmedBase) || trimmedBase.startsWith("\\\\") ? "\\" : "/";
+    const endsWithSeparator = trimmedBase.endsWith("/") || trimmedBase.endsWith("\\");
+    return `${trimmedBase}${endsWithSeparator ? "" : separator}${folderName}`;
+  };
+
+  const getPathBasename = (fullPath: string): string => {
+    const withoutTrailingSeparator = fullPath.trim().replace(/[\\/]+$/, "");
+    const parts = withoutTrailingSeparator.split(/[\\/]/);
+    return parts[parts.length - 1] || "";
+  };
+
+  const ensureProjectSubfolderPath = (basePath: string, projectName: string): string => {
+    const trimmedBase = basePath.trim();
+    const sanitizedFolder = sanitizeProjectFolderName(projectName);
+    if (!sanitizedFolder) return trimmedBase;
+
+    const basename = getPathBasename(trimmedBase);
+    if (basename.toLowerCase() === sanitizedFolder.toLowerCase()) {
+      return trimmedBase;
+    }
+
+    return joinPathForPlatform(trimmedBase, sanitizedFolder);
+  };
+
+  const {
+    workflowName,
+    saveDirectoryPath,
+    useExternalImageStorage,
+    setUseExternalImageStorage,
+    providerSettings,
+    updateProviderApiKey,
+    toggleProvider,
+    maxConcurrentCalls,
+    setMaxConcurrentCalls,
+    canvasNavigationSettings,
+    updateCanvasNavigationSettings,
+  } = useWorkflowStore();
+
+  // Inline parameters hook
+  const { inlineParametersEnabled, setInlineParameters } = useInlineParameters();
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<"project" | "providers" | "nodeDefaults" | "canvas" | "brandSkin">("project");
+  const [currentSkin, setCurrentSkin] = useState("aurora");
+  const [currentTheme, setCurrentTheme] = useState<"dark" | "light">("dark");
+
+  // Project tab state
+  const [name, setName] = useState("");
+  const [directoryPath, setDirectoryPath] = useState("");
+  const [externalStorage, setExternalStorage] = useState(true);
+  const [isValidating, setIsValidating] = useState(false);
+  const [isBrowsing, setIsBrowsing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Provider tab state
+  const [localProviders, setLocalProviders] = useState<ProviderSettings>(providerSettings);
+  const [showApiKey, setShowApiKey] = useState<Record<ProviderType, boolean>>({
+    gemini: false,
+    openai: false,
+    anthropic: false,
+    replicate: false,
+    fal: false,
+    kie: false,
+    wavespeed: false,
+  });
+  const [overrideActive, setOverrideActive] = useState<Record<ProviderType, boolean>>({
+    gemini: false,
+    openai: false,
+    anthropic: false,
+    replicate: false,
+    fal: false,
+    kie: false,
+    wavespeed: false,
+  });
+  const [envStatus, setEnvStatus] = useState<EnvStatusResponse | null>(null);
+
+  // Node defaults tab state
+  const [localNodeDefaults, setLocalNodeDefaults] = useState<NodeDefaultsConfig>({});
+  const [showImageModelDialog, setShowImageModelDialog] = useState(false);
+  const [showVideoModelDialog, setShowVideoModelDialog] = useState(false);
+
+  // Canvas tab state
+  const [localCanvasSettings, setLocalCanvasSettings] = useState<CanvasNavigationSettings>(canvasNavigationSettings);
+
+  // Load saved skin + theme on mount
+  useEffect(() => {
+    const savedSkin = localStorage.getItem('agent1-skin') || 'aurora';
+    const savedTheme = (localStorage.getItem('agent1-theme') || 'dark') as 'dark' | 'light';
+    setCurrentSkin(savedSkin);
+    setCurrentTheme(savedTheme);
+  }, [isOpen]);
+
+  // Pre-fill when opening in settings mode
+  useEffect(() => {
+    if (isOpen) {
+      // Reset to project tab when opening
+      if (mode === "new") {
+        setActiveTab("project");
+      }
+
+      if (mode === "settings") {
+        setName(workflowName || "");
+        setDirectoryPath(saveDirectoryPath || "");
+        setExternalStorage(useExternalImageStorage);
+      } else if (mode === "new") {
+        setName("");
+        setDirectoryPath("");
+        setExternalStorage(true);
+      }
+
+      // Sync local providers state
+      setLocalProviders(providerSettings);
+      setShowApiKey({ gemini: false, openai: false, anthropic: false, replicate: false, fal: false, kie: false, wavespeed: false });
+      // Initialize override as active if user already has a key set
+      setOverrideActive({
+        gemini: !!providerSettings.providers.gemini?.apiKey,
+        openai: !!providerSettings.providers.openai?.apiKey,
+        anthropic: !!providerSettings.providers.anthropic?.apiKey,
+        replicate: !!providerSettings.providers.replicate?.apiKey,
+        fal: !!providerSettings.providers.fal?.apiKey,
+        kie: !!providerSettings.providers.kie?.apiKey,
+        wavespeed: !!providerSettings.providers.wavespeed?.apiKey,
+      });
+      setError(null);
+
+      // Load node defaults
+      setLocalNodeDefaults(loadNodeDefaults());
+      setShowImageModelDialog(false);
+      setShowVideoModelDialog(false);
+
+      // Sync canvas settings
+      setLocalCanvasSettings(canvasNavigationSettings);
+
+      // Fetch env status
+      fetch("/api/env-status")
+        .then((res) => res.json())
+        .then((data: EnvStatusResponse) => setEnvStatus(data))
+        .catch(() => setEnvStatus(null));
+    }
+  }, [isOpen, mode, workflowName, saveDirectoryPath, useExternalImageStorage, providerSettings, canvasNavigationSettings]);
+
+  const handleBrowse = async () => {
+    setIsBrowsing(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/browse-directory");
+      const result = await response.json();
+
+      if (!result.success) {
+        setError(result.error || "Failed to open directory picker");
+        return;
+      }
+
+      if (result.cancelled) {
+        return;
+      }
+
+      if (result.path) {
+        setDirectoryPath(result.path);
+      }
+    } catch (err) {
+      setError(
+        `Failed to open directory picker: ${err instanceof Error ? err.message : "Unknown error"}`
+      );
+    } finally {
+      setIsBrowsing(false);
+    }
+  };
+
+  const handleSaveProject = async () => {
+    if (!name.trim()) {
+      setError("Project name is required");
+      return;
+    }
+
+    if (!directoryPath.trim()) {
+      setError("Project directory is required");
+      return;
+    }
+
+    const fullProjectPath = ensureProjectSubfolderPath(directoryPath, name);
+
+    if (!(fullProjectPath.startsWith("/") || /^[A-Za-z]:[\\\/]/.test(fullProjectPath) || fullProjectPath.startsWith("\\\\"))) {
+      setError("Project directory must be an absolute path (starting with /, a drive letter, or a UNC path)");
+      return;
+    }
+
+    setIsValidating(true);
+    setError(null);
+
+    try {
+      // Validate path shape when it already exists
+      const response = await fetch(
+        `/api/workflow?path=${encodeURIComponent(fullProjectPath)}`
+      );
+      const result = await response.json();
+
+      if (result.exists && !result.isDirectory) {
+        setError("Project path is not a directory");
+        setIsValidating(false);
+        return;
+      }
+
+      const id = mode === "new" ? generateWorkflowId() : useWorkflowStore.getState().workflowId || generateWorkflowId();
+      // Update external storage setting
+      setUseExternalImageStorage(externalStorage);
+      onSave(id, name.trim(), fullProjectPath);
+      setIsValidating(false);
+    } catch (err) {
+      setError(
+        `Failed to validate directory: ${err instanceof Error ? err.message : "Unknown error"}`
+      );
+      setIsValidating(false);
+    }
+  };
+
+  const handleSaveProviders = () => {
+    // Save each provider's settings
+    const providerIds: ProviderType[] = ["gemini", "openai", "anthropic", "replicate", "fal", "kie", "wavespeed"];
+    for (const providerId of providerIds) {
+      const local = localProviders.providers[providerId];
+      const current = providerSettings.providers[providerId];
+
+      if (!local || !current) continue;
+
+      // Update enabled state if changed
+      if (local.enabled !== current.enabled) {
+        toggleProvider(providerId, local.enabled);
+      }
+
+      // Update API key if changed
+      if (local.apiKey !== current.apiKey) {
+        updateProviderApiKey(providerId, local.apiKey);
+      }
+    }
+    onClose();
+  };
+
+  const handleSaveNodeDefaults = () => {
+    saveNodeDefaults(localNodeDefaults);
+    onClose();
+  };
+
+  const handleSaveCanvas = () => {
+    updateCanvasNavigationSettings(localCanvasSettings);
+    onClose();
+  };
+
+  const handleSave = () => {
+    if (activeTab === "project") {
+      handleSaveProject();
+    } else if (activeTab === "providers") {
+      handleSaveProviders();
+    } else if (activeTab === "canvas") {
+      handleSaveCanvas();
+    } else {
+      handleSaveNodeDefaults();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !isValidating && !isBrowsing) {
+      handleSave();
+    }
+    if (e.key === "Escape") {
+      onClose();
+    }
+  };
+
+  const updateLocalProvider = (
+    providerId: ProviderType,
+    updates: { enabled?: boolean; apiKey?: string | null }
+  ) => {
+    setLocalProviders((prev) => ({
+      providers: {
+        ...prev.providers,
+        [providerId]: {
+          ...prev.providers[providerId],
+          ...updates,
+        },
+      },
+    }));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+        <DialogContent size="md" hideClose onKeyDown={handleKeyDown}>
+        <DialogHeader>
+          <DialogTitle className="text-lg flex items-center gap-2">
+            <BrandLogo variant="icon" height="h-6" />
+            {mode === "new" ? "New Project" : "Project Settings"}
+          </DialogTitle>
+        </DialogHeader>
+        <DialogTabs
+          tabs={[
+            { id: "project", label: "Project" },
+            { id: "providers", label: "Providers" },
+            { id: "nodeDefaults", label: "Node Defaults" },
+            { id: "canvas", label: "Canvas" },
+            { id: "brandSkin", label: "Brand Skin" },
+          ]}
+          active={activeTab}
+          onChange={(id) => setActiveTab(id as typeof activeTab)}
+        />
+        <DialogBody>
+
+        {/* Project Tab Content */}
+        {activeTab === "project" && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-neutral-400 mb-1">
+                Project Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="my-project"
+                autoFocus
+                className="w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded-lg text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-neutral-400 mb-1">
+                Project Directory
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={directoryPath}
+                  onChange={(e) => setDirectoryPath(e.target.value)}
+                  placeholder="/Users/username/projects/my-project"
+                  className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-600 rounded-lg text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleBrowse}
+                  disabled={isBrowsing}
+                  className="px-3 py-2 bg-neutral-700 hover:bg-neutral-600 disabled:bg-neutral-700 disabled:opacity-50 text-neutral-200 text-sm rounded-lg transition-colors"
+                >
+                  {isBrowsing ? "..." : "Browse"}
+                </button>
+              </div>
+              <p className="text-xs text-neutral-400 mt-1">
+                Workflow files and images will be saved here. Subfolders for inputs and generations will be auto-created.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-neutral-700">
+              <label className="flex items-center justify-between gap-3 cursor-pointer">
+                <div>
+                  <span className="text-sm text-neutral-200">Embed images as base64</span>
+                  <p className="text-xs text-neutral-400">
+                    Embeds all images in workflow, larger workflow files. Can hit memory limits on very large workflows.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={!externalStorage}
+                  onClick={() => setExternalStorage(externalStorage ? false : true)}
+                  className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${!externalStorage ? "bg-[var(--accent)]" : "bg-neutral-600"}`}
+                >
+                  <span className={`inline-block h-3.5 w-3.5 rounded-full bg-[var(--surface-1)] transition-transform ${!externalStorage ? "translate-x-[18px]" : "translate-x-[3px]"}`} />
+                </button>
+              </label>
+            </div>
+
+            <div className="pt-2 border-t border-neutral-700">
+              <label className="flex items-center justify-between gap-3 cursor-pointer">
+                <div>
+                  <span className="text-sm text-neutral-200">Show model settings on nodes</span>
+                  <p className="text-xs text-neutral-400">
+                    Show model parameters inside generation nodes instead of the side panel
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={inlineParametersEnabled}
+                  onClick={() => setInlineParameters(!inlineParametersEnabled)}
+                  className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${inlineParametersEnabled ? "bg-[var(--accent)]" : "bg-neutral-600"}`}
+                >
+                  <span className={`inline-block h-3.5 w-3.5 rounded-full bg-[var(--surface-1)] transition-transform ${inlineParametersEnabled ? "translate-x-[18px]" : "translate-x-[3px]"}`} />
+                </button>
+              </label>
+            </div>
+
+            {error && <p className="text-sm text-red-400">{error}</p>}
+          </div>
+        )}
+
+        {/* Providers Tab Content */}
+        {activeTab === "providers" && (
+          <div className="space-y-3">
+            {/* Gemini Provider */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-neutral-100">Google Gemini</span>
+                {envStatus?.gemini && !overrideActive.gemini ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-green-400">Configured via .env</span>
+                    <button
+                      type="button"
+                      onClick={() => setOverrideActive((prev) => ({ ...prev, gemini: true }))}
+                      className="px-2 py-1 text-xs text-neutral-400 hover:text-neutral-200 transition-colors"
+                    >
+                      Override
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type={showApiKey.gemini ? "text" : "password"}
+                      value={localProviders.providers.gemini?.apiKey || ""}
+                      onChange={(e) => updateLocalProvider("gemini", { apiKey: e.target.value || null })}
+                      placeholder="AIza..."
+                      className="w-48 px-2 py-1 bg-neutral-800 border border-neutral-600 rounded-lg text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey((prev) => ({ ...prev, gemini: !prev.gemini }))}
+                      className="text-xs text-neutral-400 hover:text-neutral-200"
+                    >
+                      {showApiKey.gemini ? "Hide" : "Show"}
+                    </button>
+                    {envStatus?.gemini && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOverrideActive((prev) => ({ ...prev, gemini: false }));
+                          updateLocalProvider("gemini", { apiKey: null });
+                        }}
+                        className="text-xs text-neutral-500 hover:text-neutral-300"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* OpenAI Provider */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-neutral-100">OpenAI</span>
+                {envStatus?.openai && !overrideActive.openai ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-green-400">Configured via .env</span>
+                    <button
+                      type="button"
+                      onClick={() => setOverrideActive((prev) => ({ ...prev, openai: true }))}
+                      className="px-2 py-1 text-xs text-neutral-400 hover:text-neutral-200 transition-colors"
+                    >
+                      Override
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type={showApiKey.openai ? "text" : "password"}
+                      value={localProviders.providers.openai?.apiKey || ""}
+                      onChange={(e) => updateLocalProvider("openai", { apiKey: e.target.value || null })}
+                      placeholder="sk-..."
+                      className="w-48 px-2 py-1 bg-neutral-800 border border-neutral-600 rounded-lg text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey((prev) => ({ ...prev, openai: !prev.openai }))}
+                      className="text-xs text-neutral-400 hover:text-neutral-200"
+                    >
+                      {showApiKey.openai ? "Hide" : "Show"}
+                    </button>
+                    {envStatus?.openai && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOverrideActive((prev) => ({ ...prev, openai: false }));
+                          updateLocalProvider("openai", { apiKey: null });
+                        }}
+                        className="text-xs text-neutral-500 hover:text-neutral-300"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Anthropic Provider */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-neutral-100">Anthropic</span>
+                {envStatus?.anthropic && !overrideActive.anthropic ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-green-400">Configured via .env</span>
+                    <button
+                      type="button"
+                      onClick={() => setOverrideActive((prev) => ({ ...prev, anthropic: true }))}
+                      className="px-2 py-1 text-xs text-neutral-400 hover:text-neutral-200 transition-colors"
+                    >
+                      Override
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type={showApiKey.anthropic ? "text" : "password"}
+                      value={localProviders.providers.anthropic?.apiKey || ""}
+                      onChange={(e) => updateLocalProvider("anthropic", { apiKey: e.target.value || null })}
+                      placeholder="sk-ant-..."
+                      className="w-48 px-2 py-1 bg-neutral-800 border border-neutral-600 rounded-lg text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey((prev) => ({ ...prev, anthropic: !prev.anthropic }))}
+                      className="text-xs text-neutral-400 hover:text-neutral-200"
+                    >
+                      {showApiKey.anthropic ? "Hide" : "Show"}
+                    </button>
+                    {envStatus?.anthropic && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOverrideActive((prev) => ({ ...prev, anthropic: false }));
+                          updateLocalProvider("anthropic", { apiKey: null });
+                        }}
+                        className="text-xs text-neutral-500 hover:text-neutral-300"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Replicate Provider */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-neutral-100">Replicate</span>
+                {envStatus?.replicate && !overrideActive.replicate ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-green-400">Configured via .env</span>
+                    <button
+                      type="button"
+                      onClick={() => setOverrideActive((prev) => ({ ...prev, replicate: true }))}
+                      className="px-2 py-1 text-xs text-neutral-400 hover:text-neutral-200 transition-colors"
+                    >
+                      Override
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type={showApiKey.replicate ? "text" : "password"}
+                      value={localProviders.providers.replicate?.apiKey || ""}
+                      onChange={(e) => updateLocalProvider("replicate", { apiKey: e.target.value || null })}
+                      placeholder="r8_..."
+                      className="w-48 px-2 py-1 bg-neutral-800 border border-neutral-600 rounded-lg text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey((prev) => ({ ...prev, replicate: !prev.replicate }))}
+                      className="text-xs text-neutral-400 hover:text-neutral-200"
+                    >
+                      {showApiKey.replicate ? "Hide" : "Show"}
+                    </button>
+                    {envStatus?.replicate && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOverrideActive((prev) => ({ ...prev, replicate: false }));
+                          updateLocalProvider("replicate", { apiKey: null });
+                        }}
+                        className="text-xs text-neutral-500 hover:text-neutral-300"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* fal.ai Provider */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-neutral-100">fal.ai</span>
+                {envStatus?.fal && !overrideActive.fal ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-green-400">Configured via .env</span>
+                    <button
+                      type="button"
+                      onClick={() => setOverrideActive((prev) => ({ ...prev, fal: true }))}
+                      className="px-2 py-1 text-xs text-neutral-400 hover:text-neutral-200 transition-colors"
+                    >
+                      Override
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type={showApiKey.fal ? "text" : "password"}
+                      value={localProviders.providers.fal?.apiKey || ""}
+                      onChange={(e) => updateLocalProvider("fal", { apiKey: e.target.value || null })}
+                      placeholder="..."
+                      className="w-48 px-2 py-1 bg-neutral-800 border border-neutral-600 rounded-lg text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey((prev) => ({ ...prev, fal: !prev.fal }))}
+                      className="text-xs text-neutral-400 hover:text-neutral-200"
+                    >
+                      {showApiKey.fal ? "Hide" : "Show"}
+                    </button>
+                    {envStatus?.fal && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOverrideActive((prev) => ({ ...prev, fal: false }));
+                          updateLocalProvider("fal", { apiKey: null });
+                        }}
+                        className="text-xs text-neutral-500 hover:text-neutral-300"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Kie.ai Provider */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-neutral-100">Kie.ai</span>
+                {envStatus?.kie && !overrideActive.kie ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-green-400">Configured via .env</span>
+                    <button
+                      type="button"
+                      onClick={() => setOverrideActive((prev) => ({ ...prev, kie: true }))}
+                      className="px-2 py-1 text-xs text-neutral-400 hover:text-neutral-200 transition-colors"
+                    >
+                      Override
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type={showApiKey.kie ? "text" : "password"}
+                      value={localProviders.providers.kie?.apiKey || ""}
+                      onChange={(e) => updateLocalProvider("kie", { apiKey: e.target.value || null })}
+                      placeholder="..."
+                      className="w-48 px-2 py-1 bg-neutral-800 border border-neutral-600 rounded-lg text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey((prev) => ({ ...prev, kie: !prev.kie }))}
+                      className="text-xs text-neutral-400 hover:text-neutral-200"
+                    >
+                      {showApiKey.kie ? "Hide" : "Show"}
+                    </button>
+                    {envStatus?.kie && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOverrideActive((prev) => ({ ...prev, kie: false }));
+                          updateLocalProvider("kie", { apiKey: null });
+                        }}
+                        className="text-xs text-neutral-500 hover:text-neutral-300"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* WaveSpeed Provider */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-neutral-100">WaveSpeed</span>
+                {envStatus?.wavespeed && !overrideActive.wavespeed ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-green-400">Configured via .env</span>
+                    <button
+                      type="button"
+                      onClick={() => setOverrideActive((prev) => ({ ...prev, wavespeed: true }))}
+                      className="px-2 py-1 text-xs text-neutral-400 hover:text-neutral-200 transition-colors"
+                    >
+                      Override
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type={showApiKey.wavespeed ? "text" : "password"}
+                      value={localProviders.providers.wavespeed?.apiKey || ""}
+                      onChange={(e) => updateLocalProvider("wavespeed", { apiKey: e.target.value || null })}
+                      placeholder="..."
+                      className="w-48 px-2 py-1 bg-neutral-800 border border-neutral-600 rounded-lg text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey((prev) => ({ ...prev, wavespeed: !prev.wavespeed }))}
+                      className="text-xs text-neutral-400 hover:text-neutral-200"
+                    >
+                      {showApiKey.wavespeed ? "Hide" : "Show"}
+                    </button>
+                    {envStatus?.wavespeed && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOverrideActive((prev) => ({ ...prev, wavespeed: false }));
+                          updateLocalProvider("wavespeed", { apiKey: null });
+                        }}
+                        className="text-xs text-neutral-500 hover:text-neutral-300"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <p className="text-xs text-neutral-400 mt-2">
+              Add API keys via <code className="px-1 py-0.5 bg-neutral-800 rounded">.env.local</code> for better security. Keys added here override .env and are stored in your browser.
+            </p>
+          </div>
+        )}
+
+        {/* Node Defaults Tab Content */}
+        {activeTab === "nodeDefaults" && (
+          <div className="space-y-3">
+            {/* GenerateImage Section */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-neutral-100">Default Image Model</span>
+                <div className="flex items-center gap-2">
+                  {localNodeDefaults.generateImage?.selectedModel ? (
+                    <>
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-300">
+                        {getProviderIcon(localNodeDefaults.generateImage.selectedModel.provider)}
+                        <span className="truncate max-w-[150px]">
+                          {localNodeDefaults.generateImage.selectedModel.displayName}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowImageModelDialog(true)}
+                        className="px-2 py-1 text-xs bg-neutral-700 hover:bg-neutral-600 text-neutral-200 rounded transition-colors"
+                      >
+                        Change
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const { generateImage, ...rest } = localNodeDefaults;
+                          setLocalNodeDefaults(rest);
+                        }}
+                        className="text-xs text-neutral-400 hover:text-neutral-200"
+                      >
+                        Clear
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs text-neutral-400">System default (Gemini nano-banana-2)</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowImageModelDialog(true)}
+                        className="px-2 py-1 text-xs bg-neutral-700 hover:bg-neutral-600 text-neutral-200 rounded transition-colors"
+                      >
+                        Select Model
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* GenerateVideo Section */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-neutral-100">Default Video Model</span>
+                <div className="flex items-center gap-2">
+                  {localNodeDefaults.generateVideo?.selectedModel ? (
+                    <>
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-300">
+                        {getProviderIcon(localNodeDefaults.generateVideo.selectedModel.provider)}
+                        <span className="truncate max-w-[150px]">
+                          {localNodeDefaults.generateVideo.selectedModel.displayName}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowVideoModelDialog(true)}
+                        className="px-2 py-1 text-xs bg-neutral-700 hover:bg-neutral-600 text-neutral-200 rounded transition-colors"
+                      >
+                        Change
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const { generateVideo, ...rest } = localNodeDefaults;
+                          setLocalNodeDefaults(rest);
+                        }}
+                        className="text-xs text-neutral-400 hover:text-neutral-200"
+                      >
+                        Clear
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs text-neutral-400">None set (select on first use)</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowVideoModelDialog(true)}
+                        className="px-2 py-1 text-xs bg-neutral-700 hover:bg-neutral-600 text-neutral-200 rounded transition-colors"
+                      >
+                        Select Model
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* LLM Section */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-neutral-100">Default LLM Settings</span>
+                  {localNodeDefaults.llm && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const { llm, ...rest } = localNodeDefaults;
+                        setLocalNodeDefaults(rest);
+                      }}
+                      className="text-xs text-neutral-400 hover:text-neutral-200"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {!localNodeDefaults.llm ? (
+                  <p className="text-xs text-neutral-400">Using system defaults (Google Gemini 3.1 Pro)</p>
+                ) : null}
+
+                {/* Provider dropdown */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-neutral-400 w-20">Provider</label>
+                  <select
+                    value={localNodeDefaults.llm?.provider || "google"}
+                    onChange={(e) => {
+                      const newProvider = e.target.value as LLMProvider;
+                      const firstModelForProvider = LLM_MODELS[newProvider][0].value;
+                      const currentTemp = localNodeDefaults.llm?.temperature ?? 0.7;
+                      setLocalNodeDefaults(prev => ({
+                        ...prev,
+                        llm: {
+                          ...prev.llm,
+                          provider: newProvider,
+                          model: firstModelForProvider,
+                          // Clamp temperature for Anthropic (max 1.0)
+                          ...(newProvider === "anthropic" && currentTemp > 1 ? { temperature: 1 } : {}),
+                        }
+                      }));
+                    }}
+                    className="flex-1 px-2 py-1 text-xs bg-neutral-800 border border-neutral-600 rounded text-neutral-100 focus:outline-none focus:border-neutral-500"
+                  >
+                    {LLM_PROVIDERS.map((p) => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Model dropdown */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-neutral-400 w-20">Model</label>
+                  <select
+                    value={localNodeDefaults.llm?.model || LLM_MODELS[localNodeDefaults.llm?.provider || "google"][0].value}
+                    onChange={(e) => {
+                      setLocalNodeDefaults(prev => ({
+                        ...prev,
+                        llm: { ...prev.llm, model: e.target.value as LLMModelType }
+                      }));
+                    }}
+                    className="flex-1 px-2 py-1 text-xs bg-neutral-800 border border-neutral-600 rounded text-neutral-100 focus:outline-none focus:border-neutral-500"
+                  >
+                    {LLM_MODELS[localNodeDefaults.llm?.provider || "google"].map((m) => (
+                      <option key={m.value} value={m.value}>{m.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Temperature slider */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-neutral-400 w-20">
+                    Temp: {(localNodeDefaults.llm?.temperature ?? 0.7).toFixed(1)}
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max={(localNodeDefaults.llm?.provider || "google") === "anthropic" ? "1" : "2"}
+                    step="0.1"
+                    value={localNodeDefaults.llm?.temperature ?? 0.7}
+                    onChange={(e) => {
+                      setLocalNodeDefaults(prev => ({
+                        ...prev,
+                        llm: { ...prev.llm, temperature: parseFloat(e.target.value) }
+                      }));
+                    }}
+                    className="flex-1 h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-neutral-400"
+                  />
+                </div>
+
+                {/* Max Tokens slider */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-neutral-400 w-20">
+                    Tokens: {(localNodeDefaults.llm?.maxTokens ?? 8192).toLocaleString()}
+                  </label>
+                  <input
+                    type="range"
+                    min="256"
+                    max="16384"
+                    step="256"
+                    value={localNodeDefaults.llm?.maxTokens ?? 8192}
+                    onChange={(e) => {
+                      setLocalNodeDefaults(prev => ({
+                        ...prev,
+                        llm: { ...prev.llm, maxTokens: parseInt(e.target.value, 10) }
+                      }));
+                    }}
+                    className="flex-1 h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-neutral-400"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Execution Section */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex flex-col gap-3">
+                <span className="text-sm font-medium text-neutral-100">Execution Settings</span>
+
+                {/* Concurrency slider */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-neutral-400 w-32">
+                    Max Parallel Calls: {maxConcurrentCalls}
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value={maxConcurrentCalls}
+                    onChange={(e) => setMaxConcurrentCalls(parseInt(e.target.value, 10))}
+                    className="flex-1 h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-neutral-400"
+                  />
+                </div>
+                <p className="text-xs text-neutral-400">
+                  Maximum number of nodes to execute in parallel during workflow execution.
+                  Higher values may improve speed but increase API rate limit risk.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-neutral-400 mt-2">
+              These defaults are applied when creating nodes via keyboard shortcuts (Shift+G, Shift+L, etc).
+            </p>
+          </div>
+        )}
+
+        {/* Canvas Tab Content */}
+        {activeTab === "canvas" && (
+          <div className="space-y-3">
+            <p className="text-xs text-neutral-400">Configure how you navigate and interact with the canvas.</p>
+            {/* Pan Mode */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-neutral-100">Pan Mode</span>
+                  <p className="text-xs text-neutral-400">
+                    {localCanvasSettings.panMode === "space" && "Hold Space and drag to pan"}
+                    {localCanvasSettings.panMode === "middleMouse" && "Click and drag with middle mouse button"}
+                    {localCanvasSettings.panMode === "always" && "Pan without holding any keys"}
+                  </p>
+                </div>
+                <div className="flex gap-1 p-0.5 bg-neutral-800 rounded-md">
+                  {([
+                    { value: "space" as PanMode, label: "Space + Drag" },
+                    { value: "middleMouse" as PanMode, label: "Middle Mouse" },
+                    { value: "always" as PanMode, label: "Always On" },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setLocalCanvasSettings({ ...localCanvasSettings, panMode: option.value })}
+                      className={`flex-1 px-2 py-1.5 text-xs rounded transition-all duration-150 ${
+                        localCanvasSettings.panMode === option.value
+                          ? "bg-neutral-700 text-neutral-100 font-medium"
+                          : "text-neutral-400 hover:text-neutral-300"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Zoom Mode */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-neutral-100">Zoom Mode</span>
+                  <p className="text-xs text-neutral-400">
+                    {localCanvasSettings.zoomMode === "altScroll" && "Hold Alt and scroll to zoom"}
+                    {localCanvasSettings.zoomMode === "ctrlScroll" && "Hold Ctrl/Cmd and scroll to zoom"}
+                    {localCanvasSettings.zoomMode === "scroll" && "Scroll to zoom without modifier keys"}
+                  </p>
+                </div>
+                <div className="flex gap-1 p-0.5 bg-neutral-800 rounded-md">
+                  {([
+                    { value: "altScroll" as ZoomMode, label: "Alt + Scroll" },
+                    { value: "ctrlScroll" as ZoomMode, label: "Ctrl + Scroll" },
+                    { value: "scroll" as ZoomMode, label: "Scroll" },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setLocalCanvasSettings({ ...localCanvasSettings, zoomMode: option.value })}
+                      className={`flex-1 px-2 py-1.5 text-xs rounded transition-all duration-150 ${
+                        localCanvasSettings.zoomMode === option.value
+                          ? "bg-neutral-700 text-neutral-100 font-medium"
+                          : "text-neutral-400 hover:text-neutral-300"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Selection Mode */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-neutral-100">Selection Mode</span>
+                  <p className="text-xs text-neutral-400">
+                    {localCanvasSettings.selectionMode === "click" && "Click to select nodes"}
+                    {localCanvasSettings.selectionMode === "altDrag" && "Hold Alt and drag to select"}
+                    {localCanvasSettings.selectionMode === "shiftDrag" && "Hold Shift and drag to select"}
+                  </p>
+                </div>
+                <div className="flex gap-1 p-0.5 bg-neutral-800 rounded-md">
+                  {([
+                    { value: "click" as SelectionMode, label: "Click" },
+                    { value: "altDrag" as SelectionMode, label: "Alt + Drag" },
+                    { value: "shiftDrag" as SelectionMode, label: "Shift + Drag" },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setLocalCanvasSettings({ ...localCanvasSettings, selectionMode: option.value })}
+                      className={`flex-1 px-2 py-1.5 text-xs rounded transition-all duration-150 ${
+                        localCanvasSettings.selectionMode === option.value
+                          ? "bg-neutral-700 text-neutral-100 font-medium"
+                          : "text-neutral-400 hover:text-neutral-300"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Node Design Mode */}
+            <NodeDesignToggle />
+
+            {/* Reset All Node Colors */}
+            <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-sm font-medium text-neutral-100">Node Colors</span>
+                  <p className="text-xs text-neutral-400 mt-0.5">Remove all per-node color customizations</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const store = useWorkflowStore.getState();
+                    const hasColors = store.nodes.some((n) => (n.data as Record<string, unknown>)?.nodeColor);
+                    if (!hasColors) return;
+                    store.nodes.forEach((n) => {
+                      const data = n.data as Record<string, unknown>;
+                      if (data.nodeColor !== undefined || data.nodeColorMode !== undefined) {
+                        store.updateNodeData(n.id, {
+                          nodeColor: undefined,
+                          nodeColorMode: undefined,
+                        });
+                      }
+                    });
+                  }}
+                  className="px-3 py-1.5 text-xs text-[var(--text-secondary)] bg-[var(--surface-2)] hover:bg-[var(--btn-hover)] rounded-md border border-[var(--border)] transition-colors"
+                >
+                  Reset All Colors
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Brand Skin Tab Content */}
+        {activeTab === "brandSkin" && (
+          <div>
+            <div className="mb-5">
+              <h3 className="text-sm font-semibold text-neutral-100 uppercase tracking-wider mb-1">Brand Skin</h3>
+              <p className="text-xs text-neutral-400 mb-4">
+                Choose a brand identity for the app UI. Each skin replaces all colors and accents. Skins are stored locally in your browser — they don&apos;t affect other users or devices.
+              </p>
+
+              {/* ── Theme Mode Toggle — Midnight / Daylight ── */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-neutral-400 uppercase tracking-wider">Appearance</span>
+                <div
+                  className="inline-flex rounded-lg p-0.5 gap-0.5"
+                  style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentTheme('dark');
+                      document.documentElement.setAttribute('data-theme', 'dark');
+                      localStorage.setItem('agent1-theme', 'dark');
+                    }}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200"
+                    style={currentTheme === 'dark' ? {
+                      background: 'var(--accent)',
+                      color: 'var(--btn-primary-text)',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                    } : {
+                      background: 'transparent',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                    Midnight
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentTheme('light');
+                      document.documentElement.setAttribute('data-theme', 'light');
+                      localStorage.setItem('agent1-theme', 'light');
+                    }}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200"
+                    style={currentTheme === 'light' ? {
+                      background: 'var(--accent)',
+                      color: 'var(--btn-primary-text)',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                    } : {
+                      background: 'transparent',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="5" />
+                      <line x1="12" y1="1" x2="12" y2="3" />
+                      <line x1="12" y1="21" x2="12" y2="23" />
+                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                      <line x1="1" y1="12" x2="3" y2="12" />
+                      <line x1="21" y1="12" x2="23" y2="12" />
+                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                    Daylight
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {([
+                { id: 'ignite', name: 'Ignite', desc: 'Minimal · Black & Orange', accent: '#E8530E', dark: ['#E8530E', '#080808', '#1e1e1e'], light: ['#C0440A', '#fcfcfc', '#f0f0f0'] },
+                { id: 'aurora', name: 'Aurora', desc: 'Corporate · Navy & Gold', accent: '#c5a44e', dark: ['#0c0f14', '#b8973a', '#181c25'], light: ['#8a7020', '#faf8f4', '#ede8da'] },
+                { id: 'ember', name: 'Ember', desc: 'Iconic · Black & Heritage Red', accent: '#D31920', dark: ['#D31920', '#0a0a0a', '#1a1a1a'], light: ['#b01018', '#fafafa', '#f0f0f0'] },
+                { id: 'matrix', name: 'Matrix', desc: 'Digital · Black & Neon Green', accent: '#4CAF50', dark: ['#4CAF50', '#0c1014', '#1a2020'], light: ['#2e7d32', '#f4f8f4', '#e0ece0'] },
+                { id: 'sienna', name: 'Sienna', desc: 'Italian Craft · Havana & Amber', accent: '#8B572A', dark: ['#8B572A', '#120e0a', '#2c2018'], light: ['#724820', '#fdf8f4', '#f0e8e0'] },
+                { id: 'sage', name: 'Sage', desc: 'Quiet Luxury · Sage & Earth', accent: '#6B705C', dark: ['#6B705C', '#0e1210', '#1c2420'], light: ['#545848', '#f8faf8', '#e8ece8'] },
+                { id: 'orchid', name: 'Orchid', desc: 'Fashion Bold · Purple & Editorial', accent: '#7B2D8E', dark: ['#7B2D8E', '#100c16', '#221830'], light: ['#652476', '#faf8fc', '#ece4f0'] },
+                { id: 'platinum', name: 'Platinum', desc: 'Minimal · Silver & Steel', accent: '#A0A0A8', dark: ['#A0A0A8', '#101214', '#1c1c1f'], light: ['#808080', '#fafafa', '#ececee'] },
+                { id: 'abyss', name: 'Abyss', desc: 'Deep · Navy & Midnight', accent: '#1B3A5C', dark: ['#1B3A5C', '#080c14', '#0e1a2e'], light: ['#0f2540', '#f4f6fa', '#d8e0ec'] },
+                { id: 'amber', name: 'Amber', desc: 'Warm · Gold & Honey', accent: '#B8860B', dark: ['#B8860B', '#0e0c08', '#201a0e'], light: ['#8b5a00', '#faf6ee', '#ece0c8'] },
+                { id: 'ocean', name: 'Ocean', desc: 'Cool · Teal & Deep Sea', accent: '#008B8B', dark: ['#008B8B', '#081210', '#0e2020'], light: ['#006b6b', '#f4fafa', '#d0e8e8'] },
+                { id: 'flux', name: 'Flux', desc: 'React Flow · Pink & Charcoal', accent: '#FF0072', dark: ['#FF0072', '#0a0816', '#221c38'], light: ['#D00060', '#fcfaff', '#f0eef4'] },
+                { id: 'neon', name: 'Neon', desc: 'React · Cyan & Terminal', accent: '#61DAFB', dark: ['#61DAFB', '#060e14', '#142a38'], light: ['#0098C8', '#f8fcfe', '#e8f0f4'] },
+                { id: 'svelte', name: 'Svelte', desc: 'Svelte Flow · Orange & Warm', accent: '#FF3E00', dark: ['#FF3E00', '#100a06', '#2c2018'], light: ['#D03000', '#fdf8f4', '#f0e8e0'] },
+                { id: 'cobalt', name: 'Cobalt', desc: 'IDE · Deep Blue & Code', accent: '#2979FF', dark: ['#2979FF', '#060c18', '#16243c'], light: ['#1565C0', '#f8fafd', '#e8eef4'] },
+                { id: 'coral', name: 'Coral', desc: 'Creative · Warm Coral Studio', accent: '#FF6B6B', dark: ['#FF6B6B', '#100808', '#2c1e1e'], light: ['#D04040', '#fdf8f8', '#f0e8e8'] },
+                { id: 'moss', name: 'Moss', desc: 'Organic · Forest & Node Garden', accent: '#2D6A4F', dark: ['#2D6A4F', '#06100a', '#1a3024'], light: ['#1B5038', '#f8fcfa', '#e8f0ec'] },
+                { id: 'zinc', name: 'Zinc', desc: 'Industrial · Gunmetal Minimal', accent: '#71717A', dark: ['#71717A', '#09090b', '#1c1c1f'], light: ['#52525B', '#fafafa', '#ececee'] },
+                { id: 'indigo', name: 'Indigo', desc: 'SaaS · Night Violet Creative', accent: '#6366F1', dark: ['#6366F1', '#08081a', '#1a1a3c'], light: ['#4F46E5', '#fafaff', '#eaeaf4'] },
+                { id: 'rose', name: 'Rose', desc: 'Editorial · Dusty Pink Fashion', accent: '#E11D48', dark: ['#E11D48', '#10060a', '#2c1c26'], light: ['#BE123C', '#fdf8fa', '#f0e8ec'] },
+                { id: 'carbon', name: 'Carbon', desc: 'Graphite · Carbon & Electric', accent: '#F97316', dark: ['#F97316', '#0a0808', '#221e1c'], light: ['#C25D10', '#faf8f6', '#ece8e4'] },
+              ] as const).map((skin) => {
+                const isActive = currentSkin === skin.id;
+                const previewColors = currentTheme === 'dark' ? skin.dark : skin.light;
+                return (
+                  <button
+                    key={skin.id}
+                    type="button"
+                    onClick={() => {
+                      setCurrentSkin(skin.id);
+                      document.documentElement.setAttribute('data-skin', skin.id);
+                      localStorage.setItem('agent1-skin', skin.id);
+                    }}
+                    className={`text-left rounded-xl overflow-hidden transition-all duration-200 ${isActive ? 'ring-2 scale-[1.02]' : 'ring-1 ring-neutral-700 hover:ring-neutral-500 hover:scale-[1.01]'}`}
+                    style={isActive ? { '--tw-ring-color': skin.accent } as React.CSSProperties : {}}
+                  >
+                    {/* Color swatches bar — responds to theme */}
+                    <div className="flex h-14 relative">
+                      {previewColors.map((c, i) => (
+                        <div key={i} className="flex-1 transition-colors duration-300" style={{ background: c }} />
+                      ))}
+                      {/* Accent dot overlay */}
+                      <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full shadow-md" style={{ background: skin.accent, boxShadow: `0 0 8px ${skin.accent}40` }} />
+                    </div>
+
+                    {/* Info — theme-aware background */}
+                    <div className="p-2.5 transition-colors duration-300" style={{ background: currentTheme === 'dark' ? '#141414' : '#f4f4f4' }}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold transition-colors duration-300" style={{ color: currentTheme === 'dark' ? '#e8e8e8' : '#1a1a1a' }}>{skin.name}</span>
+                        {isActive && (
+                          <svg className="w-3.5 h-3.5" style={{ color: skin.accent }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                            <path d="M20 6L9 17l-5-5" />
+                          </svg>
+                        )}
+                      </div>
+                      <p className="text-[10px] mt-0.5 transition-colors duration-300" style={{ color: currentTheme === 'dark' ? '#666' : '#999' }}>{skin.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        </DialogBody>
+        <DialogFooter>
+          <DialogButton variant="ghost" onClick={onClose}>Cancel</DialogButton>
+          <DialogButton
+            variant="primary"
+            onClick={handleSave}
+            disabled={activeTab === "project" && (isValidating || isBrowsing)}
+          >
+            {activeTab === "project"
+              ? (isValidating ? "Validating..." : mode === "new" ? "Create" : "Save")
+              : "Save"
+            }
+          </DialogButton>
+        </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Model Selection Dialogs */}
+      {showImageModelDialog && (
+        <ModelSearchDialog
+          isOpen={showImageModelDialog}
+          onClose={() => setShowImageModelDialog(false)}
+          onModelSelected={(model: ProviderModel) => {
+            setLocalNodeDefaults(prev => ({
+              ...prev,
+              generateImage: {
+                ...prev.generateImage,
+                selectedModel: {
+                  provider: model.provider,
+                  modelId: model.id,
+                  displayName: model.name,
+                }
+              }
+            }));
+            setShowImageModelDialog(false);
+          }}
+          initialCapabilityFilter="image"
+        />
+      )}
+      {showVideoModelDialog && (
+        <ModelSearchDialog
+          isOpen={showVideoModelDialog}
+          onClose={() => setShowVideoModelDialog(false)}
+          onModelSelected={(model: ProviderModel) => {
+            setLocalNodeDefaults(prev => ({
+              ...prev,
+              generateVideo: {
+                ...prev.generateVideo,
+                selectedModel: {
+                  provider: model.provider,
+                  modelId: model.id,
+                  displayName: model.name,
+                }
+              }
+            }));
+            setShowVideoModelDialog(false);
+          }}
+          initialCapabilityFilter="video"
+        />
+      )}
+    </>
+  );
+}

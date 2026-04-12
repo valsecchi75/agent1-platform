@@ -1,0 +1,49 @@
+{
+  "nodeType": "naStylingDetail",
+  "name": "Styling Detail Editor",
+  "version": "1.0.0",
+  "category": "image/editing",
+  "tags": ["fashion", "styling", "garment", "modification"],
+  "summary": "Makes targeted styling modifications on garments in photos, including collars, sleeves, buttons, pockets, and fabric details",
+  "inputs": [
+    {
+      "id": "garmentPhoto",
+      "type": "image",
+      "required": true,
+      "description": "Photo of the garment to modify"
+    },
+    {
+      "id": "modificationInstruction",
+      "type": "text",
+      "required": true,
+      "description": "Detailed instruction describing the styling modification (e.g., 'change collar to peter pan style', 'add pleats to sleeves')"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "modifiedGarment",
+      "type": "image",
+      "description": "Photo of the garment with the requested styling modification applied"
+    }
+  ],
+  "executionNotes": "This node uses Gemini to analyze the garment structure and understand the modification request, then Nano Banana renders the modified version while preserving the original fabric, lighting, and overall composition. Best results with clear, well-lit garment photos.",
+  "exampleConnections": [
+    {
+      "from": "imageInput.image",
+      "to": "naStylingDetail.garmentPhoto",
+      "scenario": "Connect an image input node containing a garment photo"
+    },
+    {
+      "from": "textInput.text",
+      "to": "naStylingDetail.modificationInstruction",
+      "scenario": "Connect a text input with modification instructions"
+    },
+    {
+      "from": "naStylingDetail.modifiedGarment",
+      "to": "imageOutput.image",
+      "scenario": "Export the modified garment image"
+    }
+  ],
+  "apiProvider": "Gemini + Nano Banana",
+  "requiresApiKey": true
+}
