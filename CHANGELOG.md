@@ -4,18 +4,32 @@ All notable changes to AGENT 1 will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [0.10.0-alpha] - 2026-04-13
 
 ### Added
 
+- **Multi-user isolation**: per-user encrypted API keys (AES-256-GCM), scoped storage, workflows, sessions, reports
+- **Node Pack Manager**: ComfyUI Manager-style table UI with enable/disable, workflow awareness, no-restart install
+- **21-skin theming**: 10 new React Flow-inspired skins (flux, neon, svelte, cobalt, coral, moss, zinc, indigo, rose, carbon) with full 42-block CSS var coverage
+- **Unified Dialog system**: shared modal primitives with rotating glow effect for all modals
+- **Admin panel**: departments with real budgets, user spending analysis, system stats, safe restart
+- **Template tag taxonomy**: tag management, template explorer with filter/grid/list views
+- **Onboarding wizard**: 6-step tutorial with welcome modal and "don't show again" option
+- **Node specs enriched**: all 29 foundation + custom node specs updated with full parameter definitions
+- Node Pack enable/disable API routes (`/api/node-packs/disable`, `/api/node-packs/enable`)
+- Dynamic ConnectionDropMenu using nodeSpecRegistry
+- Pack version tracking in workflow files
+- Template upsert support (GR-041)
 - Full-snapshot backup before update (replaces 2-file backup)
 - Download progress bar with percentage in update banner
 - SSE heartbeat every 15s to prevent proxy timeouts
-- SSE inactivity timeout (180s) with connection-lost detection
 - "Skip this version" button with localStorage persistence
-- Cross-platform restart command detection (Windows/Mac/Linux)
-- Click-to-expand for long error messages in update banner
-- Server-side URL validation against allowed GitHub hosts
+
+### Changed
+
+- Morpheus pack renamed from `morpheus-model-management` to `agent1_morpheus_model_management` (GR-020)
+- `.releaseinclude` updated for renamed pack directories (GR-045)
+- `.gitignore` expanded to exclude temp/debug session artifacts and database files
 
 ### Fixed
 
@@ -23,6 +37,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Infinite build-retry loop after failed update — .update-pending marker cleaned on rollback
 - Client spinner hanging forever when SSE connection drops silently
 - Missing scripts/ directory in release ZIP (GR-016)
+- `activeNodeTypes` empty race condition in "Check Missing" (GR-042)
+- Registry JSON key mismatch `packs` vs `custom_nodes` (GR-037)
+
+## [Unreleased]
 
 ## [1.1.2] - 2026-03-12
 
