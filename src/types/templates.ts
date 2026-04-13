@@ -28,6 +28,7 @@ export interface TemplatePack {
   category: TemplateCategory;
   tags: string[]; // User-defined custom tags
   techTags: string[]; // Auto-detected from node types
+  taskTags: string[]; // User-selected task/style tags from taxonomy
   nodeCount: number; // Auto-calculated from nodes array length
 
   edgeStyle: string; // Edge animation/style preset (e.g., "default", "animated")
@@ -61,6 +62,7 @@ export interface TemplatePackMeta {
   category: TemplateCategory;
   tags: string[];
   techTags: string[];
+  taskTags: string[]; // User-selected task/style tags from taxonomy
   nodeCount: number;
   previewFrames: string[]; // Filenames in preview/ folder, e.g. ["1.jpg", "1a.jpg", "1b.jpg"]
 }

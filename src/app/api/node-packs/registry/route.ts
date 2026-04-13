@@ -2,31 +2,93 @@ import { NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
 import semver from 'semver';
-import type { NodePackRegistry, NodePackEntryWithStatus } from '@/types/nodePacks';
+import type { NodePackRegistry, NodePackEntry, NodePackEntryWithStatus } from '@/types/nodePacks';
 
-/** Load node-packs.json from local agent1-registry folder (fallback) */
+/** Load registry.json from local agent1-registry folder (fallback) */
 function loadLocalRegistry(): NodePackRegistry | null {
   try {
-    const localPath = path.resolve(process.cwd(), '..', 'agent1-registry', 'node-packs.json');
+    const localPath = path.resolve(process.cwd(), '..', 'agent1-registry', 'registry.json');
     if (fs.existsSync(localPath)) {
       const raw = fs.readFileSync(localPath, 'utf-8');
-      const registry = JSON.parse(raw) as NodePackRegistry;
-      if (registry && Array.isArray(registry.packs)) return registry;
+      const data = JSON.parse(raw);
+      // registry.json may use "custom_nodes" or "packs" as the array key
+      const packs = data.packs || data.custom_nodes;
+      if (data && Array.isArray(packs)) {
+        return { ...data, packs } as NodePackRegistry;
+      }
     }
   } catch { /* ignore */ }
   return null;
 }
 
-/** Read installed pack manifest version from custom_nodes/{packId}/manifest.json */
-function getInstalledVersion(packId: string): string | null {
+/** Build a minimal registry from locally installed custom_nodes/ manifests (last resort) */
+function buildRegistryFromLocal(): NodePackRegistry | null {
   try {
+    const customNodesDir = path.resolve(process.cwd(), 'custom_nodes');
+    if (!fs.existsSync(customNodesDir)) return null;
+
+    const entries = fs.readdirSync(customNodesDir, { withFileTypes: true });
+    const packs: NodePackEntry[] = [];
+
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+      const manifestPath = path.join(customNodesDir, entry.name, 'manifest.json');
+      if (!fs.existsSync(manifestPath)) continue;
+      try {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+        packs.push({
+          id: manifest.id || entry.name,
+          name: manifest.displayName || manifest.name || entry.name,
+          description: manifest.description || '',
+          author: manifest.author || 'Unknown',
+          version: manifest.version || '0.0.0',
+          category: manifest.category || 'unknown',
+          tags: [],
+          nodeCount: Array.isArray(manifest.nodes) ? manifest.nodes.length : 0,
+          minAppVersion: manifest.minAppVersion || '0.0.0',
+          manifestPath: `custom_nodes/${entry.name}/manifest.json`,
+          previewPath: '',
+          createdAt: '',
+          updatedAt: '',
+          changelog: '',
+          isCore: manifest.isCore || false,
+          removable: manifest.removable !== false,
+        });
+      } catch { /* skip invalid manifest */ }
+    }
+
+    if (packs.length === 0) return null;
+
+    return {
+      registryVersion: 'local',
+      updatedAt: new Date().toISOString(),
+      baseUrl: '',
+      packs,
+    };
+  } catch { return null; }
+}
+
+/** Read installed pack manifest version from active custom_nodes/{packId}/manifest.json or disabled directory */
+function getInstalledVersion(packId: string): { version: string | null; isDisabled: boolean } {
+  try {
+    // Check active installs first
     const manifestPath = path.resolve(process.cwd(), 'custom_nodes', packId, 'manifest.json');
-    if (!fs.existsSync(manifestPath)) return null;
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-    return manifest.version || null;
-  } catch {
-    return null;
-  }
+    if (fs.existsSync(manifestPath)) {
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+      return { version: manifest.version || null, isDisabled: false };
+    }
+  } catch { /* ignore */ }
+
+  try {
+    // Check disabled installs
+    const disabledPath = path.resolve(process.cwd(), 'custom_nodes', '.disabled', packId, 'manifest.json');
+    if (fs.existsSync(disabledPath)) {
+      const manifest = JSON.parse(fs.readFileSync(disabledPath, 'utf-8'));
+      return { version: manifest.version || null, isDisabled: true };
+    }
+  } catch { /* ignore */ }
+
+  return { version: null, isDisabled: false };
 }
 
 /** Mock packs for dev testing — ?mock=<mode> */
@@ -117,36 +179,49 @@ export async function GET(request: Request) {
         });
         clearTimeout(timeoutId);
         if (response.ok) {
-          const data = (await response.json()) as NodePackRegistry;
-          if (data && Array.isArray(data.packs)) {
-            registry = data;
+          const data = await response.json();
+          // Handle both "packs" and "custom_nodes" keys
+          const remotePacks = data.packs || data.custom_nodes;
+          if (data && Array.isArray(remotePacks)) {
+            registry = { ...data, packs: remotePacks } as NodePackRegistry;
             source = 'remote';
           }
         }
       } catch { /* remote failed, try local */ }
     }
 
-    // Local fallback
+    // Local registry.json fallback
     if (!registry) {
       registry = loadLocalRegistry();
       if (registry) {
-        console.log('[node-packs] Remote unavailable — serving local node-packs.json');
+        console.log('[node-packs] Remote unavailable — serving local registry.json');
+      }
+    }
+
+    // Last resort: scan local custom_nodes/ manifests
+    if (!registry) {
+      registry = buildRegistryFromLocal();
+      if (registry) {
+        source = 'local-scan';
+        console.log('[node-packs] Registry unavailable — built from local manifests');
       }
     }
 
     if (!registry) {
       return NextResponse.json(
-        { success: false, error: 'Registry unavailable (remote and local fallback both failed)' },
+        { success: false, error: 'Registry unavailable (remote, local fallback, and local scan all failed)' },
         { status: 502 }
       );
     }
 
     // Enrich each pack with install status
     const packs: NodePackEntryWithStatus[] = registry.packs.map((pack) => {
-      const installedVersion = getInstalledVersion(pack.id);
+      const { version: installedVersion, isDisabled } = getInstalledVersion(pack.id);
       let status: NodePackEntryWithStatus['status'] = 'available';
 
-      if (installedVersion) {
+      if (isDisabled) {
+        status = 'disabled';
+      } else if (installedVersion) {
         const installed = semver.parse(installedVersion);
         const remote = semver.parse(pack.version);
         if (installed && remote && semver.gt(remote, installed)) {

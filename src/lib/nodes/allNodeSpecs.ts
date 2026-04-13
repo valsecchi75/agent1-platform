@@ -835,7 +835,7 @@ const MORPHEUS_MODEL_MANAGEMENT: NodeSpec = {
   executor: "executeMorpheusModelManagement",
   minimapColor: "#94a3b8",
   isCore: false,
-  packId: "morpheus-model-management",
+  packId: "agent1_morpheus_model_management",
 };
 
 // ─── Registration ─────────────────────────────────────────────────────────────
@@ -870,40 +870,34 @@ const ALL_SPECS: NodeSpec[] = [
   OUTPUT_GALLERY,
   IMAGE_COMPARE,
 
-  // Foundation — Logic
+  // Foundation — Routing
   ROUTER,
   SWITCH,
   CONDITIONAL_SWITCH,
 
-  // Foundation — Utility
+  // Foundation — Viewer / Display
   PREVIEW_IMAGE,
   SHOW_ANYTHING,
 
-  // Neural Atelier pack
+  // Neural Atelier Pack
   NA_SKETCH_TO_PHOTO,
   NA_STYLING_DETAIL,
   NA_RECOLOR,
 
-  // Morpheus pack
+  // Morpheus Pack
   MORPHEUS_MODEL_MANAGEMENT,
 ];
 
-/**
- * Register all node specs with the global registry.
- * Call once at application startup (e.g. in workflowStore initialization).
- *
- * Safe to call multiple times — subsequent calls overwrite existing specs.
- */
+// ─── Registration ─────────────────────────────────────────────────────────────
+
+export { ALL_SPECS };
+
 export function registerAllNodeSpecs(): void {
-  nodeSpecRegistry.registerAll(ALL_SPECS);
+  for (const spec of ALL_SPECS) {
+    nodeSpecRegistry.register(spec);
+  }
 }
 
-/**
- * Returns the total number of registered specs.
- * Used for testing / diagnostics.
- */
 export function getRegisteredSpecCount(): number {
   return ALL_SPECS.length;
 }
-
-export { ALL_SPECS };

@@ -22,12 +22,15 @@ export interface NodePackEntry {
   createdAt: string;
   updatedAt: string;
   changelog: string;
+  isCore?: boolean;
+  removable?: boolean;
 }
 
 /** Registry entry enriched with local install status */
 export interface NodePackEntryWithStatus extends NodePackEntry {
-  status: 'available' | 'installed' | 'update-available';
+  status: 'available' | 'installed' | 'update-available' | 'disabled';
   installedVersion: string | null;
+  isCore?: boolean;
 }
 
 /** Manifest stored inside each pack folder (custom_nodes/{packId}/manifest.json) */

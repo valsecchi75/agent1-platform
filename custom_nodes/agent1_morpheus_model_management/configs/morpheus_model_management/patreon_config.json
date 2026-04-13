@@ -1,0 +1,10 @@
+{
+  "supabase_functions_url": "https://hrlwqnqqgcxxezagyfah.supabase.co/functions/v1",
+  "minimum_tier_cents": 1500,
+  "creator_bypass_names": ["Sergio Valsecchi"],
+  "tiers": {
+    "supporter": { "cents": 500, "has_catalog_access": false },
+    "rd_insider": { "cents": 1500, "has_catalog_access": true },
+    "lab_access": { "cents": 10000, "has_catalog_access": true }
+  }
+}

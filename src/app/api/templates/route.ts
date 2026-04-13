@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       description,
       category,
       tags,
+      taskTags,
       author,
       nodes,
       edges,
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
       groups,
       previewImages,
     } = body as SaveTemplateInput & {
+      taskTags?: string[];
       nodes: WorkflowNode[];
       edges: WorkflowEdge[];
       edgeStyle?: string;
@@ -111,6 +113,7 @@ export async function POST(request: NextRequest) {
       category,
       tags,
       techTags,
+      taskTags: taskTags || [],
       nodeCount: nodes.length,
       edgeStyle,
       nodes,

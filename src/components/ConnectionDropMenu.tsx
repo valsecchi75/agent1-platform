@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { NodeType } from "@/types";
+import { nodeSpecRegistry } from "@/lib/nodes/nodeRegistry";
+import { useWorkflowStore } from "@/store/workflowStore";
 
 // Actions are special menu items that trigger behavior instead of creating a node
 export type MenuAction = "splitGridImmediate";
@@ -616,6 +618,62 @@ const THREE_D_SOURCE_OPTIONS: MenuOption[] = [
   },
 ];
 
+// ─── Dynamic menu generation from NodeSpecRegistry ──────────────────────────────
+
+/**
+ * Generate menu options dynamically from NodeSpecRegistry.
+ * Filters specs by active node types and matching handle types.
+ * Falls back to static options if registry returns nothing.
+ */
+function getDynamicMenuOptions(
+  dataType: string,
+  direction: "source" | "target"
+): MenuOption[] {
+  try {
+    const allSpecs = nodeSpecRegistry.getAllSpecs();
+    const activeNodeTypes = useWorkflowStore.getState().activeNodeTypes;
+
+    if (!allSpecs || allSpecs.length === 0 || !activeNodeTypes) {
+      return [];
+    }
+
+    return allSpecs
+      .filter((spec) => activeNodeTypes.includes(spec.type))
+      .filter((spec) => {
+        if (direction === "target") {
+          // Node can accept this data type as input
+          return spec.inputs?.some((input) => input.dataType === dataType);
+        } else {
+          // Node can produce this data type as output
+          return spec.outputs?.some((output) => output.dataType === dataType);
+        }
+      })
+      .sort((a, b) => a.displayName.localeCompare(b.displayName))
+      .map((spec) => ({
+        type: spec.type as NodeType,
+        label: spec.displayName,
+        icon: getIconForNodeType(spec.type), // Fallback to generic icon
+      }));
+  } catch (error) {
+    // If registry lookup fails, return empty (will fall back to static)
+    console.error("Error generating dynamic menu options:", error);
+    return [];
+  }
+}
+
+/**
+ * Get a generic icon for a node type.
+ * Returns a generic node icon if no specific icon is found.
+ */
+function getIconForNodeType(_type: string) {
+  // Return a generic node/gear icon as fallback
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94m-.213 9.26c.033.576.029 1.153-.01 1.728m-8.96-1.728c-.033-.576-.029-1.153.01-1.728m0 0a1.5 1.5 0 001.5-1.5m-1.5 1.5a1.5 1.5 0 011.5-1.5m0 0c0-.207.046-.408.13-.595a2.25 2.25 0 011.36-1.36c.187-.084.388-.13.595-.13m0 0h-.5a2.25 2.25 0 00-2.25 2.25v.894m0 0a.75.75 0 001.5 0" />
+    </svg>
+  );
+}
+
 interface ConnectionDropMenuProps {
   position: { x: number; y: number };
   handleType: "image" | "text" | "video" | "audio" | "3d" | "easeCurve" | null;
@@ -638,6 +696,17 @@ export function ConnectionDropMenu({
   const getOptions = useCallback((): MenuOption[] => {
     if (!handleType) return [];
 
+    // Determine direction: "source" means we're connecting FROM an output (target = input of new node)
+    // "target" means we're connecting FROM an input (source = output of new node)
+    const direction = connectionType === "source" ? "target" : "source";
+
+    // Try to get dynamic options from registry first
+    const dynamicOptions = getDynamicMenuOptions(handleType, direction);
+    if (dynamicOptions.length > 0) {
+      return dynamicOptions;
+    }
+
+    // Fallback to static hardcoded options
     if (connectionType === "source") {
       // Dragging from a source handle (output), need nodes with target handles (inputs)
       if (handleType === "video") return VIDEO_TARGET_OPTIONS;

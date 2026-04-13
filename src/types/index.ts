@@ -17,3 +17,4 @@ export * from "./chat";
 export * from "./canvas";
 export * from "./customNodes";
 export * from "./nodePacks";
+export * from "./templateTags";

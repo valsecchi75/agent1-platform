@@ -2,11 +2,12 @@
 setlocal enabledelayedexpansion
 cd /d "%~dp0\.."
 color 0F
-title AGENT 1 - Release Publisher (Delta)
+title AGENT 1 - Release Publisher
 
 echo.
 echo  ========================================
-echo   AGENT 1 - Release Publisher (Delta)
+echo   AGENT 1 - Release Publisher
+echo   GitHub: Delta  /  Candidate: Full
 echo  ========================================
 echo.
 
@@ -62,19 +63,12 @@ echo.
 
 REM -- Flags --
 set "DRY_RUN=0"
-set "FORCE_FULL=0"
 if "%~1"=="--dry-run" set "DRY_RUN=1"
-if "%~1"=="--full" set "FORCE_FULL=1"
-if "%~2"=="--full" set "FORCE_FULL=1"
 
 if "!DRY_RUN!"=="1" (
     echo  =========================================
     echo   DRY RUN - nessuna azione reale
     echo  =========================================
-    echo.
-)
-if "!FORCE_FULL!"=="1" (
-    echo  [INFO] Modalita FULL forzata [--full]
     echo.
 )
 
@@ -158,17 +152,6 @@ echo  [OK] Versione finale: !NEW_VERSION!
 echo [INFO] Versione finale: !NEW_VERSION!>> "!LOG_FILE!"
 echo.
 
-REM -- Ask delta or full (if not already forced via --full) --
-if "!FORCE_FULL!"=="0" (
-    echo.
-    echo  Tipo di release ZIP:
-    echo    [d] Delta  - solo file modificati (per auto-update utenti esistenti)
-    echo    [f] Full   - tutti i file (per distribuzione standalone + Candidate Release)
-    echo.
-    set /p "RELEASE_MODE=  Scelta [d]: "
-    if /i "!RELEASE_MODE!"=="f" set "FORCE_FULL=1"
-)
-
 REM -- ZIP_NAME --
 set "ZIP_NAME=agent1-v!NEW_VERSION!.zip"
 
@@ -225,10 +208,9 @@ set "LAST_TAG="
 set "RELEASE_TYPE=full"
 set "PREVIOUS_VERSION=none"
 
-if "!FORCE_FULL!"=="0" (
-    for /f "delims=" %%t in ('git tag --list "v*" --sort=-version:refname 2^>nul') do (
-        if "!LAST_TAG!"=="" set "LAST_TAG=%%t"
-    )
+REM -- GitHub riceve SEMPRE delta (solo file modificati dall'ultimo tag) --
+for /f "delims=" %%t in ('git tag --list "v*" --sort=-version:refname 2^>nul') do (
+    if "!LAST_TAG!"=="" set "LAST_TAG=%%t"
 )
 
 if "!LAST_TAG!"=="" (

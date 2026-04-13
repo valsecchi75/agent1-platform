@@ -8,7 +8,7 @@
 import type { NodeExecutionContext } from "../types";
 import type { MorpheusModelManagementData } from "@/types/customNodes";
 
-const PACK_ID = "morpheus-model-management";
+const PACK_ID = "agent1_morpheus_model_management";
 const CONFIG_DIR = "morpheus_model_management";
 
 export async function executeMorpheusModelManagement(ctx: NodeExecutionContext): Promise<void> {

@@ -110,7 +110,7 @@ export function setSetting(key: string, value: string): boolean {
 
 // ─── Schema Versioning ─────────────────────────────────────────────
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 function runMigrations(db: BetterSqlite3Database): void {
   // Ensure tracking table exists
@@ -136,6 +136,63 @@ function runMigrations(db: BetterSqlite3Database): void {
     1: {
       fn: () => { /* Tables already created above — this just tracks the version */ },
       desc: "Initialize schema versioning and app_settings",
+    },
+    2: {
+      fn: (d: BetterSqlite3Database) => {
+        d.exec(`
+          CREATE TABLE IF NOT EXISTS template_tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            slug TEXT UNIQUE NOT NULL,
+            label TEXT NOT NULL,
+            group_key TEXT NOT NULL CHECK(group_key IN ('generation', 'task', 'provider', 'style')),
+            icon TEXT,
+            sort_order INTEGER DEFAULT 0,
+            is_active INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now'))
+          );
+          CREATE INDEX IF NOT EXISTS idx_template_tags_group ON template_tags(group_key);
+          CREATE INDEX IF NOT EXISTS idx_template_tags_active ON template_tags(is_active);
+        `);
+        // Seed default tags
+        d.exec(`
+          INSERT OR IGNORE INTO template_tags (slug, label, group_key, sort_order) VALUES
+            ('image', 'Image', 'generation', 1),
+            ('video', 'Video', 'generation', 2),
+            ('audio', 'Audio', 'generation', 3),
+            ('3d', '3D', 'generation', 4),
+            ('llm', 'LLM', 'generation', 5);
+          INSERT OR IGNORE INTO template_tags (slug, label, group_key, sort_order) VALUES
+            ('product-shot', 'Product Shot', 'task', 1),
+            ('editorial', 'Editorial', 'task', 2),
+            ('character-design', 'Character Design', 'task', 3),
+            ('style-transfer', 'Style Transfer', 'task', 4),
+            ('background-swap', 'Background Swap', 'task', 5),
+            ('sketch-to-render', 'Sketch to Render', 'task', 6),
+            ('color-variations', 'Color Variations', 'task', 7),
+            ('campaign', 'Campaign', 'task', 8),
+            ('mood-board', 'Mood Board', 'task', 9),
+            ('portrait', 'Portrait', 'task', 10),
+            ('landscape', 'Landscape', 'task', 11),
+            ('texture-generation', 'Texture Generation', 'task', 12),
+            ('video-storyboard', 'Video Storyboard', 'task', 13),
+            ('audio-tts', 'Audio / TTS', 'task', 14);
+          INSERT OR IGNORE INTO template_tags (slug, label, group_key, sort_order) VALUES
+            ('nano-banana', 'Nano Banana', 'provider', 1),
+            ('gemini', 'Gemini', 'provider', 2),
+            ('fal-ai', 'fal.ai', 'provider', 3),
+            ('replicate', 'Replicate', 'provider', 4),
+            ('kie-ai', 'Kie.ai', 'provider', 5),
+            ('veo', 'Veo', 'provider', 6);
+          INSERT OR IGNORE INTO template_tags (slug, label, group_key, sort_order) VALUES
+            ('photorealistic', 'Photorealistic', 'style', 1),
+            ('illustration', 'Illustration', 'style', 2),
+            ('cinematic', 'Cinematic', 'style', 3),
+            ('minimalist', 'Minimalist', 'style', 4),
+            ('street', 'Street', 'style', 5),
+            ('fashion', 'Fashion', 'style', 6);
+        `);
+      },
+      desc: "Add template tag taxonomy with seed data",
     },
   };
 

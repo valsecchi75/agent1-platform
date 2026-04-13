@@ -25,6 +25,7 @@ import type {
   DailyTimelinePoint,
   GenerationListResponse,
 } from "./db-types";
+import type { TemplateTag, TagGroup } from "@/types/templateTags";
 
 // ─── Singleton Database Connection ──────────────────────────────
 
@@ -204,6 +205,24 @@ function initializeSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_calls_created ON api_calls(created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_calls_gen ON api_calls(generation_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_user ON user_sessions(user_id);
+  `);
+
+  // Create template_tags table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS template_tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT UNIQUE NOT NULL,
+      label TEXT NOT NULL,
+      group_key TEXT NOT NULL CHECK(group_key IN ('generation', 'task', 'provider', 'style')),
+      icon TEXT,
+      sort_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_template_tags_group ON template_tags(group_key);
+    CREATE INDEX IF NOT EXISTS idx_template_tags_active ON template_tags(is_active);
   `);
 }
 
@@ -1040,6 +1059,75 @@ export function getLastGenerationWorkflow(): {
     saveDirectoryPath,
     createdAt: row.created_at,
   };
+}
+
+// ─── Template Tags ──────────────────────────────────────────
+
+export function listTemplateTags(activeOnly = false): TemplateTag[] {
+  const db = getDb();
+  const where = activeOnly ? "WHERE is_active = 1" : "";
+  const rows = db.prepare(`
+    SELECT id, slug, label, group_key as groupKey, icon, sort_order as sortOrder,
+           is_active as isActive, created_at as createdAt
+    FROM template_tags
+    ${where}
+    ORDER BY group_key, sort_order, label
+  `).all();
+  // Convert isActive from 0/1 to boolean
+  return (rows as Array<Record<string, unknown>>).map(r => ({
+    ...r,
+    isActive: Boolean(r.isActive),
+  })) as TemplateTag[];
+}
+
+export function createTemplateTag(input: { label: string; groupKey: string; icon?: string; sortOrder?: number }): TemplateTag {
+  const db = getDb();
+  const slug = input.label.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const result = db.prepare(`
+    INSERT INTO template_tags (slug, label, group_key, icon, sort_order)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(slug, input.label.trim(), input.groupKey, input.icon || null, input.sortOrder || 0);
+  return {
+    id: result.lastInsertRowid as number,
+    slug,
+    label: input.label.trim(),
+    groupKey: input.groupKey as TagGroup,
+    icon: input.icon || null,
+    sortOrder: input.sortOrder || 0,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+export function updateTemplateTag(id: number, updates: { label?: string; groupKey?: string; icon?: string; sortOrder?: number; isActive?: boolean }): { success: boolean; error?: string } {
+  const db = getDb();
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  if (updates.label !== undefined) {
+    const newSlug = updates.label.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    // Check for slug collision with another tag
+    const existing = db.prepare("SELECT id FROM template_tags WHERE slug = ? AND id != ?").get(newSlug, id);
+    if (existing) {
+      return { success: false, error: "A tag with a similar name already exists (slug collision)" };
+    }
+    sets.push("label = ?", "slug = ?");
+    values.push(updates.label.trim());
+    values.push(newSlug);
+  }
+  if (updates.groupKey !== undefined) { sets.push("group_key = ?"); values.push(updates.groupKey); }
+  if (updates.icon !== undefined) { sets.push("icon = ?"); values.push(updates.icon); }
+  if (updates.sortOrder !== undefined) { sets.push("sort_order = ?"); values.push(updates.sortOrder); }
+  if (updates.isActive !== undefined) { sets.push("is_active = ?"); values.push(updates.isActive ? 1 : 0); }
+  if (sets.length === 0) return { success: false, error: "No changes provided" };
+  values.push(id);
+  db.prepare(`UPDATE template_tags SET ${sets.join(", ")} WHERE id = ?`).run(...values);
+  return { success: true };
+}
+
+export function deleteTemplateTag(id: number): boolean {
+  const db = getDb();
+  const result = db.prepare("DELETE FROM template_tags WHERE id = ?").run(id);
+  return result.changes > 0;
 }
 
 // ─── Utility: Close Database ────────────────────────────────────

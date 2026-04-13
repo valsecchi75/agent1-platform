@@ -10,13 +10,18 @@ const CUSTOM_NODES_DIR = path.resolve(process.cwd(), 'custom_nodes');
 /** Core pack IDs that can never be modified via install/uninstall */
 const CORE_PACK_IDS = ['agent1-foundation'];
 
-/** Load node-packs.json from local fallback */
+/** Load registry.json from local fallback */
 function loadLocalRegistry(): NodePackRegistry | null {
   try {
-    const localPath = path.resolve(process.cwd(), '..', 'agent1-registry', 'node-packs.json');
+    const localPath = path.resolve(process.cwd(), '..', 'agent1-registry', 'registry.json');
     if (fs.existsSync(localPath)) {
       const raw = fs.readFileSync(localPath, 'utf-8');
-      return JSON.parse(raw) as NodePackRegistry;
+      const data = JSON.parse(raw);
+      // Handle both "packs" and "custom_nodes" keys
+      const packs = data.packs || data.custom_nodes;
+      if (data && Array.isArray(packs)) {
+        return { ...data, packs } as NodePackRegistry;
+      }
     }
   } catch { /* ignore */ }
   return null;

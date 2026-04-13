@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { QuickstartBackButton } from "./QuickstartBackButton";
 import { TemplateCard } from "./TemplateCard";
+import { TemplateGridCard } from "./TemplateGridCard";
+import { TemplateFilterBar, SortMode } from "./TemplateFilterBar";
+import { ViewToggle } from "./ViewToggle";
 import { WorkflowFile } from "@/store/workflowStore";
 import type {
   TemplatePackMeta,
@@ -10,6 +13,7 @@ import type {
   RegistryEntry,
   TemplateRegistry,
 } from "@/types/templates";
+import type { TemplateTag } from "@/types/templateTags";
 import { Globe, RefreshCw } from "lucide-react";
 
 interface TemplateExplorerViewProps {
@@ -57,6 +61,7 @@ function registryEntryToMeta(
     category: entry.category,
     tags: entry.tags || [],
     techTags: entry.techTags || [],
+    taskTags: [],
     nodeCount: entry.nodeCount,
     previewFrames: entry.previewFrames || [],
   };
@@ -121,8 +126,37 @@ export function TemplateExplorerView({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // View mode (persisted in localStorage)
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    try {
+      const saved = localStorage.getItem("agent1-template-view-mode");
+      return saved === "grid" ? "grid" : "list";
+    } catch {
+      return "list";
+    }
+  });
+
+  const handleViewChange = (mode: "grid" | "list") => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem("agent1-template-view-mode", mode);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // Taxonomy-based filters
+  const [taxonomyTags, setTaxonomyTags] = useState<TemplateTag[]>([]);
+  const [generationFilter, setGenerationFilter] = useState<string | null>(null);
+  const [selectedTaskSlugs, setSelectedTaskSlugs] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedProviderSlugs, setSelectedProviderSlugs] = useState<
+    Set<string>
+  >(new Set());
+  const [sortMode, setSortMode] = useState<SortMode>("newest");
 
   // Debounce search query
   useEffect(() => {
@@ -134,6 +168,22 @@ export function TemplateExplorerView({
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
   }, [searchQuery]);
+
+  // Fetch taxonomy tags on mount
+  useEffect(() => {
+    async function fetchTaxonomyTags() {
+      try {
+        const response = await fetch("/api/template-tags");
+        const result = await response.json();
+        if (result.success && Array.isArray(result.tags)) {
+          setTaxonomyTags(result.tags);
+        }
+      } catch (err) {
+        console.error("Error fetching taxonomy tags:", err);
+      }
+    }
+    fetchTaxonomyTags();
+  }, []);
 
   // Combine local + remote (remote duplicates kept for "Online" view)
   const localSlugs = useMemo(
@@ -175,24 +225,71 @@ export function TemplateExplorerView({
       }
       if (categoryFilter !== "all" && template.category !== categoryFilter)
         return false;
-      if (selectedTags.size > 0) {
-        const allTags = [...template.tags, ...template.techTags];
-        if (!allTags.some((tag) => selectedTags.has(tag))) return false;
+
+      // Generation filter from sidebar
+      if (generationFilter) {
+        const genTag = taxonomyTags.find((t) => t.slug === generationFilter);
+        if (genTag) {
+          const allTags = [
+            ...template.tags,
+            ...template.techTags,
+            ...(template.taskTags || []),
+          ];
+          if (!allTags.some((t) => t === genTag.label)) return false;
+        }
       }
+
+      // Task dropdown filter
+      if (selectedTaskSlugs.size > 0) {
+        const taskLabels = getTagLabelsBySlugs(selectedTaskSlugs, taxonomyTags);
+        const allTags = [
+          ...template.tags,
+          ...template.techTags,
+          ...(template.taskTags || []),
+        ];
+        if (!allTags.some((t) => taskLabels.has(t))) return false;
+      }
+
+      // Provider dropdown filter
+      if (selectedProviderSlugs.size > 0) {
+        const providerLabels = getTagLabelsBySlugs(
+          selectedProviderSlugs,
+          taxonomyTags
+        );
+        const allTags = [...template.tags, ...template.techTags];
+        if (!allTags.some((t) => providerLabels.has(t))) return false;
+      }
+
       return true;
     });
 
-    // Sort: new remote templates first, then by name
-    filtered.sort((a, b) => {
-      const aIsNew =
-        a.source === "remote" && newRemoteSlugs.has(a.slug) ? 1 : 0;
-      const bIsNew =
-        b.source === "remote" && newRemoteSlugs.has(b.slug) ? 1 : 0;
-      if (aIsNew !== bIsNew) return bIsNew - aIsNew; // new first
-      // Then remote before local
-      if (a.source !== b.source) return a.source === "remote" ? -1 : 1;
-      return a.name.localeCompare(b.name);
-    });
+    // Sort: based on sortMode
+    switch (sortMode) {
+      case "newest":
+        filtered.sort((a, b) => {
+          // New remote first, then by date or name
+          const aNew =
+            a.source === "remote" && newRemoteSlugs.has(a.slug) ? 1 : 0;
+          const bNew =
+            b.source === "remote" && newRemoteSlugs.has(b.slug) ? 1 : 0;
+          if (aNew !== bNew) return bNew - aNew;
+          return (
+            (b.updatedAt || b.createdAt || "").localeCompare(
+              a.updatedAt || a.createdAt || ""
+            ) || a.name.localeCompare(b.name)
+          );
+        });
+        break;
+      case "name-asc":
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name-desc":
+        filtered.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "nodes":
+        filtered.sort((a, b) => b.nodeCount - a.nodeCount);
+        break;
+    }
 
     return filtered;
   }, [
@@ -200,43 +297,73 @@ export function TemplateExplorerView({
     debouncedSearch,
     categoryFilter,
     sourceFilter,
-    selectedTags,
+    generationFilter,
+    selectedTaskSlugs,
+    selectedProviderSlugs,
     newRemoteSlugs,
     localSlugs,
+    sortMode,
+    taxonomyTags,
   ]);
 
-  // Collect all unique tags
-  const availableTags = useMemo(() => {
-    const tags = new Set<string>();
-    allTemplates.forEach((t) => {
-      t.tags.forEach((tag) => tags.add(tag));
-      t.techTags.forEach((tag) => tags.add(tag));
-    });
-    return Array.from(tags).sort();
-  }, [allTemplates]);
+  // Split taxonomy tags by groupKey
+  const taskTags = useMemo(
+    () => taxonomyTags.filter((t) => t.groupKey === "task"),
+    [taxonomyTags]
+  );
+  const providerTags = useMemo(
+    () => taxonomyTags.filter((t) => t.groupKey === "provider"),
+    [taxonomyTags]
+  );
+  const generationTags = useMemo(
+    () => taxonomyTags.filter((t) => t.groupKey === "generation"),
+    [taxonomyTags]
+  );
 
-  const toggleTag = useCallback((tag: string) => {
-    setSelectedTags((prev) => {
+  // Helper to toggle slug sets
+  function toggleSlugSet(
+    setter: React.Dispatch<React.SetStateAction<Set<string>>>,
+    slug: string
+  ) {
+    setter((prev) => {
       const next = new Set(prev);
-      if (next.has(tag)) next.delete(tag);
-      else next.add(tag);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
       return next;
     });
-  }, []);
+  }
+
+  // Helper to get tag labels from slugs
+  function getTagLabelsBySlugs(
+    slugs: Set<string>,
+    taxonomy: TemplateTag[]
+  ): Set<string> {
+    const labels = new Set<string>();
+    for (const slug of slugs) {
+      const tag = taxonomy.find((t) => t.slug === slug);
+      if (tag) labels.add(tag.label);
+    }
+    return labels;
+  }
 
   const clearFilters = useCallback(() => {
     setSearchQuery("");
     setDebouncedSearch("");
     setCategoryFilter("all");
     setSourceFilter("all");
-    setSelectedTags(new Set());
+    setGenerationFilter(null);
+    setSelectedTaskSlugs(new Set());
+    setSelectedProviderSlugs(new Set());
+    setSortMode("newest");
   }, []);
 
   const hasActiveFilters =
     searchQuery ||
     categoryFilter !== "all" ||
     sourceFilter !== "all" ||
-    selectedTags.size > 0;
+    generationFilter !== null ||
+    selectedTaskSlugs.size > 0 ||
+    selectedProviderSlugs.size > 0;
   const hasNoResults = filteredTemplates.length === 0 && !isLoadingList;
 
   // ─── Fetch local templates ─────────────────────────────────────
@@ -516,10 +643,73 @@ export function TemplateExplorerView({
             />
           </div>
 
+          {/* Browse */}
+          <div className="space-y-2">
+            <h3 className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider">
+              Browse
+            </h3>
+            <button
+              onClick={() => setGenerationFilter(null)}
+              className={`
+                w-full px-3 py-1.5 text-xs font-medium rounded-md text-left transition-colors flex items-center justify-between
+                ${
+                  generationFilter === null
+                    ? "bg-[var(--accent)]/20 border border-[var(--accent)]/50 text-[var(--accent)]"
+                    : "bg-neutral-700/30 border border-transparent text-neutral-400 hover:bg-neutral-700/50 hover:text-neutral-300"
+                }
+              `}
+            >
+              <span>All Templates</span>
+              <span className="text-[10px] opacity-60">{filteredTemplates.length}</span>
+            </button>
+          </div>
+
+          {/* Generation Type */}
+          {generationTags.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider">
+                Generation Type
+              </h3>
+              <div className="flex flex-col gap-1">
+                {generationTags.map((tag) => {
+                  const count = filteredTemplates.filter((t) => {
+                    const allTags = [
+                      ...t.tags,
+                      ...t.techTags,
+                      ...(t.taskTags || []),
+                    ];
+                    return allTags.includes(tag.label);
+                  }).length;
+                  return (
+                    <button
+                      key={tag.slug}
+                      onClick={() =>
+                        setGenerationFilter(
+                          generationFilter === tag.slug ? null : tag.slug
+                        )
+                      }
+                      className={`
+                        w-full px-3 py-1.5 text-xs font-medium rounded-md text-left transition-colors flex items-center justify-between
+                        ${
+                          generationFilter === tag.slug
+                            ? "bg-[var(--accent)]/20 border border-[var(--accent)]/50 text-[var(--accent)]"
+                            : "bg-neutral-700/30 border border-transparent text-neutral-400 hover:bg-neutral-700/50 hover:text-neutral-300"
+                        }
+                      `}
+                    >
+                      <span>{tag.label}</span>
+                      <span className="text-[10px] opacity-60">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Source Filter */}
           {remoteTemplates.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+              <h3 className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider">
                 Source
               </h3>
               <div className="flex flex-col gap-1">
@@ -534,7 +724,7 @@ export function TemplateExplorerView({
                     key={option.id}
                     onClick={() => setSourceFilter(option.id)}
                     className={`
-                      px-3 py-1.5 text-xs font-medium rounded-md text-left transition-colors flex items-center justify-between
+                      w-full px-3 py-1.5 text-xs font-medium rounded-md text-left transition-colors flex items-center justify-between
                       ${
                         sourceFilter === option.id
                           ? "bg-[var(--accent)]/20 border border-[var(--accent)]/50 text-[var(--accent)]"
@@ -561,7 +751,7 @@ export function TemplateExplorerView({
 
           {/* Category Filters */}
           <div className="space-y-2">
-            <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+            <h3 className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider">
               Category
             </h3>
             <div className="flex flex-col gap-1">
@@ -570,7 +760,7 @@ export function TemplateExplorerView({
                   key={option.id}
                   onClick={() => setCategoryFilter(option.id)}
                   className={`
-                    px-3 py-1.5 text-xs font-medium rounded-md text-left transition-colors
+                    w-full px-3 py-1.5 text-xs font-medium rounded-md text-left transition-colors
                     ${
                       categoryFilter === option.id
                         ? "bg-[var(--accent)]/20 border border-[var(--accent)]/50 text-[var(--accent)]"
@@ -581,35 +771,6 @@ export function TemplateExplorerView({
                   {option.label}
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* Tags Filter */}
-          <div className="space-y-2">
-            <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
-              Tags
-            </h3>
-            <div className="flex flex-col gap-1">
-              {availableTags.length > 0 ? (
-                availableTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => toggleTag(tag)}
-                    className={`
-                      px-3 py-1.5 text-xs font-medium rounded-md text-left transition-colors
-                      ${
-                        selectedTags.has(tag)
-                          ? "bg-[var(--accent)]/20 border border-[var(--accent)]/50 text-[var(--accent)]"
-                          : "bg-neutral-700/30 border border-transparent text-neutral-400 hover:bg-neutral-700/50 hover:text-neutral-300"
-                      }
-                    `}
-                  >
-                    {tag}
-                  </button>
-                ))
-              ) : (
-                <p className="text-xs text-neutral-600">No tags available</p>
-              )}
             </div>
           </div>
 
@@ -684,64 +845,135 @@ export function TemplateExplorerView({
             </div>
           )}
 
-          {/* Templates Grid */}
+          {/* Filter Bar + Templates Grid */}
           {!isLoadingList && filteredTemplates.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                Templates ({filteredTemplates.length})
-                {localCount > 0 && remoteCount > 0 && (
-                  <span className="font-normal ml-2 text-neutral-500">
-                    {localCount} local, {remoteCount} online
-                  </span>
-                )}
-              </h3>
+            <div className="space-y-4">
+              <TemplateFilterBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                taskTags={taskTags}
+                providerTags={providerTags}
+                selectedTaskSlugs={selectedTaskSlugs}
+                selectedProviderSlugs={selectedProviderSlugs}
+                onToggleTask={(slug) => toggleSlugSet(setSelectedTaskSlugs, slug)}
+                onToggleProvider={(slug) =>
+                  toggleSlugSet(setSelectedProviderSlugs, slug)
+                }
+                sortMode={sortMode}
+                onSortChange={setSortMode}
+                viewMode={viewMode}
+                onViewChange={handleViewChange}
+              />
 
-              <div className="grid grid-cols-1 gap-3">
-                {filteredTemplates.map((template) => (
-                  <TemplateCard
-                    key={`${template.source}-${template.slug}`}
-                    template={template}
-                    isLoading={
-                      loadingTemplateSlug === template.slug ||
-                      installingSlug === template.slug
-                    }
-                    isNew={
-                      template.source === "remote" &&
-                      newRemoteSlugs.has(template.slug)
-                    }
-                    isInstalled={
-                      template.source === "remote" &&
-                      localSlugs.has(template.slug)
-                    }
-                    onUseWorkflow={
-                      template.source === "local"
-                        ? () => handleUseTemplate(template.slug)
-                        : template.source === "remote" && localSlugs.has(template.slug)
-                          ? () => handleUseTemplate(template.slug)
-                          : () => handleInstallTemplate(template.slug)
-                    }
-                    onDelete={
-                      template.source === "local"
-                        ? () => handleDeleteTemplate(template.slug)
-                        : undefined
-                    }
-                    onEdit={
-                      template.source === "local"
-                        ? () => handleEditTemplate(template.slug)
-                        : undefined
-                    }
-                    disabled={
-                      (isLoading || installingSlug !== null) &&
-                      loadingTemplateSlug !== template.slug &&
-                      installingSlug !== template.slug
-                    }
-                    remoteBaseUrl={
-                      template.source === "remote"
-                        ? template.sourceUrl || REGISTRY_BASE_URL
-                        : undefined
-                    }
-                  />
-                ))}
+              <div>
+                <h3 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-3">
+                  Templates ({filteredTemplates.length})
+                  {localCount > 0 && remoteCount > 0 && (
+                    <span className="font-normal ml-2 text-neutral-500">
+                      {localCount} local, {remoteCount} online
+                    </span>
+                  )}
+                </h3>
+
+                {viewMode === "grid" ? (
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
+                    {filteredTemplates.map((template) => (
+                      <TemplateGridCard
+                        key={`${template.source}-${template.slug}`}
+                        template={template}
+                        isLoading={
+                          loadingTemplateSlug === template.slug ||
+                          installingSlug === template.slug
+                        }
+                        isNew={
+                          template.source === "remote" &&
+                          newRemoteSlugs.has(template.slug)
+                        }
+                        isInstalled={
+                          template.source === "remote" &&
+                          localSlugs.has(template.slug)
+                        }
+                        onUseWorkflow={
+                          template.source === "local"
+                            ? () => handleUseTemplate(template.slug)
+                            : template.source === "remote" &&
+                              localSlugs.has(template.slug)
+                            ? () => handleUseTemplate(template.slug)
+                            : () => handleInstallTemplate(template.slug)
+                        }
+                        onDelete={
+                          template.source === "local"
+                            ? () => handleDeleteTemplate(template.slug)
+                            : undefined
+                        }
+                        onEdit={
+                          template.source === "local"
+                            ? () => handleEditTemplate(template.slug)
+                            : undefined
+                        }
+                        disabled={
+                          (isLoading || installingSlug !== null) &&
+                          loadingTemplateSlug !== template.slug &&
+                          installingSlug !== template.slug
+                        }
+                        remoteBaseUrl={
+                          template.source === "remote"
+                            ? template.sourceUrl || REGISTRY_BASE_URL
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {filteredTemplates.map((template) => (
+                      <TemplateCard
+                        key={`${template.source}-${template.slug}`}
+                        template={template}
+                        isLoading={
+                          loadingTemplateSlug === template.slug ||
+                          installingSlug === template.slug
+                        }
+                        isNew={
+                          template.source === "remote" &&
+                          newRemoteSlugs.has(template.slug)
+                        }
+                        isInstalled={
+                          template.source === "remote" &&
+                          localSlugs.has(template.slug)
+                        }
+                        onUseWorkflow={
+                          template.source === "local"
+                            ? () => handleUseTemplate(template.slug)
+                            : template.source === "remote" &&
+                              localSlugs.has(template.slug)
+                            ? () => handleUseTemplate(template.slug)
+                            : () => handleInstallTemplate(template.slug)
+                        }
+                        onDelete={
+                          template.source === "local"
+                            ? () => handleDeleteTemplate(template.slug)
+                            : undefined
+                        }
+                        onEdit={
+                          template.source === "local"
+                            ? () => handleEditTemplate(template.slug)
+                            : undefined
+                        }
+                        disabled={
+                          (isLoading || installingSlug !== null) &&
+                          loadingTemplateSlug !== template.slug &&
+                          installingSlug !== template.slug
+                        }
+                        remoteBaseUrl={
+                          template.source === "remote"
+                            ? template.sourceUrl || REGISTRY_BASE_URL
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

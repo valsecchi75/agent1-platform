@@ -59,6 +59,7 @@ function buildMeta(data: TemplatePack, previewFrames: string[]): TemplatePackMet
     category: data.category,
     tags: data.tags,
     techTags: data.techTags,
+    taskTags: data.taskTags || [],
     nodeCount: data.nodeCount ?? data.nodes?.length ?? 0,
     previewFrames,
   };
@@ -172,6 +173,7 @@ export function listTemplates(): TemplatePackMeta[] {
           category: "simple" as TemplateCategory,
           tags: [],
           techTags: [],
+          taskTags: [],
           nodeCount: 0,
           previewFrames: getPreviewFrames(slug),
         };
@@ -235,32 +237,42 @@ export function getTemplate(slug: string): TemplatePack | null {
 }
 
 /**
- * Create a new template with optional preview images
+ * Create a new template with optional preview images.
+ * If upsert=true and the template already exists, updates it instead of throwing an error.
+ * If upsert=false (default) and the template exists, throws an error.
  */
 export function createTemplate(
   slug: string,
   data: TemplatePack,
-  previewImages?: Array<{ filename: string; buffer: Buffer }>
+  previewImages?: Array<{ filename: string; buffer: Buffer }>,
+  upsert: boolean = false
 ): string {
   ensureTemplatesDir();
 
   const templateDir = path.join(TEMPLATES_DIR, slug);
+  const templateExists = fs.existsSync(templateDir);
 
   // Check if slug already exists
-  if (fs.existsSync(templateDir)) {
+  if (templateExists && !upsert) {
     throw new Error(`Template with slug "${slug}" already exists`);
   }
 
-  // Create template directory
+  // Create template directory (mkdirSync with recursive: true is safe if already exists)
   fs.mkdirSync(templateDir, { recursive: true });
 
   // Write template.json
   const templatePath = path.join(templateDir, "template.json");
   fs.writeFileSync(templatePath, JSON.stringify(data, null, 2), "utf-8");
 
-  // Write preview images if provided
+  // Handle preview images
   if (previewImages && previewImages.length > 0) {
     const previewDir = path.join(templateDir, "preview");
+
+    // Clear existing preview folder if updating
+    if (templateExists && fs.existsSync(previewDir)) {
+      fs.rmSync(previewDir, { recursive: true, force: true });
+    }
+
     fs.mkdirSync(previewDir, { recursive: true });
 
     for (const { filename, buffer } of previewImages) {
@@ -554,8 +566,9 @@ export function detectTechTags(nodes: WorkflowNode[]): string[] {
 }
 
 /**
- * Install a template from a remote source
- * Same as createTemplate but sets source metadata appropriately
+ * Install a template from a remote source.
+ * Uses upsert=true so if the template already exists, it's updated instead of throwing an error.
+ * Sets source metadata appropriately.
  */
 export function installRemoteTemplate(
   slug: string,
@@ -564,15 +577,21 @@ export function installRemoteTemplate(
   sourceUrl: string,
   registryVersion: string
 ): string {
+  ensureTemplatesDir();
+
+  // Get existing createdAt if template already exists, otherwise use current time
+  const existingTemplate = getTemplate(slug);
+  const createdAt = existingTemplate?.createdAt ?? new Date().toISOString();
+
   const data: TemplatePack = {
     ...templateData,
     slug,
     source: "remote",
     sourceUrl,
     registryVersion,
-    createdAt: new Date().toISOString(),
+    createdAt,
     updatedAt: new Date().toISOString(),
   };
 
-  return createTemplate(slug, data, previewImages);
+  return createTemplate(slug, data, previewImages, true);
 }

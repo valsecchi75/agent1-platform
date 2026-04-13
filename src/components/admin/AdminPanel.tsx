@@ -14,6 +14,7 @@ import { AdminDepartmentList } from "./AdminDepartmentList";
 import { AdminUserList } from "./AdminUserList";
 import { AdminStatsTab } from "./AdminStatsTab";
 import { AdminSystemTab } from "./AdminSystemTab";
+import { AdminTagTaxonomy } from "./AdminTagTaxonomy";
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -40,9 +41,10 @@ export function AdminPanel({
     tabs.push({ id: "users", label: "Users" });
   }
 
-  // Only admin gets stats and system
+  // Only admin gets stats, tags, and system
   if (userRole === "admin") {
     tabs.push({ id: "stats", label: "Analytics" });
+    tabs.push({ id: "tags", label: "Tags" });
     tabs.push({ id: "system", label: "System" });
   }
 
@@ -72,6 +74,7 @@ export function AdminPanel({
           )}
           {activeTab === "users" && <AdminUserList userRole={userRole} />}
           {activeTab === "stats" && <AdminStatsTab />}
+          {activeTab === "tags" && <AdminTagTaxonomy />}
           {activeTab === "system" && <AdminSystemTab />}
         </DialogBody>
       </DialogContent>

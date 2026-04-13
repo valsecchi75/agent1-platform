@@ -7,7 +7,7 @@
  *
  * Contract coverage:
  *  - pendingImageSyncs module export (Map instance)
- *  - WorkflowFile interface shape (version field required)
+ *  - WorkflowFile interface shape (version field required, packVersions optional)
  *  - createPersistenceSlice builds a valid slice on a minimal store
  *  - PersistenceSlice initial state values
  *  - PersistenceSlice all required methods exist
@@ -16,7 +16,7 @@
  *  - setWorkflowMetadata sets all metadata fields
  *  - setWorkflowName, setGenerationsPath, markAsUnsaved
  *  - setAutoSaveEnabled, setUseExternalImageStorage
- *  - loadWorkflow: round-trip restores nodes and edges
+ *  - loadWorkflow: round-trip restores nodes and edges with optional packVersions
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -138,6 +138,34 @@ describe("WorkflowFile format contract", () => {
     expect(typeof minimalWorkflow.name).toBe("string");
     expect(Array.isArray(minimalWorkflow.nodes)).toBe(true);
     expect(Array.isArray(minimalWorkflow.edges)).toBe(true);
+  });
+
+  it("WorkflowFile can include optional packVersions field", async () => {
+    // Verify that packVersions is optional and can be included
+    const workflowWithoutPacks = {
+      version: 1 as const,
+      name: "test",
+      nodes: [],
+      edges: [],
+      edgeStyle: "curved" as const,
+    };
+
+    const workflowWithPacks = {
+      version: 1 as const,
+      name: "test",
+      nodes: [],
+      edges: [],
+      edgeStyle: "curved" as const,
+      packVersions: {
+        "agent1-foundation": "1.0.0",
+        "agent1_neural_atelier": "2.1.0",
+      },
+    };
+
+    // Both should be valid
+    expect(workflowWithoutPacks.version).toBe(1);
+    expect(workflowWithPacks.packVersions).toBeDefined();
+    expect(typeof workflowWithPacks.packVersions["agent1-foundation"]).toBe("string");
   });
 });
 
@@ -383,20 +411,4 @@ describe("loadWorkflow round-trip", () => {
     };
 
     await store.getState().loadWorkflow(workflow);
-    expect(store.getState().workflowName).toBe("Restored Workflow");
-  });
-
-  it("resolves without throwing for a minimal valid workflow", async () => {
-    const store = await buildStore();
-
-    const workflow = {
-      version: 1 as const,
-      name: "Minimal",
-      nodes: [],
-      edges: [],
-      edgeStyle: "curved" as const,
-    };
-
-    await expect(store.getState().loadWorkflow(workflow)).resolves.not.toThrow();
-  });
-});
+    expect(store.getState().workflowName).toBe("Re

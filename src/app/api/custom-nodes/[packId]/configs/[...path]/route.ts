@@ -35,7 +35,8 @@ const BINARY_EXTENSIONS = new Set([
  * old and new URLs work without breaking existing workflows.
  */
 const PACK_ALIASES: Record<string, string> = {
-  comfyui_morpheus_model_management: "morpheus-model-management",
+  comfyui_morpheus_model_management: "agent1_morpheus_model_management",
+  "morpheus-model-management": "agent1_morpheus_model_management",
   comfyui_neural_atelier: "agent1_neural_atelier",
 };
 

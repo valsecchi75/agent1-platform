@@ -1,0 +1,19 @@
+{
+  "id": "agent1_neural_atelier",
+  "name": "Neural Atelier",
+  "displayName": "Neural Atelier — Fashion AI",
+  "version": "1.0.0",
+  "author": "AGENT 1 Team",
+  "description": "Fashion-focused AI nodes: sketch-to-photo, styling detail, recoloring",
+  "category": "image",
+  "minAppVersion": "0.9.0",
+  "isCore": false,
+  "removable": true,
+  "hasSpecs": true,
+  "nodes": [
+    { "type": "naSketchToPhoto", "name": "Sketch to Photo", "category": "image-generation", "specFile": "specs/naSketchToPhoto.json" },
+    { "type": "naStylingDetail", "name": "Styling Detail", "category": "image-generation", "specFile": "specs/naStylingDetail.json" },
+    { "type": "naRecolor", "name": "Recolor", "category": "image-generation", "specFile": "specs/naRecolor.json" }
+  ],
+  "dependencies": []
+}

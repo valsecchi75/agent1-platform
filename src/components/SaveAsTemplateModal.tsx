@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useRef, ChangeEvent, KeyboardEvent } from "react";
-import { X, Upload, Tag, Plus } from "lucide-react";
+import { useState, useEffect, useRef, ChangeEvent } from "react";
+import { X, Upload, Tag, ChevronDown, ChevronRight, Check } from "lucide-react";
 import type { WorkflowNode } from "@/types/nodes";
 import type { WorkflowEdge } from "@/types/workflow";
 import type { TemplatePack } from "@/types/templates";
 import { TEMPLATE_CATEGORIES, TECH_TAG_MAP } from "@/types/templates";
+import type { TemplateTag, TagGroup } from "@/types/templateTags";
+import { TAG_GROUP_LABELS } from "@/types/templateTags";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +27,7 @@ interface SaveAsTemplateModalProps {
   currentEdgeStyle: string;
   currentGroups?: unknown[];
   currentWorkflowName: string | null;
+  editingTemplate?: TemplatePack | null; // For editing existing templates
 }
 
 interface PreviewImage {
@@ -34,8 +37,23 @@ interface PreviewImage {
 }
 
 /**
+ * Mapping from auto-detected techTag labels to taxonomy tag labels.
+ * Used to auto-check taxonomy checkboxes based on detected node types.
+ */
+const TECH_TO_TAXONOMY_MAP: Record<string, { label: string; group: TagGroup }> = {
+  "Nano Banana": { label: "Nano Banana", group: "provider" },
+  "LLM": { label: "LLM", group: "generation" },
+  "Video Gen": { label: "Video", group: "generation" },
+  "Audio Gen": { label: "Audio", group: "generation" },
+  "3D Gen": { label: "3D", group: "generation" },
+  "Gemini": { label: "Gemini", group: "provider" },
+  "fal.ai": { label: "fal.ai", group: "provider" },
+  "Replicate": { label: "Replicate", group: "provider" },
+  "Veo": { label: "Veo", group: "provider" },
+};
+
+/**
  * Detects tech tags from the workflow nodes
- * Scans node types and model providers to auto-tag the template
  */
 function detectTechTags(nodes: WorkflowNode[]): string[] {
   const tags = new Set<string>();
@@ -44,7 +62,6 @@ function detectTechTags(nodes: WorkflowNode[]): string[] {
     const type = node.type;
     const data = node.data;
 
-    // Check direct node type mapping
     if (type in TECH_TAG_MAP) {
       const mapped = TECH_TAG_MAP[type];
       if (typeof mapped === "string") {
@@ -52,11 +69,9 @@ function detectTechTags(nodes: WorkflowNode[]): string[] {
       }
     }
 
-    // Check for model provider in node data
     if (data && typeof data === "object") {
       const nodeData = data as Record<string, unknown>;
 
-      // Check for gemini model
       if (
         (nodeData.model && typeof nodeData.model === "string" && nodeData.model.includes("gemini")) ||
         (nodeData.provider && nodeData.provider === "google")
@@ -64,7 +79,6 @@ function detectTechTags(nodes: WorkflowNode[]): string[] {
         tags.add("Gemini");
       }
 
-      // Check for fal.ai provider
       if (nodeData.selectedModel && typeof nodeData.selectedModel === "object") {
         const model = nodeData.selectedModel as Record<string, unknown>;
         if (model.provider === "fal") {
@@ -74,7 +88,6 @@ function detectTechTags(nodes: WorkflowNode[]): string[] {
         }
       }
 
-      // Check for veo model
       if (nodeData.model && typeof nodeData.model === "string" && nodeData.model.includes("veo")) {
         tags.add("Veo");
       }
@@ -84,9 +97,6 @@ function detectTechTags(nodes: WorkflowNode[]): string[] {
   return Array.from(tags).sort();
 }
 
-/**
- * Generates a URL-safe slug from a name
- */
 function generateSlug(name: string): string {
   return name
     .toLowerCase()
@@ -95,13 +105,7 @@ function generateSlug(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-/**
- * Compress base64 images in workflow nodes to lightweight thumbnails.
- * Keeps images as visual reference for users loading the template,
- * but reduces them to ~512px JPEG thumbnails to keep the JSON small.
- */
 async function compressNodeImages(nodes: WorkflowNode[], maxDim = 512, quality = 0.6): Promise<WorkflowNode[]> {
-  // Helper: compress a single data URL, skip non-base64 and null values
   const compress = (val: unknown): Promise<unknown> => {
     if (typeof val === "string" && val.startsWith("data:image")) {
       return resizePreviewImage(val, maxDim, quality);
@@ -115,25 +119,19 @@ async function compressNodeImages(nodes: WorkflowNode[], maxDim = 512, quality =
       if (!data) return node;
 
       const cleaned = { ...data };
-
-      // Compress single image fields
       cleaned.outputImage = await compress(cleaned.outputImage);
       cleaned.image = await compress(cleaned.image);
       cleaned.sourceImage = await compress(cleaned.sourceImage);
 
-      // Compress inputImages array
       if (Array.isArray(cleaned.inputImages)) {
         cleaned.inputImages = await Promise.all(
           cleaned.inputImages.map((img: unknown) => compress(img))
         );
       }
 
-      // Compress imageHistory — keep only the currently selected image (latest)
-      // to avoid bloat from many carousel entries
       if (Array.isArray(cleaned.imageHistory)) {
         const history = cleaned.imageHistory as Record<string, unknown>[];
         if (history.length > 0) {
-          // Keep only the last entry (most recent generation), compress it
           const latest = { ...history[history.length - 1] };
           if (typeof latest.base64 === "string" && (latest.base64 as string).startsWith("data:image")) {
             latest.base64 = await resizePreviewImage(latest.base64 as string, maxDim, quality);
@@ -143,14 +141,12 @@ async function compressNodeImages(nodes: WorkflowNode[], maxDim = 512, quality =
         }
       }
 
-      // Compress outputGallery
       if (Array.isArray(cleaned.outputGallery)) {
         cleaned.outputGallery = await Promise.all(
           cleaned.outputGallery.map((img: unknown) => compress(img))
         );
       }
 
-      // Strip blob URLs (these are runtime-only, can't be persisted)
       if (typeof cleaned.videoUrl === "string" && (cleaned.videoUrl as string).startsWith("blob:")) {
         cleaned.videoUrl = null;
       }
@@ -160,10 +156,6 @@ async function compressNodeImages(nodes: WorkflowNode[], maxDim = 512, quality =
   );
 }
 
-/**
- * Resize a data URL image to a max dimension for preview thumbnails.
- * Returns a compressed JPEG data URL.
- */
 function resizePreviewImage(dataUrl: string, maxDim = 800, quality = 0.7): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -181,14 +173,11 @@ function resizePreviewImage(dataUrl: string, maxDim = 800, quality = 0.7): Promi
       ctx?.drawImage(img, 0, 0, width, height);
       resolve(canvas.toDataURL("image/jpeg", quality));
     };
-    img.onerror = () => resolve(dataUrl); // fallback to original on error
+    img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
   });
 }
 
-/**
- * Converts a File to a base64 data URL
- */
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -207,39 +196,147 @@ export function SaveAsTemplateModal({
   currentEdgeStyle,
   currentGroups,
   currentWorkflowName,
+  editingTemplate,
 }: SaveAsTemplateModalProps) {
   const [name, setName] = useState(currentWorkflowName || "");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<"simple" | "advanced" | "production" | "experimental">("simple");
   const [author, setAuthor] = useState("User");
-  const [customTags, setCustomTags] = useState<string[]>([]);
-  const [customTagInput, setCustomTagInput] = useState("");
+  const [selectedTagSlugs, setSelectedTagSlugs] = useState<Set<string>>(new Set());
+  const [customTags, setCustomTags] = useState<string[]>([]); // Legacy/unmatched tags
+  const [taxonomyTags, setTaxonomyTags] = useState<TemplateTag[]>([]);
+  const [taxonomyLoading, setTaxonomyLoading] = useState(true);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<TagGroup>>(new Set());
   const [previewImages, setPreviewImages] = useState<PreviewImage[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Map Dialog's open prop and onOpenChange callback
+  const detectedTechTags = detectTechTags(currentNodes);
+
+  // Fetch taxonomy tags on mount
+  useEffect(() => {
+    if (!isOpen) return;
+    setTaxonomyLoading(true);
+    fetch("/api/template-tags")
+      .then((res) => res.json())
+      .then((data) => {
+        const tags = (data.tags || []) as TemplateTag[];
+        setTaxonomyTags(tags);
+
+        // Auto-select tags based on detected tech tags
+        const autoSlugs = new Set<string>();
+        for (const techTag of detectedTechTags) {
+          const mapping = TECH_TO_TAXONOMY_MAP[techTag];
+          if (mapping) {
+            const found = tags.find(
+              (t) => t.label === mapping.label && t.groupKey === mapping.group
+            );
+            if (found) autoSlugs.add(found.slug);
+          }
+        }
+
+        // If we have an "Image" node type detected (nanoBanana produces images),
+        // also auto-check "Image" in generation group
+        if (detectedTechTags.includes("Nano Banana") || currentNodes.some(n => n.type === "nanoBanana")) {
+          const imageTag = tags.find(t => t.label === "Image" && t.groupKey === "generation");
+          if (imageTag) autoSlugs.add(imageTag.slug);
+        }
+
+        // If editing existing template, pre-select matching taxonomy tags
+        if (editingTemplate) {
+          const allExistingLabels = [
+            ...(editingTemplate.tags || []),
+            ...(editingTemplate.techTags || []),
+            ...(editingTemplate.taskTags || []),
+          ];
+          const taxonomyLabels = new Set(tags.map((t) => t.label));
+
+          for (const label of allExistingLabels) {
+            const found = tags.find((t) => t.label === label);
+            if (found) autoSlugs.add(found.slug);
+          }
+
+          // Preserve custom/unmatched tags
+          const unmatchedTags = (editingTemplate.tags || []).filter(
+            (label) => !taxonomyLabels.has(label) && !detectedTechTags.includes(label)
+          );
+          setCustomTags(unmatchedTags);
+        }
+
+        setSelectedTagSlugs(autoSlugs);
+      })
+      .catch(() => {
+        setTaxonomyTags([]);
+      })
+      .finally(() => setTaxonomyLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Populate fields when editing
+  useEffect(() => {
+    if (editingTemplate && isOpen) {
+      setName(editingTemplate.name);
+      setDescription(editingTemplate.description);
+      setCategory(editingTemplate.category);
+      setAuthor(editingTemplate.author);
+    }
+  }, [editingTemplate, isOpen]);
+
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && !isLoading) {
       onClose();
     }
   };
 
-  const detectedTechTags = detectTechTags(currentNodes);
-  const allTags = [...new Set([...detectedTechTags, ...customTags])];
+  // Group taxonomy tags by groupKey
+  const tagsByGroup = taxonomyTags.reduce<Record<TagGroup, TemplateTag[]>>(
+    (acc, tag) => {
+      if (!acc[tag.groupKey]) acc[tag.groupKey] = [];
+      acc[tag.groupKey].push(tag);
+      return acc;
+    },
+    { generation: [], task: [], provider: [], style: [] }
+  );
 
-  const handleAddCustomTag = () => {
-    const trimmed = customTagInput.trim();
-    if (trimmed && !allTags.includes(trimmed)) {
-      setCustomTags((prev) => [...prev, trimmed]);
-      setCustomTagInput("");
+  // Determine which slugs are auto-detected (disabled checkboxes)
+  const autoDetectedSlugs = new Set<string>();
+  for (const techTag of detectedTechTags) {
+    const mapping = TECH_TO_TAXONOMY_MAP[techTag];
+    if (mapping) {
+      const found = taxonomyTags.find(
+        (t) => t.label === mapping.label && t.groupKey === mapping.group
+      );
+      if (found) autoDetectedSlugs.add(found.slug);
     }
+  }
+  // Also check Image auto-detect
+  if (detectedTechTags.includes("Nano Banana") || currentNodes.some(n => n.type === "nanoBanana")) {
+    const imageTag = taxonomyTags.find(t => t.label === "Image" && t.groupKey === "generation");
+    if (imageTag) autoDetectedSlugs.add(imageTag.slug);
+  }
+
+  const handleToggleTag = (slug: string) => {
+    if (autoDetectedSlugs.has(slug)) return; // Can't uncheck auto-detected
+    setSelectedTagSlugs((prev) => {
+      const next = new Set(prev);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
+      return next;
+    });
   };
 
-  const handleRemoveCustomTag = (tag: string) => {
-    setCustomTags((prev) => prev.filter((t) => t !== tag));
+  const toggleGroupCollapse = (group: TagGroup) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(group)) next.delete(group);
+      else next.add(group);
+      return next;
+    });
   };
+
+  // Unmatched detected tech tags that don't map to any taxonomy entry
+  const unmatchedTechTags = detectedTechTags.filter((tag) => !TECH_TO_TAXONOMY_MAP[tag]);
 
   const handleRemovePreviewImage = (id: string) => {
     setPreviewImages((prev) => prev.filter((img) => img.id !== id));
@@ -248,10 +345,8 @@ export function SaveAsTemplateModal({
   const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
     if (!files) return;
-
     const validTypes = ["image/jpeg", "image/png", "image/webp"];
     const newImages: PreviewImage[] = [];
-
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -259,25 +354,15 @@ export function SaveAsTemplateModal({
           setError(`File "${file.name}" is not a valid image type (jpg, png, webp)`);
           continue;
         }
-
         const dataUrl = await fileToDataUrl(file);
-        newImages.push({
-          id: `preview-${Date.now()}-${i}`,
-          url: dataUrl,
-          filename: file.name,
-        });
+        newImages.push({ id: `preview-${Date.now()}-${i}`, url: dataUrl, filename: file.name });
       }
-
       setPreviewImages((prev) => [...prev, ...newImages]);
       setError(null);
     } catch (err) {
       setError(`Failed to read image file: ${err instanceof Error ? err.message : "Unknown error"}`);
     }
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleDropZoneClick = () => {
@@ -292,13 +377,10 @@ export function SaveAsTemplateModal({
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     const files = e.dataTransfer.files;
     if (!files) return;
-
     const validTypes = ["image/jpeg", "image/png", "image/webp"];
     const newImages: PreviewImage[] = [];
-
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -306,15 +388,9 @@ export function SaveAsTemplateModal({
           setError(`File "${file.name}" is not a valid image type (jpg, png, webp)`);
           continue;
         }
-
         const dataUrl = await fileToDataUrl(file);
-        newImages.push({
-          id: `preview-${Date.now()}-${i}`,
-          url: dataUrl,
-          filename: file.name,
-        });
+        newImages.push({ id: `preview-${Date.now()}-${i}`, url: dataUrl, filename: file.name });
       }
-
       setPreviewImages((prev) => [...prev, ...newImages]);
       setError(null);
     } catch (err) {
@@ -322,36 +398,16 @@ export function SaveAsTemplateModal({
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddCustomTag();
-    }
-  };
-
   const handleSaveTemplate = async () => {
-    // Validation
-    if (!name.trim()) {
-      setError("Template name is required");
-      return;
-    }
-
-    if (!description.trim()) {
-      setError("Description is required");
-      return;
-    }
+    if (!name.trim()) { setError("Template name is required"); return; }
+    if (!description.trim()) { setError("Description is required"); return; }
 
     setIsLoading(true);
     setError(null);
 
     try {
       const slug = generateSlug(name);
-
-      // Compress node images to thumbnails (512px JPEG) — keeps visual references
-      // but reduces a 50MB+ workflow to ~1-2MB
       const cleanNodes = await compressNodeImages(currentNodes, 512, 0.6);
-
-      // Compress preview images to reasonable size (800px max, JPEG quality 0.7)
       const compressedPreviews = await Promise.all(
         previewImages.map(async (img) => ({
           filename: img.filename.replace(/\.\w+$/, ".jpg"),
@@ -359,22 +415,36 @@ export function SaveAsTemplateModal({
         }))
       );
 
-      // Build template data
+      // Build tag arrays from selected taxonomy slugs
+      const selectedLabels: string[] = [];
+      const taskTagLabels: string[] = [];
+
+      for (const slug of selectedTagSlugs) {
+        const tag = taxonomyTags.find((t) => t.slug === slug);
+        if (tag) {
+          selectedLabels.push(tag.label);
+          if (tag.groupKey === "task" || tag.groupKey === "style") {
+            taskTagLabels.push(tag.label);
+          }
+        }
+      }
+
+      // Union of all labels (taxonomy + custom + unmatched tech) for backward compat
+      const allTags = [...new Set([...selectedLabels, ...customTags, ...unmatchedTechTags])];
+
       const templateData = {
         name: name.trim(),
         description: description.trim(),
         category,
         tags: allTags,
+        taskTags: taskTagLabels,
         author: author.trim(),
         previewImages: compressedPreviews,
       };
 
-      // POST to /api/templates with workflow data (images stripped)
       const response = await fetch("/api/templates", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...templateData,
           nodes: cleanNodes,
@@ -396,6 +466,8 @@ export function SaveAsTemplateModal({
       setIsLoading(false);
     }
   };
+
+  const groupOrder: TagGroup[] = ["generation", "task", "provider", "style"];
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -456,62 +528,113 @@ export function SaveAsTemplateModal({
             </select>
           </div>
 
-          {/* Tech Tags */}
-          {detectedTechTags.length > 0 && (
-            <div>
-              <label className="block text-sm text-[var(--text-secondary)] mb-2">Auto-Detected Tech Tags</label>
-              <div className="flex flex-wrap gap-2">
-                {detectedTechTags.map((tag) => (
-                  <div
-                    key={tag}
-                    className="inline-flex items-center gap-1.5 px-2 py-1 bg-[var(--surface-2)] border border-[var(--border)] rounded-full"
-                  >
-                    <Tag size={14} className="text-[var(--text-secondary)]" />
-                    <span className="text-xs text-[var(--text-secondary)]">{tag}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Custom Tags */}
+          {/* Tag Taxonomy Selector */}
           <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">Custom Tags</label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={customTagInput}
-                onChange={(e) => setCustomTagInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Add a tag and press Enter"
-                disabled={isLoading}
-                className="flex-1 px-3 py-2 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:border-[var(--input-focus)] disabled:opacity-50 transition-colors"
-              />
-              <button
-                onClick={handleAddCustomTag}
-                disabled={isLoading || !customTagInput.trim()}
-                className="px-3 py-2 bg-[var(--surface-3)] hover:bg-[var(--controls-hover)] disabled:opacity-50 text-[var(--text-primary)] text-sm rounded-lg transition-colors flex items-center gap-1"
-              >
-                <Plus size={16} />
-              </button>
-            </div>
-            {customTags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {customTags.map((tag) => (
-                  <div
-                    key={tag}
-                    className="inline-flex items-center gap-2 px-2 py-1 bg-[var(--surface-3)] border border-[var(--border)] rounded-full"
-                  >
-                    <span className="text-xs text-[var(--text-secondary)]">{tag}</span>
-                    <button
-                      onClick={() => handleRemoveCustomTag(tag)}
-                      disabled={isLoading}
-                      className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-50 transition-colors"
+            <label className="block text-sm text-[var(--text-secondary)] mb-2">Tags</label>
+            {taxonomyLoading ? (
+              <div className="text-xs text-[var(--text-muted)] py-2">Loading tags...</div>
+            ) : (
+              <div className="space-y-2">
+                {groupOrder.map((group) => {
+                  const groupTags = tagsByGroup[group] || [];
+                  if (groupTags.length === 0) return null;
+                  const isCollapsed = collapsedGroups.has(group);
+
+                  return (
+                    <div key={group} className="border border-[var(--border)] rounded-lg overflow-hidden">
+                      {/* Group header */}
+                      <button
+                        type="button"
+                        onClick={() => toggleGroupCollapse(group)}
+                        className="w-full flex items-center gap-2 px-3 py-2 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] transition-colors text-left"
+                      >
+                        {isCollapsed ? (
+                          <ChevronRight size={14} className="text-[var(--text-muted)]" />
+                        ) : (
+                          <ChevronDown size={14} className="text-[var(--text-muted)]" />
+                        )}
+                        <span className="text-xs font-medium text-[var(--text-secondary)]">
+                          {TAG_GROUP_LABELS[group]}
+                        </span>
+                        <span className="text-[10px] text-[var(--text-muted)] ml-auto">
+                          {groupTags.filter((t) => selectedTagSlugs.has(t.slug)).length}/{groupTags.length}
+                        </span>
+                      </button>
+
+                      {/* Tag checkboxes */}
+                      {!isCollapsed && (
+                        <div className="px-3 py-2 grid grid-cols-2 gap-x-4 gap-y-1">
+                          {groupTags.map((tag) => {
+                            const isChecked = selectedTagSlugs.has(tag.slug);
+                            const isAutoDetected = autoDetectedSlugs.has(tag.slug);
+
+                            return (
+                              <label
+                                key={tag.id}
+                                className={`flex items-center gap-2 py-1 cursor-pointer text-xs ${
+                                  isAutoDetected ? "opacity-70" : ""
+                                }`}
+                              >
+                                <div
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleToggleTag(tag.slug);
+                                  }}
+                                  className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
+                                    isChecked
+                                      ? "bg-[var(--accent)] border-[var(--accent)]"
+                                      : "border-[var(--border)] bg-[var(--surface-1)]"
+                                  } ${isAutoDetected ? "cursor-not-allowed" : "cursor-pointer hover:border-[var(--accent)]"}`}
+                                >
+                                  {isChecked && <Check size={12} className="text-white" />}
+                                </div>
+                                <span className="text-[var(--text-primary)] truncate">{tag.label}</span>
+                                {isAutoDetected && (
+                                  <span className="text-[9px] text-[var(--text-muted)] ml-auto flex-shrink-0">auto</span>
+                                )}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Unmatched auto-detected tech tags (no taxonomy entry) */}
+            {unmatchedTechTags.length > 0 && (
+              <div className="mt-2">
+                <span className="text-[10px] text-[var(--text-muted)]">Auto-detected (no taxonomy match):</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {unmatchedTechTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-full text-[10px] text-[var(--text-secondary)]"
                     >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
+                      <Tag size={10} />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Legacy custom tags (from existing template, read-only) */}
+            {customTags.length > 0 && (
+              <div className="mt-2">
+                <span className="text-[10px] text-[var(--text-muted)]">Custom tags (preserved):</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {customTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--surface-3)] border border-[var(--border)] rounded-full text-[10px] text-[var(--text-secondary)]"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -554,7 +677,6 @@ export function SaveAsTemplateModal({
               </div>
             </div>
 
-            {/* Preview Thumbnails */}
             {previewImages.length > 0 && (
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {previewImages.map((img) => (
@@ -584,7 +706,6 @@ export function SaveAsTemplateModal({
               {currentNodes.length} node{currentNodes.length !== 1 ? "s" : ""}
             </div>
           </div>
-
         </DialogBody>
 
         <DialogFooter>

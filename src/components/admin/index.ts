@@ -5,3 +5,4 @@ export { AdminUserList } from "./AdminUserList";
 export { AdminUserForm } from "./AdminUserForm";
 export { AdminStatsTab } from "./AdminStatsTab";
 export { AdminSystemTab } from "./AdminSystemTab";
+export { AdminTagTaxonomy } from "./AdminTagTaxonomy";

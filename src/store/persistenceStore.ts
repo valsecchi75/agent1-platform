@@ -76,6 +76,7 @@ export interface WorkflowFile {
   edges: WorkflowEdge[];
   edgeStyle: EdgeStyle;
   groups?: Record<string, NodeGroup>;
+  packVersions?: Record<string, string>;
 }
 
 // ─── Deps (cross-slice access) ────────────────────────────────────────────────
@@ -189,6 +190,18 @@ export const createPersistenceSlice: StateCreator<
   saveWorkflow: (name?: string) => {
     const { nodes, edges, edgeStyle, groups } = get();
 
+    // Collect pack versions from installed manifests
+    // TODO: Populate from NodePackManager active packs when available
+    // For now, this is a placeholder that can be filled in on save
+    const packVersions: Record<string, string> = {};
+    try {
+      // Attempt to get pack versions from localStorage or Zustand if available
+      // Since we don't have direct access here, document for future integration
+      // This will be properly populated when NodePackManager integration is complete
+    } catch {
+      // Non-critical — just skip if we can't get versions
+    }
+
     const workflow: WorkflowFile = {
       version: 1,
       name: name || `workflow-${new Date().toISOString().slice(0, 10)}`,
@@ -196,6 +209,7 @@ export const createPersistenceSlice: StateCreator<
       edges,
       edgeStyle,
       groups: groups && Object.keys(groups).length > 0 ? groups : undefined,
+      ...(Object.keys(packVersions).length > 0 && { packVersions }),
     };
 
     const json = JSON.stringify(workflow, null, 2);
@@ -228,6 +242,20 @@ export const createPersistenceSlice: StateCreator<
       return max;
     }, 0);
     setGroupIdCounter(maxGroupId);
+
+    // Check pack versions for compatibility warnings
+    if (workflow.packVersions && Object.keys(workflow.packVersions).length > 0) {
+      try {
+        // TODO: Compare with current installed pack versions when NodePackManager integration is complete
+        // For now, just log the saved pack versions for debugging
+        const packInfo = Object.entries(workflow.packVersions)
+          .map(([pack, version]) => `${pack}@${version}`)
+          .join(", ");
+        console.info(`Workflow created with packs: ${packInfo}`);
+      } catch (error) {
+        console.warn("Failed to check pack version compatibility:", error);
+      }
+    }
 
     // Migrate legacy nanoBanana nodes
     workflow.nodes = workflow.nodes.map((node) => {
@@ -430,6 +458,17 @@ export const createPersistenceSlice: StateCreator<
         set({ nodes: currentNodes, workflowId: newWorkflowId });
       }
 
+      // Collect pack versions from installed manifests
+      // TODO: Integrate with NodePackManager to get current pack versions
+      // For now, this is a placeholder for future phase where pack metadata is available
+      const packVersions: Record<string, string> = {};
+      try {
+        // Fetch from NodePackManager store or localStorage when integrated
+        // This will help detect when workflows are loaded with incompatible pack versions
+      } catch {
+        // Non-critical — just skip if we can't get versions
+      }
+
       let workflow: WorkflowFile = {
         version: 1,
         id: workflowId,
@@ -438,6 +477,7 @@ export const createPersistenceSlice: StateCreator<
         edges,
         edgeStyle,
         groups: groups && Object.keys(groups).length > 0 ? groups : undefined,
+        ...(Object.keys(packVersions).length > 0 && { packVersions }),
       };
 
       if (useExternalImageStorage) {
@@ -552,25 +592,21 @@ export const createPersistenceSlice: StateCreator<
   // ── Auto-save lifecycle ────────────────────────────────────────────────────
 
   initializeAutoSave: () => {
-    if (autoSaveIntervalId) return;
+    if (autoSaveIntervalId !== null) return; // Already running
+
+    const { autoSaveEnabled, saveToFile } = get();
+    if (!autoSaveEnabled) return;
 
     autoSaveIntervalId = setInterval(async () => {
       const state = get();
-      if (
-        state.autoSaveEnabled &&
-        state.hasUnsavedChanges &&
-        state.workflowId &&
-        state.workflowName &&
-        state.saveDirectoryPath &&
-        !state.isSaving
-      ) {
+      if (state.hasUnsavedChanges && !state.isSaving) {
         await state.saveToFile();
       }
-    }, 90 * 1000);
+    }, 90000); // 90 seconds
   },
 
   cleanupAutoSave: () => {
-    if (autoSaveIntervalId) {
+    if (autoSaveIntervalId !== null) {
       clearInterval(autoSaveIntervalId);
       autoSaveIntervalId = null;
     }

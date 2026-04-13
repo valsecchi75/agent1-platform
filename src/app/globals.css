@@ -227,6 +227,16 @@ html[data-theme="light"][data-skin="aurora"] {
   --accent: #8a7020;
   --accent-hover: #9a8030;
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Ember — Bold, high contrast, black/red/white, urban democratic ── */
@@ -289,6 +299,17 @@ html[data-skin="ember"] {
   --btn-secondary-text: #a0a0a0;
   --btn-hover: #303030;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="ember"] {
@@ -340,6 +361,16 @@ html[data-theme="light"][data-skin="ember"] {
   --edge-selected: #b01018;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Matrix — Technical dark, sport engineering, aggressive geometry ── */
@@ -402,6 +433,17 @@ html[data-skin="matrix"] {
   --btn-secondary-text: #8a9098;
   --btn-hover: #2a3440;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="matrix"] {
@@ -451,6 +493,16 @@ html[data-theme="light"][data-skin="matrix"] {
   --edge-selected: #2e7d32;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Sienna — Warm artisan, Italian havana, honey amber, refined ── */
@@ -513,6 +565,17 @@ html[data-skin="sienna"] {
   --btn-secondary-text: #b0a08a;
   --btn-hover: #3a3028;
   --btn-primary-text: #ede6dc;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="sienna"] {
@@ -562,6 +625,16 @@ html[data-theme="light"][data-skin="sienna"] {
   --edge-selected: #724820;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Sage — Quiet luxury, muted sage/cognac, vintage LA earth ── */
@@ -624,6 +697,17 @@ html[data-skin="sage"] {
   --btn-secondary-text: #9aa098;
   --btn-hover: #303830;
   --btn-primary-text: #e4e6e2;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="sage"] {
@@ -673,6 +757,16 @@ html[data-theme="light"][data-skin="sage"] {
   --edge-selected: #545848;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Orchid — Fashion bold, feminine purple, editorial vivid ── */
@@ -735,6 +829,17 @@ html[data-skin="orchid"] {
   --btn-secondary-text: #a094aa;
   --btn-hover: #382e48;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="orchid"] {
@@ -784,6 +889,16 @@ html[data-theme="light"][data-skin="orchid"] {
   --edge-selected: #652476;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Platinum — Cool silver, professional minimalist ── */
@@ -846,6 +961,17 @@ html[data-skin="platinum"] {
   --btn-secondary-text: #b8b8b8;
   --btn-hover: #3f3f3f;
   --btn-primary-text: #0f0f0f;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="platinum"] {
@@ -895,6 +1021,16 @@ html[data-theme="light"][data-skin="platinum"] {
   --edge-selected: #808080;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Abyss — Deep navy blue, ocean depths ── */
@@ -957,6 +1093,17 @@ html[data-skin="abyss"] {
   --btn-secondary-text: #7a9acc;
   --btn-hover: #243848;
   --btn-primary-text: #d4dfe8;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="abyss"] {
@@ -1006,6 +1153,16 @@ html[data-theme="light"][data-skin="abyss"] {
   --edge-selected: #0f2540;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Amber — Rich gold, heritage luxury ── */
@@ -1068,6 +1225,17 @@ html[data-skin="amber"] {
   --btn-secondary-text: #b5a590;
   --btn-hover: #3e3428;
   --btn-primary-text: #ede8e0;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="amber"] {
@@ -1117,6 +1285,16 @@ html[data-theme="light"][data-skin="amber"] {
   --edge-selected: #8b5a00;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Ocean — Teal cyan, tropical waters ── */
@@ -1179,6 +1357,17 @@ html[data-skin="ocean"] {
   --btn-secondary-text: #8ab4b4;
   --btn-hover: #2a4848;
   --btn-primary-text: #dfe6e6;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="ocean"] {
@@ -1228,6 +1417,16 @@ html[data-theme="light"][data-skin="ocean"] {
   --edge-selected: #006b6b;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Ignite — Pure black, warm orange, agno-inspired minimal ── */
@@ -1289,6 +1488,17 @@ html[data-skin="ignite"] {
   --btn-secondary-text: #999999;
   --btn-hover: #282828;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="ignite"] {
@@ -1341,6 +1551,16 @@ html[data-theme="light"][data-skin="ignite"] {
   --edge-selected: #C0440A;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Flux — React Flow iconic pink, node-editor heritage ── */
@@ -1402,6 +1622,17 @@ html[data-skin="flux"] {
   --btn-secondary-text: #9590a0;
   --btn-hover: #2e2648;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="flux"] {
@@ -1454,6 +1685,16 @@ html[data-theme="light"][data-skin="flux"] {
   --edge-selected: #D00060;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Neon — Electric cyan glow, React-inspired terminal hacker ── */
@@ -1515,6 +1756,17 @@ html[data-skin="neon"] {
   --btn-secondary-text: #7098a8;
   --btn-hover: #1e3848;
   --btn-primary-text: #060e14;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="neon"] {
@@ -1567,6 +1819,16 @@ html[data-theme="light"][data-skin="neon"] {
   --edge-selected: #0098C8;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Svelte — Warm transition orange, Svelte Flow brand spirit ── */
@@ -1628,6 +1890,17 @@ html[data-skin="svelte"] {
   --btn-secondary-text: #a08878;
   --btn-hover: #3a2c22;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="svelte"] {
@@ -1680,6 +1953,16 @@ html[data-theme="light"][data-skin="svelte"] {
   --edge-selected: #D03000;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Cobalt — Deep IDE blue, developer workstation feel ── */
@@ -1741,6 +2024,17 @@ html[data-skin="cobalt"] {
   --btn-secondary-text: #7888a8;
   --btn-hover: #20304e;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="cobalt"] {
@@ -1793,6 +2087,16 @@ html[data-theme="light"][data-skin="cobalt"] {
   --edge-selected: #1565C0;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Coral — Soft creative coral, warm studio energy ── */
@@ -1854,6 +2158,17 @@ html[data-skin="coral"] {
   --btn-secondary-text: #a08888;
   --btn-hover: #3a2828;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="coral"] {
@@ -1906,6 +2221,16 @@ html[data-theme="light"][data-skin="coral"] {
   --edge-selected: #D04040;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Moss — Deep forest green, organic node garden ── */
@@ -1967,6 +2292,17 @@ html[data-skin="moss"] {
   --btn-secondary-text: #78a088;
   --btn-hover: #244030;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="moss"] {
@@ -2019,6 +2355,16 @@ html[data-theme="light"][data-skin="moss"] {
   --edge-selected: #1B5038;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Zinc — Cool gunmetal, minimal industrial precision ── */
@@ -2080,6 +2426,17 @@ html[data-skin="zinc"] {
   --btn-secondary-text: #9898a0;
   --btn-hover: #27272a;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="zinc"] {
@@ -2132,6 +2489,16 @@ html[data-theme="light"][data-skin="zinc"] {
   --edge-selected: #52525B;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Indigo — Night violet creative, modern SaaS energy ── */
@@ -2193,6 +2560,17 @@ html[data-skin="indigo"] {
   --btn-secondary-text: #8888b0;
   --btn-hover: #28284e;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="indigo"] {
@@ -2245,6 +2623,16 @@ html[data-theme="light"][data-skin="indigo"] {
   --edge-selected: #4F46E5;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Rose — Dusty editorial pink, fashion-tech energy ── */
@@ -2306,6 +2694,17 @@ html[data-skin="rose"] {
   --btn-secondary-text: #a08090;
   --btn-hover: #3a2832;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="rose"] {
@@ -2358,6 +2757,16 @@ html[data-theme="light"][data-skin="rose"] {
   --edge-selected: #BE123C;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ── Carbon — Pure graphite + electric orange, industrial precision ── */
@@ -2419,6 +2828,17 @@ html[data-skin="carbon"] {
   --btn-secondary-text: #989088;
   --btn-hover: #2e2a28;
   --btn-primary-text: #ffffff;
+
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #22c55e;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #f59e0b;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #ef4444;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 html[data-theme="light"][data-skin="carbon"] {
@@ -2471,6 +2891,16 @@ html[data-theme="light"][data-skin="carbon"] {
   --edge-selected: #C25D10;
 
   --btn-primary-text: #ffffff;
+
+  /* Node Pack Manager buttons */
+  --npm-btn-install: #16a34a;
+  --npm-btn-install-text: #ffffff;
+  --npm-btn-update: var(--surface-3);
+  --npm-btn-update-text: var(--text-primary);
+  --npm-btn-disable: #d97706;
+  --npm-btn-disable-text: #ffffff;
+  --npm-btn-uninstall: #dc2626;
+  --npm-btn-uninstall-text: #ffffff;
 }
 
 /* ══════════════════════════════════════════════════

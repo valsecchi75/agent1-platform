@@ -160,6 +160,9 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set, get) 
     set({ updateSkippedVersion: version, updateDismissed: true });
   },
 
-  setNodePackBadge: (active: boolean) => set({ nodePackBadgeActive: active }),
-  setActiveNodeTypes: (types: string[]) => set({ activeNodeTypes: types }),
-});
+  setNodePackBadge: (active: boolean) =>
+    set({ nodePackBadgeActive: active }),
+
+  setActiveNodeTypes: (types: string[]) =>
+    set({ activeNodeTypes: types }),
+});
