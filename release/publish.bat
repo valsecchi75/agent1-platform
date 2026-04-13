@@ -355,7 +355,7 @@ echo [OK] ZIP created: !ZIP_SIZE_MB! MB (!BUILD_type!)>> "!LOG_FILE!"
 
 echo.
 set /p "CONFIRM_BUMP=  Build and ZIP OK. Continue with version bump and commit? (y/n): "
-if /i not "!CONFIRM_BUMP!"=="s" goto :abort_cleanup
+if /i not "!CONFIRM_BUMP!"=="y" goto :abort_cleanup
 
 REM ================================================================
 REM  STEP 4b - Version bump (NOW that build and zip are OK)
@@ -400,7 +400,7 @@ git status --short
 echo.
 
 set /p "CONFIRM_COMMIT=  Confirm commit and push? (y/n): "
-if /i not "!CONFIRM_COMMIT!"=="s" goto :abort_cleanup
+if /i not "!CONFIRM_COMMIT!"=="y" goto :abort_cleanup
 
 git add package.json start.bat start.sh src/app/credits/page.tsx src/components/settings/CreditsModal.tsx 2>nul
 git commit -m "release: v!NEW_VERSION!" 2>nul
@@ -467,7 +467,7 @@ echo  ----------------------------------------
 echo.
 
 set /p "NOTES_OK=  Release notes OK? (y/n): "
-if /i not "!NOTES_OK!"=="s" goto :edit_notes_loop
+if /i not "!NOTES_OK!"=="y" goto :edit_notes_loop
 
 REM ================================================================
 REM  STEP 7 - Pubblicazione su GitHub
