@@ -68,7 +68,6 @@ export function useUpdateCheck() {
         releaseNotes: null,
         downloadUrl: null,
         publishedAt: null,
-        cachedAt: new Date().toISOString(),
         error: 'network_error',
       });
     }
