@@ -183,7 +183,7 @@ export function UpdateBanner() {
                 : 'Unable to check for updates. Will retry.'}
             </span>
             <button
-              onClick={checkNow}
+              onClick={() => checkNow()}
               className="ub-btn flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium"
               style={{
                 background: 'rgba(239,68,68,0.12)',
