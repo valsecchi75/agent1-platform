@@ -110,12 +110,30 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                   {[
+                    "Multi-user system — per-user encrypted API keys (AES-256-GCM)",
+                    "Department management — budget tracking, member spending analysis",
+                    "Admin Panel — 5 tabs: Departments, Users, Analytics, Tags, System",
+                    "Role-based access — admin, dept_admin, user roles with JWT",
+                    "User isolation — scoped workflows, storage, sessions, reports",
+                    "Node Pack Manager — table UI, enable/disable, workflow awareness",
+                    "21-skin theme system — 10 new React Flow-inspired skins",
+                    "Unified Dialog system — shared modal primitives with glow effect",
+                    "Onboarding Wizard — 6-step tutorial with don't-show-again",
+                    "Auto-Update system — GitHub API, progress bar, skip version, rollback",
+                    "Template tag taxonomy — 4 categories, admin CRUD, filtered explorer",
                     "Node bypass (Ctrl+B) — ComfyUI-style skip with stripe overlay",
-                    "Audio handle on GenerateVideoNode — video+audio sync",
                     "Array batch mode — sequential per-item downstream execution",
                     "Optional inputs — isOptional flag on ImageInput, Audio, Prompt",
-                    "PreviewImage node — responsive, unified fullBleed design",
-                    "ShowAnything node — responsive, color-coded type badge",
+                    "Audio handle on GenerateVideoNode — video+audio sync",
+                    "Router / Switch / ConditionalSwitch — flow-control nodes",
+                    "Node dimming system — CSS-based path visualization",
+                    "Full-bleed node layouts — edge-to-edge content with overlays",
+                    "Multi-workflow tabs — Ctrl+T/W/Tab, rename, unsaved indicator",
+                    "PreviewImage + ShowAnything — responsive, unified fullBleed",
+                    "Per-user API key manager — encrypted storage, key masking",
+                    "Comments & annotations — drawing tools, unviewed counter",
+                    "58-model registry — 6+ providers including Kie.ai, fal.ai",
+                    "Credits modal — collapsible release history",
                   ].map((item, i) => (
                     <span key={i} className="text-[11px] flex gap-1.5" style={{ color: 'var(--text-secondary)' }}>
                       <span style={{ color: 'var(--accent)' }}>+</span>{item}

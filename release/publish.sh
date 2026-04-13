@@ -185,6 +185,44 @@ abort_cleanup() {
 }
 
 # ================================================================
+#  STEP 2b — Auto-commit modifiche pendenti (GR-007)
+# ================================================================
+echo ""
+echo "  ----------------------------------------"
+echo "   STEP 2b: Verifica modifiche non committate"
+echo "  ----------------------------------------"
+echo ""
+
+HAS_CHANGES=0
+if ! git diff --quiet --exit-code 2>/dev/null; then HAS_CHANGES=1; fi
+if ! git diff --quiet --cached --exit-code 2>/dev/null; then HAS_CHANGES=1; fi
+UNTRACKED=$(git ls-files --others --exclude-standard | wc -l)
+if [ "$UNTRACKED" -gt 0 ]; then HAS_CHANGES=1; fi
+
+if [ "$HAS_CHANGES" -eq 0 ]; then
+  echo "  [OK] Nessuna modifica pendente."
+  log "[OK] Working tree pulito"
+else
+  echo "  Trovate modifiche non committate:"
+  git status --short
+  echo ""
+  read -p "  Committare automaticamente prima della release? (s/n): " AUTO_COMMIT
+  if [ "$AUTO_COMMIT" = "s" ] || [ "$AUTO_COMMIT" = "S" ]; then
+    git add -A
+    if git commit -m "chore: pre-release changes for v${NEW_VERSION}"; then
+      echo "  [OK] Modifiche committate automaticamente."
+      log "[OK] Auto-commit pre-release"
+    else
+      echo "  [ATTENZIONE] Commit fallito. Procedo comunque."
+      log "[WARN] Auto-commit fallito"
+    fi
+  else
+    echo "  [ATTENZIONE] Procedo senza commit. Il delta potrebbe non includere le ultime modifiche."
+    log "[WARN] Utente ha scelto di non committare"
+  fi
+fi
+
+# ================================================================
 #  STEP 3 — Build di verifica
 # ================================================================
 echo ""

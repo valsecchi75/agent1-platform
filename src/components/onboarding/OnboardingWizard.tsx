@@ -6,9 +6,11 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 
 import { ApiKeysStep } from "./steps/ApiKeysStep";
 import { CanvasStep } from "./steps/CanvasStep";
+import { DepartmentsBudgetsStep } from "./steps/DepartmentsBudgetsStep";
 import { NodesStep } from "./steps/NodesStep";
 import { ProTipsStep } from "./steps/ProTipsStep";
 import { ReportsStep } from "./steps/ReportsStep";
+import { TeamRolesStep } from "./steps/TeamRolesStep";
 import { WelcomeStep } from "./steps/WelcomeStep";
 
 const STEPS = [
@@ -17,6 +19,8 @@ const STEPS = [
   { component: CanvasStep, label: "Canvas" },
   { component: NodesStep, label: "Nodes" },
   { component: ReportsStep, label: "Reports" },
+  { component: TeamRolesStep, label: "Team" },
+  { component: DepartmentsBudgetsStep, label: "Budgets" },
   { component: ProTipsStep, label: "Tips" },
 ];
 

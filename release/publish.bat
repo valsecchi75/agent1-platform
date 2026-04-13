@@ -159,6 +159,53 @@ REM -- Dry run salta step 3-6 --
 if "!DRY_RUN!"=="1" goto :step7_summary
 
 REM ================================================================
+REM  STEP 2b - Auto-commit modifiche pendenti (GR-007)
+REM  git diff confronta commit, non working tree.
+REM  Se ci sono file non committati, li committiamo ora.
+REM ================================================================
+echo.
+echo  ----------------------------------------
+echo   STEP 2b: Verifica modifiche non committate
+echo  ----------------------------------------
+echo.
+
+git diff --quiet --exit-code >nul 2>nul
+set "HAS_UNSTAGED=!ERRORLEVEL!"
+git diff --quiet --cached --exit-code >nul 2>nul
+set "HAS_STAGED=!ERRORLEVEL!"
+
+REM Check for untracked files too
+for /f %%i in ('git ls-files --others --exclude-standard ^| find /c /v ""') do set "UNTRACKED_COUNT=%%i"
+
+if !HAS_UNSTAGED! EQU 0 if !HAS_STAGED! EQU 0 if !UNTRACKED_COUNT! EQU 0 (
+    echo  [OK] Nessuna modifica pendente.
+    echo [OK] Working tree pulito>> "!LOG_FILE!"
+    goto :step3_build
+)
+
+echo  Trovate modifiche non committate:
+git status --short
+echo.
+set /p "AUTO_COMMIT=  Committare automaticamente prima della release? (s/n): "
+if /i "!AUTO_COMMIT!"=="n" (
+    echo  [ATTENZIONE] Procedo senza commit. Il delta potrebbe non includere le ultime modifiche.
+    echo [WARN] Utente ha scelto di non committare>> "!LOG_FILE!"
+    goto :step3_build
+)
+
+git add -A
+git commit -m "chore: pre-release changes for v!NEW_VERSION!"
+if !ERRORLEVEL! EQU 0 (
+    echo  [OK] Modifiche committate automaticamente.
+    echo [OK] Auto-commit pre-release>> "!LOG_FILE!"
+) else (
+    echo  [ATTENZIONE] Commit fallito. Procedo comunque.
+    echo [WARN] Auto-commit fallito>> "!LOG_FILE!"
+)
+
+:step3_build
+
+REM ================================================================
 REM  STEP 3 - Build di verifica
 REM  (PRIMA del version bump — se fallisce, nulla viene modificato)
 REM ================================================================

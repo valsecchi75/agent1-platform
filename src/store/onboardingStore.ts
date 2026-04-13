@@ -36,7 +36,7 @@ const removeLocalStorage = (key: string): void => {
 export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   showWizard: false,
   currentStep: 0,
-  totalSteps: 6,
+  totalSteps: 8,
   dontShowAgain: getLocalStorage(DONT_SHOW_KEY) === "true",
   setShowWizard: (show) => set({ showWizard: show }),
   setDontShowAgain: (value) => {

@@ -1,12 +1,12 @@
 "use client";
 
-import { Keyboard, Save, Sparkles, Users } from "lucide-react";
+import { Keyboard, Save, Sparkles, Settings } from "lucide-react";
 
 const TIPS = [
   { icon: Keyboard, title: "Keyboard Shortcuts", desc: "Press ? to see all shortcuts. Ctrl+Enter runs the workflow." },
   { icon: Save, title: "Save as Template", desc: "Save your best workflows as reusable templates." },
   { icon: Sparkles, title: "AI Quickstart", desc: "Describe what you want — AI builds the workflow for you." },
-  { icon: Users, title: "Community Workflows", desc: "Browse and install workflows shared by other users." },
+  { icon: Settings, title: "Admin Panel", desc: "Manage users, departments, and budgets from the settings menu." },
 ];
 
 export function ProTipsStep() {
