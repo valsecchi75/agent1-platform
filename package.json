@@ -1,6 +1,6 @@
 {
   "name": "agent1-from-vision-to-form",
-  "version": "0.10.1-alpha",
+  "version": "0.10.2-alpha",
   "private": true,
   "scripts": {
     "dev": "node server.js",
