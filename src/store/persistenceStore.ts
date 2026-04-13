@@ -1,13 +1,13 @@
 /**
- * persistenceStore.ts — Persistence Slice (Zona Congelata)
+ * persistenceStore.ts — Persistence Slice (Frozen Zone)
  *
  * Owns: workflowId, workflowName, saveDirectoryPath, generationsPath, lastSavedAt,
  *       hasUnsavedChanges, autoSaveEnabled, isSaving, useExternalImageStorage,
  *       imageRefBasePath, globalImageHistory.
  * Provides: save/load/clear workflow, auto-save, metadata helpers, global image history.
  *
- * ZONA CONGELATA — Do NOT modify without contract test + PR review.
- * See CLAUDE.md § "Zona Congelata" for rules.
+ * FROZEN ZONE — Do NOT modify without contract test + PR review.
+ * See CLAUDE.md § "Frozen Zone" for rules.
  */
 
 import type { StateCreator } from "zustand";

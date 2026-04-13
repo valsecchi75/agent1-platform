@@ -1,13 +1,13 @@
 'use client';
 
 /**
- * /dev/update-test — Pagina di test per il sistema di aggiornamento
+ * /dev/update-test — Test page for the update system
  *
- * Due modalità:
- * A) "Vedi nell'app" → apre localhost:3000?dev-update=<mode> per vedere il banner
- *    esattamente come lo vedrà l'utente finale, con il vero layout dell'app.
- * B) "Inietta qui" → inietta lo stato nel Zustand di questa pagina per ispezionare
- *    i dettagli tecnici e simulare il progress.
+ * Two modes:
+ * A) "See in app" → opens localhost:3000?dev-update=<mode> to see the banner
+ *    exactly as the end user will see it, with the real app layout.
+ * B) "Inject here" → injects state into this page's Zustand to inspect
+ *    technical details and simulate progress.
  */
 
 import { useState, useCallback, useRef } from 'react';
@@ -20,17 +20,17 @@ import type { NodePackEntryWithStatus } from '@/types/nodePacks';
 const APP_URL = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : 'http://localhost:3000';
 
 const DEV_URLS: { label: string; param: string; desc: string }[] = [
-  { param: 'available',      label: 'Update disponibile (mock)',  desc: 'Banner oro con versione 99.0.0-preview — bottone "Aggiorna ora" → errore URL (nessun download)' },
-  { param: 'available-real', label: 'Update reale da GitHub',     desc: 'Check reale GitHub: se esiste una release più nuova, il bottone "Aggiorna ora" fa il vero download' },
-  { param: 'error',          label: 'Errore token',               desc: 'Banner con errore di autenticazione GitHub' },
-  { param: 'uptodate',       label: 'App aggiornata',             desc: 'Nessun banner (situazione normale)' },
+  { param: 'available',      label: 'Update available (mock)',    desc: 'Gold banner with version 99.0.0-preview — "Update now" button → URL error (no download)' },
+  { param: 'available-real', label: 'Real update from GitHub',    desc: 'Real GitHub check: if a newer release exists, the "Update now" button performs the real download' },
+  { param: 'error',          label: 'Token error',                desc: 'Banner with GitHub authentication error' },
+  { param: 'uptodate',       label: 'App up to date',             desc: 'No banner (normal situation)' },
 ];
 
 const NODEPACK_DEV_URLS: { label: string; param: string; desc: string }[] = [
-  { param: 'with-packs',  label: 'Dialog con 4 pack mock',    desc: 'Apre il Node Pack Manager con 4 pack: 1 installed, 1 update-available, 2 available' },
-  { param: 'empty',        label: 'Dialog vuoto',              desc: 'Registry vuoto — nessun pack disponibile' },
-  { param: 'error',        label: 'Errore registry',           desc: 'Simula errore 502 — messaggio "Cannot reach registry"' },
-  { param: 'new-packs',    label: 'Pack nuovi (trigger badge)', desc: 'Tutti i pack con updatedAt freschissimo — utile per testare il badge arancione' },
+  { param: 'with-packs',  label: 'Dialog with 4 mock packs',  desc: 'Opens the Node Pack Manager with 4 packs: 1 installed, 1 update-available, 2 available' },
+  { param: 'empty',        label: 'Empty dialog',              desc: 'Empty registry — no packs available' },
+  { param: 'error',        label: 'Registry error',            desc: 'Simulates 502 error — "Cannot reach registry" message' },
+  { param: 'new-packs',    label: 'New packs (trigger badge)', desc: 'All packs with very recent updatedAt — useful for testing the orange badge' },
 ];
 
 type MockMode = 'available' | 'error' | 'uptodate';
@@ -53,7 +53,7 @@ export default function UpdateTestPage() {
   const logRef = useRef<HTMLDivElement>(null);
 
   const addLog = useCallback((msg: string, type: 'info' | 'ok' | 'err' | 'data' = 'info') => {
-    const ts = new Date().toLocaleTimeString('it-IT', { hour12: false });
+    const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
     setLog(prev => {
       const next = [...prev, { ts, type, msg }];
       setTimeout(() => { logRef.current?.scrollTo({ top: 99999, behavior: 'smooth' }); }, 30);
@@ -64,30 +64,30 @@ export default function UpdateTestPage() {
   // Inject mock state into Zustand (this page only)
   const loadMock = useCallback(async (mode: MockMode) => {
     setLoading(true);
-    addLog(`Carico mock: ${mode}`, 'info');
+    addLog(`Loading mock: ${mode}`, 'info');
     try {
       const res = await fetch(`/api/update-check${MOCK_API[mode]}`);
       const data = await res.json();
       addLog(`API: ${JSON.stringify(data)}`, 'data');
       setUpdateInfo(data);
       setUpdateProgress({ isUpdating: false, step: null, status: null, error: null });
-      addLog(`Stato banner → ${mode}`, 'ok');
-    } catch (e) { addLog(`Errore: ${String(e)}`, 'err'); }
+      addLog(`Banner state → ${mode}`, 'ok');
+    } catch (e) { addLog(`Error: ${String(e)}`, 'err'); }
     finally { setLoading(false); }
   }, [addLog, setUpdateInfo, setUpdateProgress]);
 
   // Real GitHub check
   const realCheck = useCallback(async () => {
     setLoading(true);
-    addLog('Check reale GitHub (bypass cache)…', 'info');
+    addLog('Real GitHub check (bypass cache)…', 'info');
     try {
       const res = await fetch('/api/update-check?force=true');
       const data = await res.json();
-      addLog(`Risposta: ${JSON.stringify(data)}`, 'data');
+      addLog(`Response: ${JSON.stringify(data)}`, 'data');
       setUpdateInfo(data);
       setUpdateProgress({ isUpdating: false, step: null, status: null, error: null });
-      addLog(data.updateAvailable ? `✓ v${data.latestVersion} disponibile` : `✓ Aggiornata (${data.currentVersion})`, 'ok');
-    } catch (e) { addLog(`Errore: ${String(e)}`, 'err'); }
+      addLog(data.updateAvailable ? `✓ v${data.latestVersion} available` : `✓ Up to date (${data.currentVersion})`, 'ok');
+    } catch (e) { addLog(`Error: ${String(e)}`, 'err'); }
     finally { setLoading(false); }
   }, [addLog, setUpdateInfo, setUpdateProgress]);
 
@@ -99,7 +99,7 @@ export default function UpdateTestPage() {
       { step: 5, status: 'npm_install' },
     ];
     setUpdateProgress({ isUpdating: true, step: null, status: 'starting', error: null });
-    addLog('Simulazione progress…', 'info');
+    addLog('Simulating progress…', 'info');
     for (const s of steps) {
       await new Promise(r => setTimeout(r, 900));
       setUpdateProgress({ isUpdating: true, step: s.step, status: s.status, error: null });
@@ -107,12 +107,12 @@ export default function UpdateTestPage() {
     }
     await new Promise(r => setTimeout(r, 600));
     setUpdateProgress({ isUpdating: false, step: null, status: 'restart_required', error: null });
-    addLog('✓ restart_required', 'ok');
+    addLog('✓ restart required', 'ok');
   }, [addLog, setUpdateProgress]);
 
   const simulateError = useCallback(() => {
-    setUpdateProgress({ isUpdating: false, step: null, status: null, error: 'Download failed (403) — simulazione' });
-    addLog('Errore iniettato nel banner', 'err');
+    setUpdateProgress({ isUpdating: false, step: null, status: null, error: 'Download failed (403) — simulation' });
+    addLog('Error injected into banner', 'err');
   }, [addLog, setUpdateProgress]);
 
   const resetState = useCallback(() => {
@@ -122,10 +122,10 @@ export default function UpdateTestPage() {
   }, [setUpdateInfo, setUpdateProgress]);
 
   const triggerRealUpdate = useCallback(async () => {
-    if (!updateInfo?.downloadUrl) { addLog('⚠ downloadUrl null — fai "Check reale GitHub" prima', 'err'); return; }
-    addLog(`Avvio aggiornamento → ${updateInfo.downloadUrl}`, 'info');
+    if (!updateInfo?.downloadUrl) { addLog('⚠ downloadUrl null — do "Real GitHub check" first', 'err'); return; }
+    addLog(`Starting update → ${updateInfo.downloadUrl}`, 'info');
     await applyUpdate();
-    addLog('applyUpdate() completato', 'ok');
+    addLog('applyUpdate() completed', 'ok');
   }, [addLog, applyUpdate, updateInfo]);
 
   const logColors: Record<string, string> = { info: '#9ca3af', ok: '#86efac', err: '#fca5a5', data: '#93c5fd' };
@@ -142,16 +142,16 @@ export default function UpdateTestPage() {
             <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(197,164,78,0.12)', border: '1px solid rgba(197,164,78,0.2)', color: '#c5a44e' }}>DEV ONLY</span>
           </div>
           <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
-            <strong style={{ color: '#9ca3af' }}>Update</strong>: Sezione A (app reale) + B (debug)
-            — <strong style={{ color: '#9ca3af' }}>Node Pack Manager</strong>: Sezione A (app reale con
+            <strong style={{ color: '#9ca3af' }}>Update</strong>: Section A (real app) + B (debug)
+            — <strong style={{ color: '#9ca3af' }}>Node Pack Manager</strong>: Section A (real app with
             <code style={{ background: '#1a1e2c', padding: '1px 6px', borderRadius: 3, color: '#c5a44e', fontSize: 11, margin: '0 4px' }}>
               ?dev-nodepacks=
-            </code>) + B (debug tecnico)
+            </code>) + B (technical debug)
           </p>
         </div>
 
         {/* ── SECTION A: View in real app ──────────────────────────────────── */}
-        <SectionHeader label="A" title="Vedi nell'app reale" subtitle="Apre localhost:3000 con il param ?dev-update= — vedi esattamente cosa vede l'utente" />
+        <SectionHeader label="A" title="See in real app" subtitle="Opens localhost:3000 with the ?dev-update= param — see exactly what the user sees" />
         <div style={{ display: 'grid', gap: '0.5rem', marginBottom: '2rem' }}>
           {DEV_URLS.map(({ param, label, desc }) => (
             <div key={param} style={{
@@ -177,7 +177,7 @@ export default function UpdateTestPage() {
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(197,164,78,0.1)'; }}
                 >
                   <Eye className="w-3 h-3" />
-                  Apri
+                  Open
                 </a>
                 {/* Open in new tab */}
                 <a
@@ -192,10 +192,10 @@ export default function UpdateTestPage() {
                   }}
                   onMouseEnter={e => { e.currentTarget.style.color = '#e8e6e3'; }}
                   onMouseLeave={e => { e.currentTarget.style.color = '#9ca3af'; }}
-                  title="Apri in nuova scheda"
+                  title="Open in new tab"
                 >
                   <ArrowUpRight className="w-3 h-3" />
-                  Nuova scheda
+                  New tab
                 </a>
               </div>
             </div>
@@ -214,11 +214,11 @@ export default function UpdateTestPage() {
         </div>
 
         {/* ── SECTION B: Inject state into this page ───────────────────────── */}
-        <SectionHeader label="B" title="Debug tecnico (questa pagina)" subtitle="Il banner sopra riflette lo stato Zustand di questa pagina" />
+        <SectionHeader label="B" title="Technical debug (this page)" subtitle="The banner above reflects this page's Zustand state" />
 
         {/* State readout */}
         <div style={{ background: '#181c25', border: '1px solid #2a3040', borderRadius: 8, padding: '1rem', marginBottom: '1rem', fontSize: 12 }}>
-          <div style={{ fontWeight: 600, marginBottom: '0.5rem', color: '#c5a44e', fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Stato corrente (Zustand)</div>
+          <div style={{ fontWeight: 600, marginBottom: '0.5rem', color: '#c5a44e', fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Current state (Zustand)</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
             <StateRow label="updateAvailable" value={String(updateInfo?.updateAvailable ?? '—')} />
             <StateRow label="currentVersion"  value={updateInfo?.currentVersion ?? '—'} />
@@ -232,34 +232,34 @@ export default function UpdateTestPage() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-          <Section title="Stato banner (mock)">
+          <Section title="Banner state (mock)">
             <BtnGroup>
-              <Btn onClick={() => loadMock('available')} disabled={loading} accent><Play className="w-3 h-3" />Update disponibile</Btn>
-              <Btn onClick={() => loadMock('error')} disabled={loading}><AlertCircle className="w-3 h-3" />Errore check</Btn>
-              <Btn onClick={() => loadMock('uptodate')} disabled={loading}><CheckCircle2 className="w-3 h-3" />Già aggiornato</Btn>
+              <Btn onClick={() => loadMock('available')} disabled={loading} accent><Play className="w-3 h-3" />Update available</Btn>
+              <Btn onClick={() => loadMock('error')} disabled={loading}><AlertCircle className="w-3 h-3" />Check error</Btn>
+              <Btn onClick={() => loadMock('uptodate')} disabled={loading}><CheckCircle2 className="w-3 h-3" />Already up to date</Btn>
             </BtnGroup>
           </Section>
 
-          <Section title="Simulazione progress">
+          <Section title="Progress simulation">
             <BtnGroup>
-              <Btn onClick={simulateProgress} disabled={loading || updateProgress.isUpdating} accent><RefreshCw className="w-3 h-3" />Simula 5 step</Btn>
-              <Btn onClick={simulateError} disabled={loading}><AlertCircle className="w-3 h-3" />Simula errore</Btn>
+              <Btn onClick={simulateProgress} disabled={loading || updateProgress.isUpdating} accent><RefreshCw className="w-3 h-3" />Simulate 5 steps</Btn>
+              <Btn onClick={simulateError} disabled={loading}><AlertCircle className="w-3 h-3" />Simulate error</Btn>
             </BtnGroup>
           </Section>
 
-          <Section title="Check reale GitHub">
+          <Section title="Real GitHub check">
             <BtnGroup>
-              <Btn onClick={realCheck} disabled={loading} accent><ExternalLink className="w-3 h-3" />Check GitHub (bypass cache)</Btn>
+              <Btn onClick={realCheck} disabled={loading} accent><ExternalLink className="w-3 h-3" />GitHub check (bypass cache)</Btn>
               <Btn onClick={triggerRealUpdate} disabled={loading || !updateInfo?.downloadUrl}
-                title={!updateInfo?.downloadUrl ? 'Prima esegui Check GitHub' : ''}>
-                <Play className="w-3 h-3" />Aggiornamento reale
+                title={!updateInfo?.downloadUrl ? 'Run GitHub check first' : ''}>
+                <Play className="w-3 h-3" />Real update
               </Btn>
             </BtnGroup>
           </Section>
 
           <Section title="Reset">
             <BtnGroup>
-              <Btn onClick={resetState} disabled={loading}><Square className="w-3 h-3" />Reset tutto</Btn>
+              <Btn onClick={resetState} disabled={loading}><Square className="w-3 h-3" />Reset all</Btn>
             </BtnGroup>
           </Section>
         </div>
@@ -268,10 +268,10 @@ export default function UpdateTestPage() {
         <div style={{ background: '#0a0d12', border: '1px solid #1e2435', borderRadius: 8, overflow: 'hidden' }}>
           <div style={{ padding: '0.6rem 1rem', borderBottom: '1px solid #1e2435', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Log</span>
-            <button onClick={() => setLog([])} style={{ fontSize: 10, color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer' }}>pulisci</button>
+            <button onClick={() => setLog([])} style={{ fontSize: 10, color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer' }}>clear</button>
           </div>
           <div ref={logRef} style={{ height: 220, overflowY: 'auto', padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: 11, lineHeight: 1.7 }}>
-            {log.length === 0 && <span style={{ color: '#374151' }}>Nessuna attività…</span>}
+            {log.length === 0 && <span style={{ color: '#374151' }}>No activity…</span>}
             {log.map((e, i) => (
               <div key={i}>
                 <span style={{ color: '#374151' }}>{e.ts} </span>
@@ -284,7 +284,7 @@ export default function UpdateTestPage() {
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* ── NODE PACK MANAGER — SECTION A: View in real app ─────── */}
         <div style={{ marginTop: '3rem', borderTop: '1px solid #2a3040', paddingTop: '2rem' }}>
-          <SectionHeader label="A" title="Node Pack Manager — Vedi nell'app reale" subtitle="Apre localhost:3000 con ?dev-nodepacks= — il dialog si apre automaticamente con dati mock" />
+          <SectionHeader label="A" title="Node Pack Manager — See in real app" subtitle="Opens localhost:3000 with ?dev-nodepacks= — the dialog opens automatically with mock data" />
           <div style={{ display: 'grid', gap: '0.5rem', marginBottom: '2rem' }}>
             {NODEPACK_DEV_URLS.map(({ param, label, desc }) => (
               <div key={param} style={{
@@ -312,7 +312,7 @@ export default function UpdateTestPage() {
                     onMouseLeave={e => { e.currentTarget.style.background = 'rgba(197,164,78,0.1)'; }}
                   >
                     <Eye className="w-3 h-3" />
-                    Apri
+                    Open
                   </a>
                   <a
                     href={`/?dev-nodepacks=${param}`}
@@ -326,10 +326,10 @@ export default function UpdateTestPage() {
                     }}
                     onMouseEnter={e => { e.currentTarget.style.color = '#e8e6e3'; }}
                     onMouseLeave={e => { e.currentTarget.style.color = '#9ca3af'; }}
-                    title="Apri in nuova scheda"
+                    title="Open in new tab"
                   >
                     <ArrowUpRight className="w-3 h-3" />
-                    Nuova scheda
+                    New tab
                   </a>
                 </div>
               </div>
@@ -382,11 +382,11 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
       addLog(`Registry response: success=${data.success}, source=${data.source}, packs=${data.packs?.length ?? 0}`, 'data');
       if (data.success && data.packs) {
         setPacks(data.packs);
-        addLog(`✓ ${data.packs.length} pack(s) trovati — source: ${data.source}`, 'ok');
+        addLog(`✓ ${data.packs.length} pack(s) found — source: ${data.source}`, 'ok');
       } else {
         addLog(`✗ ${data.error || 'Unknown error'}`, 'err');
       }
-    } catch (e) { addLog(`✗ Fetch fallito: ${String(e)}`, 'err'); }
+    } catch (e) { addLog(`✗ Fetch failed: ${String(e)}`, 'err'); }
     finally { setLoading(false); }
   }, [addLog]);
 
@@ -397,7 +397,7 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
       const res = await fetch('/api/node-registry/active-types');
       const data = await res.json();
       setActiveTypes(data.nodeTypes || []);
-      addLog(`✓ ${data.nodeTypes?.length ?? 0} tipi attivi, ${data.packCount ?? 0} pack(s)`, 'ok');
+      addLog(`✓ ${data.nodeTypes?.length ?? 0} active types, ${data.packCount ?? 0} pack(s)`, 'ok');
     } catch (e) { addLog(`✗ ${String(e)}`, 'err'); }
   }, [addLog]);
 
@@ -417,7 +417,7 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
 
   // Install pack
   const installPack = useCallback(async (packId: string) => {
-    addLog(`Installazione pack: ${packId}…`, 'info');
+    addLog(`Installing pack: ${packId}…`, 'info');
     try {
       const res = await fetch('/api/node-packs/install', {
         method: 'POST',
@@ -426,18 +426,18 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
       });
       const data = await res.json();
       if (data.success) {
-        addLog(`✓ Pack ${packId} installato (v${data.version}) — restart richiesto`, 'ok');
+        addLog(`✓ Pack ${packId} installed (v${data.version}) — restart required`, 'ok');
         setRestartRequired(true);
         await fetchRegistry();
       } else {
-        addLog(`✗ Install fallito: ${data.error}`, 'err');
+        addLog(`✗ Install failed: ${data.error}`, 'err');
       }
     } catch (e) { addLog(`✗ ${String(e)}`, 'err'); }
   }, [addLog, fetchRegistry]);
 
   // Uninstall pack
   const uninstallPack = useCallback(async (packId: string) => {
-    addLog(`Disinstallazione pack: ${packId}…`, 'info');
+    addLog(`Uninstalling pack: ${packId}…`, 'info');
     try {
       const res = await fetch('/api/node-packs/uninstall', {
         method: 'POST',
@@ -446,18 +446,18 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
       });
       const data = await res.json();
       if (data.success) {
-        addLog(`✓ Pack ${packId} rimosso — restart richiesto`, 'ok');
+        addLog(`✓ Pack ${packId} removed — restart required`, 'ok');
         setRestartRequired(true);
         await fetchRegistry();
       } else {
-        addLog(`✗ Uninstall fallito: ${data.error}`, 'err');
+        addLog(`✗ Uninstall failed: ${data.error}`, 'err');
       }
     } catch (e) { addLog(`✗ ${String(e)}`, 'err'); }
   }, [addLog, fetchRegistry]);
 
   // Try uninstall core (should fail)
   const tryUninstallCore = useCallback(async () => {
-    addLog('Test protezione core: uninstall agent1-foundation…', 'info');
+    addLog('Test core protection: uninstall agent1-foundation…', 'info');
     try {
       const res = await fetch('/api/node-packs/uninstall', {
         method: 'POST',
@@ -466,20 +466,20 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
       });
       const data = await res.json();
       if (!data.success) {
-        addLog(`✓ Correttamente rifiutato: "${data.error}" (HTTP ${res.status})`, 'ok');
+        addLog(`✓ Correctly rejected: "${data.error}" (HTTP ${res.status})`, 'ok');
       } else {
-        addLog('✗ ERRORE: core pack eliminato! Non dovrebbe succedere!', 'err');
+        addLog('✗ ERROR: core pack deleted! This should not happen!', 'err');
       }
     } catch (e) { addLog(`✗ ${String(e)}`, 'err'); }
   }, [addLog]);
 
   // Restart server
   const triggerRestart = useCallback(async () => {
-    addLog('Invio POST /api/restart…', 'info');
+    addLog('Sending POST /api/restart…', 'info');
     setRestarting(true);
     try {
       await fetch('/api/restart', { method: 'POST' });
-      addLog('✓ Restart richiesto — polling health ogni 2s…', 'ok');
+      addLog('✓ Restart requested — polling health every 2s…', 'ok');
       const maxWait = 30000;
       const interval = 2000;
       const start = Date.now();
@@ -487,7 +487,7 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
         if (Date.now() - start > maxWait) {
           setRestarting(false);
           setHealthStatus('timeout');
-          addLog('✗ Server non ha risposto entro 30s', 'err');
+          addLog('✗ Server did not respond within 30s', 'err');
           return;
         }
         fetch('/api/health')
@@ -496,7 +496,7 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
               setRestarting(false);
               setRestartRequired(false);
               setHealthStatus('online (restarted)');
-              addLog('✓ Server riavviato con successo!', 'ok');
+              addLog('✓ Server restarted successfully!', 'ok');
             } else {
               setTimeout(poll, interval);
             }
@@ -509,7 +509,7 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
       setTimeout(poll, interval);
     } catch (e) {
       setRestarting(false);
-      addLog(`✗ Restart fallito: ${String(e)}`, 'err');
+      addLog(`✗ Restart failed: ${String(e)}`, 'err');
     }
   }, [addLog]);
 
@@ -517,7 +517,7 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
   const toggleBadge = useCallback(() => {
     const next = !nodePackBadge;
     setNodePackBadge(next);
-    addLog(`Badge → ${next ? 'ATTIVO (arancione)' : 'spento'}`, next ? 'ok' : 'info');
+    addLog(`Badge → ${next ? 'ACTIVE (orange)' : 'off'}`, next ? 'ok' : 'info');
   }, [addLog, nodePackBadge, setNodePackBadge]);
 
   const available = packs.filter(p => p.status === 'available');
@@ -526,19 +526,19 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
 
   return (
     <>
-      <SectionHeader label="B" title="Node Pack Manager — Debug tecnico" subtitle="Test completo: registry, install, uninstall, restart, badge" />
+      <SectionHeader label="B" title="Node Pack Manager — Technical debug" subtitle="Full test: registry, install, uninstall, restart, badge" />
 
       {/* State readout */}
       <div style={{ background: '#181c25', border: '1px solid #2a3040', borderRadius: 8, padding: '1rem', marginBottom: '1rem', fontSize: 12 }}>
-        <div style={{ fontWeight: 600, marginBottom: '0.5rem', color: '#c5a44e', fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Stato Node Pack Manager</div>
+        <div style={{ fontWeight: 600, marginBottom: '0.5rem', color: '#c5a44e', fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Node Pack Manager state</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
           <StateRow label="packs (registry)" value={packs.length > 0 ? `${packs.length} (${available.length} available, ${installed.length} installed, ${updatable.length} updates)` : '—'} />
           <StateRow label="health" value={healthStatus} warn={healthStatus === 'offline' || healthStatus === 'timeout'} />
           <StateRow label="restartRequired" value={String(restartRequired)} warn={restartRequired} />
           <StateRow label="restarting" value={String(restarting)} />
           <StateRow label="badge (Zustand)" value={String(nodePackBadge)} />
-          <StateRow label="activeNodeTypes" value={storeActiveTypes.length > 0 ? `${storeActiveTypes.length} tipi` : '—'} />
-          <StateRow label="activeTypes (API)" value={activeTypes.length > 0 ? `${activeTypes.length} tipi` : '—'} />
+          <StateRow label="activeNodeTypes" value={storeActiveTypes.length > 0 ? `${storeActiveTypes.length} types` : '—'} />
+          <StateRow label="activeTypes (API)" value={activeTypes.length > 0 ? `${activeTypes.length} types` : '—'} />
         </div>
       </div>
 
@@ -555,10 +555,10 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
         {/* Badge & UI */}
         <Section title="Badge & UI">
           <BtnGroup>
-            <Btn onClick={toggleBadge} accent><Eye className="w-3 h-3" />{nodePackBadge ? 'Spegni badge' : 'Accendi badge'}</Btn>
+            <Btn onClick={toggleBadge} accent><Eye className="w-3 h-3" />{nodePackBadge ? 'Turn off badge' : 'Turn on badge'}</Btn>
             <Btn onClick={() => {
-              addLog('Nota: il Node Pack Manager dialog è accessibile dal bottone Puzzle nell\'header (vicino a Settings)', 'info');
-            }}><Puzzle className="w-3 h-3" />Info: apri dal Header</Btn>
+              addLog('Note: the Node Pack Manager dialog is accessible from the Puzzle button in the header (near Settings)', 'info');
+            }}><Puzzle className="w-3 h-3" />Info: open from Header</Btn>
           </BtnGroup>
         </Section>
 
@@ -572,8 +572,8 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
                 </Btn>
               ))
             ) : (
-              <Btn onClick={() => addLog('Nessun pack disponibile per install — prima fai "Fetch Registry"', 'info')} disabled={loading}>
-                <Download className="w-3 h-3" />Nessun pack disponibile
+              <Btn onClick={() => addLog('No packs available for install — do "Fetch Registry" first', 'info')} disabled={loading}>
+                <Download className="w-3 h-3" />No packs available
               </Btn>
             )}
             {installed.filter(p => p.id !== 'agent1-foundation').length > 0 ? (
@@ -601,7 +601,7 @@ function NodePackTestSection({ addLog }: { addLog: (msg: string, type?: 'info' |
       {packs.length > 0 && (
         <div style={{ background: '#181c25', border: '1px solid #2a3040', borderRadius: 8, padding: '1rem', marginBottom: '1.5rem' }}>
           <div style={{ fontWeight: 600, marginBottom: '0.75rem', color: '#c5a44e', fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-            Packs nel registry ({packs.length})
+            Packs in registry ({packs.length})
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {packs.map(p => (

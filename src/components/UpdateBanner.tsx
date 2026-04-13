@@ -4,7 +4,7 @@ import { ArrowUp, X, CheckCircle2, AlertCircle, RotateCcw, RefreshCw, SkipForwar
 import { useState } from 'react';
 import { useUpdateCheck } from '@/hooks/useUpdateCheck';
 
-const STEPS = ['Download', 'Estrazione', 'Backup', 'Sostituzione', 'npm install'];
+const STEPS = ['Download', 'Extraction', 'Backup', 'Replacement', 'npm install'];
 
 /** Detect platform to show correct restart command */
 function getRestartCmd(): string {
@@ -118,8 +118,8 @@ export function UpdateBanner() {
           <div className="flex items-center gap-3 px-4" style={{ height: 40 }}>
             <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#22c55e' }} />
             <span className="text-xs flex-1" style={{ color: '#d1fae5' }}>
-              <strong>Aggiornamento completato.</strong>{' '}
-              <span style={{ opacity: 0.7 }}>Chiudi e rilancia</span>{' '}
+              <strong>Update completed.</strong>{' '}
+              <span style={{ opacity: 0.7 }}>Close and restart</span>{' '}
               <code style={{
                 background: 'rgba(255,255,255,0.07)',
                 padding: '1px 6px',
@@ -140,9 +140,9 @@ export function UpdateBanner() {
               className={`text-xs flex-1 ${errorExpanded ? '' : 'truncate'}`}
               style={{ color: '#fca5a5', cursor: 'pointer' }}
               onClick={() => setErrorExpanded(!errorExpanded)}
-              title={errorExpanded ? 'Clicca per comprimere' : 'Clicca per espandere l\'errore completo'}
+              title={errorExpanded ? 'Click to collapse' : 'Click to expand full error'}
             >
-              <strong>Errore:</strong>{' '}
+              <strong>Error:</strong>{' '}
               <span style={{ opacity: 0.85 }}>{progressError}</span>
             </span>
             <button
@@ -155,7 +155,7 @@ export function UpdateBanner() {
               }}
             >
               <RotateCcw className="w-3 h-3" />
-              Riprova
+              Retry
             </button>
             {!isUpdating && (
               <button
@@ -177,10 +177,10 @@ export function UpdateBanner() {
             <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#f87171' }} />
             <span className="text-xs flex-1 truncate" style={{ color: '#fca5a5', opacity: 0.8 }}>
               {updateInfo.error === 'network_error' || updateInfo.error?.includes('Network')
-                ? 'Controllo aggiornamenti non riuscito. Verrà riprovato automaticamente.'
+                ? 'Update check failed. Will retry automatically.'
                 : updateInfo.error?.includes('rate limit') || updateInfo.error?.includes('Rate limit')
-                ? 'Troppe richieste al server. Nuovo tentativo tra un\'ora.'
-                : 'Impossibile verificare aggiornamenti. Verrà riprovato.'}
+                ? 'Too many requests to server. Will retry in one hour.'
+                : 'Unable to check for updates. Will retry.'}
             </span>
             <button
               onClick={checkNow}
@@ -192,7 +192,7 @@ export function UpdateBanner() {
               }}
             >
               <RotateCcw className="w-3 h-3" />
-              Riprova
+              Retry
             </button>
             <button
               onClick={dismissUpdate}
@@ -217,12 +217,12 @@ export function UpdateBanner() {
               />
               <span className="text-xs font-medium flex-1" style={{ color: 'var(--foreground)' }}>
                 {isStarting && !isUpdating
-                  ? 'Preparazione…'
+                  ? 'Preparing…'
                   : step
                   ? status === 'verifying'
-                    ? 'Verifica integrità…'
-                    : `${STEPS[(step ?? 1) - 1] ?? 'Elaborazione'}…`
-                  : 'Avvio…'}
+                    ? 'Verifying integrity…'
+                    : `${STEPS[(step ?? 1) - 1] ?? 'Processing'}…`
+                  : 'Starting…'}
               </span>
               <span
                 className="text-xs tabular-nums font-medium"
@@ -325,7 +325,7 @@ export function UpdateBanner() {
                   v{updateInfo.latestVersion}
                 </span>
                 <span style={{ fontSize: 11, color: 'var(--foreground)', opacity: 0.4 }}>
-                  disponibile
+                  available
                 </span>
                 {updateInfo.releaseNotes && (
                   <button
@@ -345,7 +345,7 @@ export function UpdateBanner() {
                     onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
                     onMouseLeave={e => (e.currentTarget.style.opacity = '0.65')}
                   >
-                    {showNotes ? 'nascondi' : 'note'}
+                    {showNotes ? 'hide' : 'notes'}
                   </button>
                 )}
               </div>
@@ -367,7 +367,7 @@ export function UpdateBanner() {
                 }}
               >
                 <ArrowUp className="w-3 h-3" />
-                Aggiorna ora
+                Update now
               </button>
 
               {/* Skip this version */}
@@ -387,10 +387,10 @@ export function UpdateBanner() {
                 }}
                 onMouseEnter={e => (e.currentTarget.style.opacity = '0.65')}
                 onMouseLeave={e => (e.currentTarget.style.opacity = '0.25')}
-                title="Salta questa versione"
+                title="Skip this version"
               >
                 <SkipForward className="w-3 h-3" />
-                Salta
+                Skip
               </button>
 
               {/* Dismiss */}
@@ -400,7 +400,7 @@ export function UpdateBanner() {
                 style={{ color: 'var(--foreground)', opacity: 0.25 }}
                 onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
                 onMouseLeave={e => (e.currentTarget.style.opacity = '0.25')}
-                title="Ignora per ora"
+                title="Dismiss for now"
               >
                 <X className="w-3.5 h-3.5" />
               </button>

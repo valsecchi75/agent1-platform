@@ -1,11 +1,11 @@
 /**
- * graphStore.ts — Graph Slice (Zona Congelata)
+ * graphStore.ts — Graph Slice (Frozen Zone)
  *
  * Owns: nodes, edges, edgeStyle, clipboard, groups.
  * Provides: all node/edge/group/clipboard operations, getConnectedInputs, validateWorkflow.
  *
- * ZONA CONGELATA — Do NOT modify without contract test + PR review.
- * See CLAUDE.md § "Zona Congelata" for rules.
+ * FROZEN ZONE — Do NOT modify without contract test + PR review.
+ * See CLAUDE.md § "Frozen Zone" for rules.
  */
 
 import {

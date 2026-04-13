@@ -1,5 +1,5 @@
 /**
- * graphStore — Zona Congelata Contract Tests
+ * graphStore — Frozen Zone Contract Tests
  *
  * These tests pin the public API surface of graphStore.ts.
  * If any of these tests break, it means the contract was changed — which

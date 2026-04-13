@@ -25,26 +25,26 @@ REM ================================================================
 
 where node >nul 2>nul
 if !ERRORLEVEL! NEQ 0 (
-    echo  [ERRORE] Node.js non trovato. Installa da https://nodejs.org
-    echo [ERRORE] Node.js non trovato>> "!LOG_FILE!"
+    echo  [ERROR] Node.js not found. Install from https://nodejs.org
+    echo [ERROR] Node.js not found>> "!LOG_FILE!"
     pause & exit /b 1
 )
 where git >nul 2>nul
 if !ERRORLEVEL! NEQ 0 (
-    echo  [ERRORE] Git non trovato. Installa da https://git-scm.com
-    echo [ERRORE] Git non trovato>> "!LOG_FILE!"
+    echo  [ERROR] Git not found. Install from https://git-scm.com
+    echo [ERROR] Git not found>> "!LOG_FILE!"
     pause & exit /b 1
 )
 where gh >nul 2>nul
 if !ERRORLEVEL! NEQ 0 (
-    echo  [ERRORE] GitHub CLI non trovato. Installa da https://cli.github.com
-    echo [ERRORE] GitHub CLI non trovato>> "!LOG_FILE!"
+    echo  [ERROR] GitHub CLI not found. Install from https://cli.github.com
+    echo [ERROR] GitHub CLI not found>> "!LOG_FILE!"
     pause & exit /b 1
 )
 gh auth status >nul 2>nul
 if !ERRORLEVEL! NEQ 0 (
-    echo  [ERRORE] GitHub CLI non autenticato. Lancia: gh auth login
-    echo [ERRORE] GitHub CLI non autenticato>> "!LOG_FILE!"
+    echo  [ERROR] GitHub CLI not authenticated. Run: gh auth login
+    echo [ERROR] GitHub CLI not authenticated>> "!LOG_FILE!"
     pause & exit /b 1
 )
 
@@ -54,7 +54,7 @@ set /p CURRENT_VERSION=<"%TEMP%\a1_ver.txt"
 del "%TEMP%\a1_ver.txt" 2>nul
 
 if "!CURRENT_VERSION!"=="" (
-    echo  [ERRORE] Impossibile leggere versione da package.json.
+    echo  [ERROR] Unable to read version from package.json.
     pause & exit /b 1
 )
 echo  Versione corrente: !CURRENT_VERSION!
@@ -67,7 +67,7 @@ if "%~1"=="--dry-run" set "DRY_RUN=1"
 
 if "!DRY_RUN!"=="1" (
     echo  =========================================
-    echo   DRY RUN - nessuna azione reale
+    echo   DRY RUN - no real actions
     echo  =========================================
     echo.
 )
@@ -79,7 +79,7 @@ del "%TEMP%\a1_phase.txt" 2>nul
 if "!PHASE!"=="" set "PHASE=stable"
 
 REM ================================================================
-REM  STEP 2 - Scelta tipo di bump (SOLO calcolo, nessuna scrittura)
+REM  STEP 2 - Choose bump type (CALCULATION ONLY, no writes)
 REM ================================================================
 
 if "!PHASE!"=="alpha" goto :menu_alpha
@@ -87,46 +87,46 @@ if "!PHASE!"=="beta"  goto :menu_beta
 goto :menu_stable
 
 :menu_alpha
-echo  Fase: ALPHA
+echo  Phase: ALPHA
 echo.
-echo  Scegli il tipo di release:
+echo  Choose release type:
 echo    [a] Alpha patch    0.9.x-alpha -- 0.9.y-alpha
-echo    [b] Promuovi a Beta          -- 1.0.0-beta
-echo    [r] Release finale           -- 1.0.0
+echo    [b] Promote to Beta          -- 1.0.0-beta
+echo    [r] Final release            -- 1.0.0
 echo.
-set /p "BUMP=  Scelta: "
+set /p "BUMP=  Choice: "
 if /i "!BUMP!"=="a" goto :calc_version
 if /i "!BUMP!"=="b" goto :calc_version
 if /i "!BUMP!"=="r" goto :calc_version
-echo  [ERRORE] Scelta non valida. Usa: a, b, r
+echo  [ERROR] Invalid choice. Use: a, b, r
 pause & exit /b 1
 
 :menu_beta
-echo  Fase: BETA
+echo  Phase: BETA
 echo.
-echo  Scegli il tipo di release:
+echo  Choose release type:
 echo    [b] Beta patch     1.0.0-beta.x -- 1.0.0-beta.y
-echo    [r] Release finale              -- 1.0.0
+echo    [r] Final release              -- 1.0.0
 echo.
-set /p "BUMP=  Scelta: "
+set /p "BUMP=  Choice: "
 if /i "!BUMP!"=="b" goto :calc_version
 if /i "!BUMP!"=="r" goto :calc_version
-echo  [ERRORE] Scelta non valida. Usa: b, r
+echo  [ERROR] Invalid choice. Use: b, r
 pause & exit /b 1
 
 :menu_stable
-echo  Fase: STABILE
+echo  Phase: STABLE
 echo.
-echo  Scegli il tipo di release:
+echo  Choose release type:
 echo    [p] Patch   (bug fix)
-echo    [m] Minor   (nuove feature)
+echo    [m] Minor   (new features)
 echo    [M] Major   (breaking changes)
 echo.
-set /p "BUMP=  Scelta: "
+set /p "BUMP=  Choice: "
 if "!BUMP!"=="p" goto :calc_version
 if "!BUMP!"=="m" goto :calc_version
 if "!BUMP!"=="M" goto :calc_version
-echo  [ERRORE] Scelta non valida. Usa: p, m, M
+echo  [ERROR] Invalid choice. Use: p, m, M
 pause & exit /b 1
 
 :calc_version
@@ -135,37 +135,37 @@ set /p NEW_VERSION=<"%TEMP%\a1_newver.txt"
 del "%TEMP%\a1_newver.txt" 2>nul
 
 if "!NEW_VERSION!"=="ERROR" (
-    echo  [ERRORE] Calcolo versione fallito.
+    echo  [ERROR] Version calculation failed.
     pause & exit /b 1
 )
 if "!NEW_VERSION!"=="" (
-    echo  [ERRORE] Calcolo versione fallito.
+    echo  [ERROR] Version calculation failed.
     pause & exit /b 1
 )
 
 echo.
-echo  Versione suggerita: !NEW_VERSION!
+echo  Suggested version: !NEW_VERSION!
 echo.
-set /p "OVERRIDE_VERSION=  Premi INVIO per confermare, oppure scrivi una versione diversa: "
+set /p "OVERRIDE_VERSION=  Press ENTER to confirm, or type a different version: "
 if not "!OVERRIDE_VERSION!"=="" set "NEW_VERSION=!OVERRIDE_VERSION!"
-echo  [OK] Versione finale: !NEW_VERSION!
-echo [INFO] Versione finale: !NEW_VERSION!>> "!LOG_FILE!"
+echo  [OK] Final version: !NEW_VERSION!
+echo [INFO] Final version: !NEW_VERSION!>> "!LOG_FILE!"
 echo.
 
 REM -- ZIP_NAME --
 set "ZIP_NAME=agent1-v!NEW_VERSION!.zip"
 
-REM -- Dry run salta step 3-6 --
+REM -- Dry run skips step 3-6 --
 if "!DRY_RUN!"=="1" goto :step7_summary
 
 REM ================================================================
-REM  STEP 2b - Auto-commit modifiche pendenti (GR-007)
-REM  git diff confronta commit, non working tree.
-REM  Se ci sono file non committati, li committiamo ora.
+REM  STEP 2b - Auto-commit pending changes (GR-007)
+REM  git diff compares commits, not working tree.
+REM  If there are uncommitted files, commit them now.
 REM ================================================================
 echo.
 echo  ----------------------------------------
-echo   STEP 2b: Verifica modifiche non committate
+echo   STEP 2b: Check uncommitted changes
 echo  ----------------------------------------
 echo.
 
@@ -178,66 +178,66 @@ REM Check for untracked files too
 for /f %%i in ('git ls-files --others --exclude-standard ^| find /c /v ""') do set "UNTRACKED_COUNT=%%i"
 
 if !HAS_UNSTAGED! EQU 0 if !HAS_STAGED! EQU 0 if !UNTRACKED_COUNT! EQU 0 (
-    echo  [OK] Nessuna modifica pendente.
-    echo [OK] Working tree pulito>> "!LOG_FILE!"
+    echo  [OK] No pending changes.
+    echo [OK] Clean working tree>> "!LOG_FILE!"
     goto :step3_build
 )
 
-echo  Trovate modifiche non committate:
+echo  Found uncommitted changes:
 git status --short
 echo.
-set /p "AUTO_COMMIT=  Committare automaticamente prima della release? (s/n): "
+set /p "AUTO_COMMIT=  Auto-commit before release? (y/n): "
 if /i "!AUTO_COMMIT!"=="n" (
-    echo  [ATTENZIONE] Procedo senza commit. Il delta potrebbe non includere le ultime modifiche.
-    echo [WARN] Utente ha scelto di non committare>> "!LOG_FILE!"
+    echo  [WARNING] Proceeding without commit. Delta may not include latest changes.
+    echo [WARN] User chose not to commit>> "!LOG_FILE!"
     goto :step3_build
 )
 
 git add -A
 git commit -m "chore: pre-release changes for v!NEW_VERSION!"
 if !ERRORLEVEL! EQU 0 (
-    echo  [OK] Modifiche committate automaticamente.
+    echo  [OK] Changes auto-committed.
     echo [OK] Auto-commit pre-release>> "!LOG_FILE!"
 ) else (
-    echo  [ATTENZIONE] Commit fallito. Procedo comunque.
-    echo [WARN] Auto-commit fallito>> "!LOG_FILE!"
+    echo  [WARNING] Commit failed. Proceeding anyway.
+    echo [WARN] Auto-commit failed>> "!LOG_FILE!"
 )
 
 :step3_build
 
 REM ================================================================
-REM  STEP 3 - Build di verifica
-REM  (PRIMA del version bump — se fallisce, nulla viene modificato)
+REM  STEP 3 - Verification build
+REM  (BEFORE version bump — if fails, nothing modified)
 REM ================================================================
 echo.
 echo  ----------------------------------------
-echo   STEP 3: Build di verifica
+echo   STEP 3: Verification build
 echo  ----------------------------------------
 echo.
 call npm run build
 if !ERRORLEVEL! NEQ 0 (
-    echo  [ERRORE] Build fallito.
-    echo [ERRORE] Build fallito>> "!LOG_FILE!"
-    set /p "BUILD_CHOICE=  Abortire o continuare comunque? (a/c): "
+    echo  [ERROR] Build failed.
+    echo [ERROR] Build failed>> "!LOG_FILE!"
+    set /p "BUILD_CHOICE=  Abort or continue anyway? (a/c): "
     if /i "!BUILD_CHOICE!"=="a" (
-        echo  Nessun file modificato - annullamento pulito.
-        echo [INFO] Annullato prima del bump - nessun rollback necessario>> "!LOG_FILE!"
+        echo  No files modified - clean abort.
+        echo [INFO] Aborted before bump - no rollback needed>> "!LOG_FILE!"
         pause & exit /b 0
     )
-    echo  [ATTENZIONE] Continuo nonostante il build fallito.
+    echo  [WARNING] Continuing despite build failure.
 ) else (
-    echo  [OK] Build riuscito
-    echo [OK] Build riuscito>> "!LOG_FILE!"
+    echo  [OK] Build succeeded
+    echo [OK] Build succeeded>> "!LOG_FILE!"
 )
 
 REM ================================================================
-REM  STEP 4 - Delta detection + Creazione zip
-REM  (PRIMA del version bump — se fallisce, nulla viene modificato)
-REM  Usa script esterno per evitare problemi di escape e lunghezza CLI
+REM  STEP 4 - Delta detection + Zip creation
+REM  (BEFORE version bump — if fails, nothing modified)
+REM  Uses external script to avoid escape and CLI length issues
 REM ================================================================
 echo.
 echo  ----------------------------------------
-echo   STEP 4: Delta detection + Creazione zip
+echo   STEP 4: Delta detection + Zip creation
 echo  ----------------------------------------
 echo.
 
@@ -246,7 +246,7 @@ if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
 if not exist "release\.tmp" mkdir "release\.tmp" 2>nul
 
 if not exist "release\.releaseinclude" (
-    echo  [ERRORE] release\.releaseinclude non trovato.
+    echo  [ERROR] release\.releaseinclude not found.
     pause & exit /b 1
 )
 
@@ -261,32 +261,32 @@ for /f "delims=" %%t in ('git tag --list "v*" --sort=-version:refname 2^>nul') d
 )
 
 if "!LAST_TAG!"=="" (
-    echo  [INFO] Nessun tag precedente. Creo release FULL.
-    echo [INFO] Nessun tag - release FULL>> "!LOG_FILE!"
+    echo  [INFO] No previous tag. Creating FULL release.
+    echo [INFO] No tag - FULL release>> "!LOG_FILE!"
     set "RELEASE_TYPE=full"
 ) else (
-    echo  [INFO] Ultimo tag: !LAST_TAG! - Creo release DELTA.
-    echo [INFO] Ultimo tag: !LAST_TAG! - DELTA>> "!LOG_FILE!"
+    echo  [INFO] Last tag: !LAST_TAG! - Creating DELTA release.
+    echo [INFO] Last tag: !LAST_TAG! - DELTA>> "!LOG_FILE!"
     set "RELEASE_TYPE=delta"
     set "PREVIOUS_VERSION=!LAST_TAG:~1!"
 )
 
 REM ================================================================
-REM  Delega la creazione staging a build-staging.js (script esterno)
+REM  Delegate staging creation to build-staging.js (external script)
 REM ================================================================
 
 node release/build-staging.js "!RELEASE_TYPE!" "!NEW_VERSION!" "!PREVIOUS_VERSION!" "!LAST_TAG!"
 
 if !ERRORLEVEL! NEQ 0 (
-    echo  [ERRORE] build-staging.js ha restituito errore.
-    echo [ERRORE] build-staging.js fallito>> "!LOG_FILE!"
+    echo  [ERROR] build-staging.js returned error.
+    echo [ERROR] build-staging.js failed>> "!LOG_FILE!"
 )
 
 REM Leggi risultato da Node
 if not exist "release\.tmp\a1_build_result.txt" (
-    echo  [ERRORE] Delta detection fallita - nessun risultato da build-staging.js.
-    echo  [INFO] Nessun file modificato - annullamento pulito.
-    echo [ERRORE] Delta detection fallita>> "!LOG_FILE!"
+    echo  [ERROR] Delta detection failed - no result from build-staging.js.
+    echo  [INFO] No files modified - clean abort.
+    echo [ERROR] Delta detection failed>> "!LOG_FILE!"
     pause & exit /b 0
 )
 
@@ -303,43 +303,43 @@ for /f "usebackq tokens=1,* delims==" %%a in ("release\.tmp\a1_build_vars.txt") 
 del "release\.tmp\a1_build_vars.txt" 2>nul
 
 if "!BUILD_error!"=="NO_CHANGES" (
-    echo  [INFO] Nessun file modificato rispetto a !LAST_TAG!. Nulla da rilasciare.
-    echo [INFO] Nessun file modificato - annullamento pulito>> "!LOG_FILE!"
+    echo  [INFO] No files changed since !LAST_TAG!. Nothing to release.
+    echo [INFO] No files modified - clean abort>> "!LOG_FILE!"
     del "release\.tmp\a1_build_result.txt" 2>nul
     if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
     pause & exit /b 0
 )
 if not "!BUILD_error!"=="none" (
-    echo  [ERRORE] Delta detection: !BUILD_error!
-    echo  [INFO] Nessun file modificato - annullamento pulito.
-    echo [ERRORE] !BUILD_error!>> "!LOG_FILE!"
+    echo  [ERROR] Delta detection: !BUILD_error!
+    echo  [INFO] No files modified - clean abort.
+    echo [ERROR] !BUILD_error!>> "!LOG_FILE!"
     del "release\.tmp\a1_build_result.txt" 2>nul
     if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
     pause & exit /b 0
 )
 
-echo  [OK] !BUILD_type!: !BUILD_files! file inclusi, !BUILD_deleted! file eliminati
-echo [OK] !BUILD_type!: !BUILD_files! file, !BUILD_deleted! eliminati>> "!LOG_FILE!"
-echo  [OK] manifest.json generato (type: !BUILD_type!)
+echo  [OK] !BUILD_type!: !BUILD_files! files included, !BUILD_deleted! files deleted
+echo [OK] !BUILD_type!: !BUILD_files! files, !BUILD_deleted! deleted>> "!LOG_FILE!"
+echo  [OK] manifest.json generated (type: !BUILD_type!)
 
 REM Log file list dettagliato
 node -e "var r=JSON.parse(require('fs').readFileSync('release/.tmp/a1_build_result.txt','utf8'));var fs=require('fs');var log='';if(r.fileList)log+='\n[DELTA FILES]\n'+r.fileList;if(r.deletedList)log+='\n[DELETED FILES]\n'+r.deletedList;if(log)fs.appendFileSync('!LOG_FILE!',log+'\n');" 2>nul
 del "release\.tmp\a1_build_result.txt" 2>nul
 
 REM ================================================================
-REM  Crea ZIP da staging dir
+REM  Create ZIP from staging dir
 REM ================================================================
 echo.
-echo  Creazione ZIP: !ZIP_NAME!
+echo  Creating ZIP: !ZIP_NAME!
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try{$root='!CD!';$td=Join-Path $root '.release-staging';$zip=Join-Path $root '!ZIP_NAME!';if(-not(Test-Path $td)){throw 'Staging dir non trovata: '+$td};$fc=(Get-ChildItem -Path $td -Recurse -File).Count;Push-Location $td;Compress-Archive -Path '*' -DestinationPath $zip -Force;Pop-Location;$sz=[math]::Round((Get-Item $zip).Length/1MB,2);Write-Host('  Zip creato: !ZIP_NAME! - '+$sz+' MB - '+$fc+' file')}catch{Write-Host('  ERRORE PowerShell: '+$_.Exception.Message);exit 1}"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try{$root='!CD!';$td=Join-Path $root '.release-staging';$zip=Join-Path $root '!ZIP_NAME!';if(-not(Test-Path $td)){throw 'Staging dir not found: '+$td};$fc=(Get-ChildItem -Path $td -Recurse -File).Count;Push-Location $td;Compress-Archive -Path '*' -DestinationPath $zip -Force;Pop-Location;$sz=[math]::Round((Get-Item $zip).Length/1MB,2);Write-Host('  Zip created: !ZIP_NAME! - '+$sz+' MB - '+$fc+' files')}catch{Write-Host('  PowerShell ERROR: '+$_.Exception.Message);exit 1}"
 
 if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
 
 if not exist "!ZIP_NAME!" (
-    echo  [ERRORE] Creazione zip fallita.
-    echo  [INFO] Nessun file modificato - annullamento pulito.
-    echo [ERRORE] Creazione zip fallita>> "!LOG_FILE!"
+    echo  [ERROR] Zip creation failed.
+    echo  [INFO] No files modified - clean abort.
+    echo [ERROR] Zip creation failed>> "!LOG_FILE!"
     pause & exit /b 0
 )
 
@@ -351,14 +351,14 @@ del "%TEMP%\a1_zipsize.txt" 2>nul
 if "!ZIP_SIZE_MB!"=="" set "ZIP_SIZE_MB=0"
 
 echo  [OK] ZIP: !ZIP_SIZE_MB! MB (!BUILD_type!)
-echo [OK] ZIP creato: !ZIP_SIZE_MB! MB (!BUILD_type!)>> "!LOG_FILE!"
+echo [OK] ZIP created: !ZIP_SIZE_MB! MB (!BUILD_type!)>> "!LOG_FILE!"
 
 echo.
-set /p "CONFIRM_BUMP=  Build e ZIP OK. Proseguo con il version bump e commit? (s/n): "
+set /p "CONFIRM_BUMP=  Build and ZIP OK. Continue with version bump and commit? (y/n): "
 if /i not "!CONFIRM_BUMP!"=="s" goto :abort_cleanup
 
 REM ================================================================
-REM  STEP 4b - Version bump (ORA che build e zip sono OK)
+REM  STEP 4b - Version bump (NOW that build and zip are OK)
 REM ================================================================
 echo.
 echo  ----------------------------------------
@@ -366,26 +366,26 @@ echo   STEP 4b: Version bump
 echo  ----------------------------------------
 echo.
 
-REM -- Aggiorna badge versione nei file sorgente UI --
-node -e "var fs=require('fs');function toDisplay(v){var a=v.match(/^(\d+\.\d+\.\d+)-alpha/);var b=v.match(/^(\d+\.\d+\.\d+)-beta/);var s=v.match(/^(\d+\.\d+\.\d+)$/);if(a)return 'Alpha '+a[1];if(b)return 'Beta '+b[1];if(s)return 'v'+s[1];return v.charAt(0).toUpperCase()+v.slice(1)}var oldL=toDisplay('!CURRENT_VERSION!');var newL=toDisplay('!NEW_VERSION!');if(oldL===newL){process.stdout.write('  [INFO] Badge gia aggiornato ('+newL+')\n');process.exit(0)}var files=['src/app/credits/page.tsx','src/components/settings/CreditsModal.tsx'];var re=new RegExp('(>\\s*)'+oldL.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(\\s*<)','g');var updated=0;files.forEach(function(f){if(fs.existsSync(f)===false)return;var c=fs.readFileSync(f,'utf8');var n=c.replace(re,'$1'+newL+'$2');if(n!==c){fs.writeFileSync(f,n);updated++;process.stdout.write('  [OK] Badge aggiornato: '+f+'\n')}});if(updated===0)process.stdout.write('  [AVVISO] Nessun badge trovato - aggiornamento manuale necessario\n');" 2>nul
+REM -- Update version badge in UI source files --
+node -e "var fs=require('fs');function toDisplay(v){var a=v.match(/^(\d+\.\d+\.\d+)-alpha/);var b=v.match(/^(\d+\.\d+\.\d+)-beta/);var s=v.match(/^(\d+\.\d+\.\d+)$/);if(a)return 'Alpha '+a[1];if(b)return 'Beta '+b[1];if(s)return 'v'+s[1];return v.charAt(0).toUpperCase()+v.slice(1)}var oldL=toDisplay('!CURRENT_VERSION!');var newL=toDisplay('!NEW_VERSION!');if(oldL===newL){process.stdout.write('  [INFO] Badge already updated ('+newL+')\n');process.exit(0)}var files=['src/app/credits/page.tsx','src/components/settings/CreditsModal.tsx'];var re=new RegExp('(>\\s*)'+oldL.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(\\s*<)','g');var updated=0;files.forEach(function(f){if(fs.existsSync(f)===false)return;var c=fs.readFileSync(f,'utf8');var n=c.replace(re,'$1'+newL+'$2');if(n!==c){fs.writeFileSync(f,n);updated++;process.stdout.write('  [OK] Badge updated: '+f+'\n')}});if(updated===0)process.stdout.write('  [WARNING] No badge found - manual update required\n');" 2>nul
 
-REM -- Aggiorna package.json --
+REM -- Update package.json --
 node -e "var fs=require('fs');var p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version='!NEW_VERSION!';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
-echo  [OK] package.json aggiornato a v!NEW_VERSION!
-echo [OK] package.json aggiornato>> "!LOG_FILE!"
+echo  [OK] package.json updated to v!NEW_VERSION!
+echo [OK] package.json updated>> "!LOG_FILE!"
 
-REM -- Aggiorna start scripts --
+REM -- Update start scripts --
 if exist "start.bat" (
     node -e "var fs=require('fs');var c=fs.readFileSync('start.bat','utf8');c=c.replace(/v\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)*/,'v!NEW_VERSION!');fs.writeFileSync('start.bat',c);"
-    echo  [OK] start.bat aggiornato
+    echo  [OK] start.bat updated
 )
 if exist "start.sh" (
     node -e "var fs=require('fs');var c=fs.readFileSync('start.sh','utf8');c=c.replace(/v\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)*/,'v!NEW_VERSION!');fs.writeFileSync('start.sh',c);"
-    echo  [OK] start.sh aggiornato
+    echo  [OK] start.sh updated
 )
 
-echo  [OK] Version bump completato
-echo [OK] Version bump a v!NEW_VERSION!>> "!LOG_FILE!"
+echo  [OK] Version bump completed
+echo [OK] Version bump to v!NEW_VERSION!>> "!LOG_FILE!"
 
 REM ================================================================
 REM  STEP 5 - Git commit + tag + push
@@ -395,11 +395,11 @@ echo  ----------------------------------------
 echo   STEP 5: Git commit + tag + push
 echo  ----------------------------------------
 echo.
-echo  File modificati:
+echo  Modified files:
 git status --short
 echo.
 
-set /p "CONFIRM_COMMIT=  Confermi commit e push? (s/n): "
+set /p "CONFIRM_COMMIT=  Confirm commit and push? (y/n): "
 if /i not "!CONFIRM_COMMIT!"=="s" goto :abort_cleanup
 
 git add package.json start.bat start.sh src/app/credits/page.tsx src/components/settings/CreditsModal.tsx 2>nul
@@ -415,18 +415,18 @@ REM -- Push con auto-upstream --
 echo  Pushing...
 git push origin master:main 2>nul
 if !ERRORLEVEL! NEQ 0 (
-    echo  [AVVISO] Push fallito, provo con force...
-    set /p "FORCE_PUSH=  Fare force push? (s/n): "
-    if /i "!FORCE_PUSH!"=="s" (
+    echo  [WARNING] Push failed, trying with force...
+    set /p "FORCE_PUSH=  Do force push? (y/n): "
+    if /i "!FORCE_PUSH!"=="y" (
         git push origin master:main --force 2>nul
     ) else (
-        echo  Push saltato.
+        echo  Push skipped.
     )
 )
 
 REM Push tag separatamente
 git push origin "v!NEW_VERSION!" 2>nul
-echo  [OK] Push completato
+echo  [OK] Push completed
 echo [OK] Commit + tag + push>> "!LOG_FILE!"
 echo.
 
@@ -437,7 +437,7 @@ echo  ----------------------------------------
 echo   STEP 6: Release notes
 echo  ----------------------------------------
 echo.
-echo  Genero release notes...
+echo  Generating release notes...
 
 node -e "var fs=require('fs');try{var c=fs.readFileSync('CHANGELOG.md','utf8');var m=c.match(/## \[Unreleased\][\s\S]*?\n([\s\S]*?)(?=\n## \[|$)/);fs.writeFileSync('release/release-notes.tmp',m&&m[1]?m[1].trim():'Release v!NEW_VERSION!')}catch(e){fs.writeFileSync('release/release-notes.tmp','Release v!NEW_VERSION!')}" 2>nul
 
@@ -445,18 +445,18 @@ if not exist "release\release-notes.tmp" (
     echo Release v!NEW_VERSION!> "release\release-notes.tmp"
 )
 
-echo  Apro Notepad - chiudi quando hai finito.
+echo  Opening Notepad - close when done.
 echo.
 
 :edit_notes_loop
 start /wait notepad "release\release-notes.tmp"
 
 if not exist "release\release-notes.tmp" (
-    echo  [AVVISO] File note cancellato. Ricreato.
+    echo  [WARNING] Notes file deleted. Recreated.
     echo Release v!NEW_VERSION!> "release\release-notes.tmp"
 )
 
-echo  Anteprima:
+echo  Preview:
 echo  ----------------------------------------
 set "LINE_COUNT=0"
 for /f "usebackq tokens=* delims=" %%L in ("release\release-notes.tmp") do (
@@ -466,7 +466,7 @@ for /f "usebackq tokens=* delims=" %%L in ("release\release-notes.tmp") do (
 echo  ----------------------------------------
 echo.
 
-set /p "NOTES_OK=  Release notes OK? (s/n): "
+set /p "NOTES_OK=  Release notes OK? (y/n): "
 if /i not "!NOTES_OK!"=="s" goto :edit_notes_loop
 
 REM ================================================================
@@ -476,21 +476,21 @@ REM ================================================================
 :step7_summary
 echo.
 echo  ========================================
-echo   RIEPILOGO PUBBLICAZIONE
+echo   PUBLICATION SUMMARY
 echo  ========================================
 echo.
-echo  Versione:     v!NEW_VERSION!
-echo  Tipo:         !BUILD_type!
+echo  Version:      v!NEW_VERSION!
+echo  Type:         !BUILD_type!
 echo  Repository:   valsecchi75/agent1-platform
 echo  Tag:          v!NEW_VERSION!
 
 if "!DRY_RUN!"=="1" (
-    echo  Zip:          [non creato - dry run]
+    echo  Zip:          [not created - dry run]
     echo.
     echo  ========================================
     echo.
-    echo  [DRY RUN] Nessuna pubblicazione effettuata.
-    echo  Comando:
+    echo  [DRY RUN] No publication performed.
+    echo  Command:
     echo  gh release create "v!NEW_VERSION!" "!ZIP_NAME!" --title "AGENT 1 v!NEW_VERSION!" --notes-file "release/release-notes.tmp" --repo valsecchi75/agent1-platform
     echo.
     pause & exit /b 0
@@ -510,46 +510,46 @@ echo.
 echo  ========================================
 echo.
 
-set /p "CONFIRM_PUBLISH=  Pubblico la release? (s/n): "
-if /i not "!CONFIRM_PUBLISH!"=="s" (
+set /p "CONFIRM_PUBLISH=  Publish the release? (y/n): "
+if /i not "!CONFIRM_PUBLISH!"=="y" (
     echo.
-    echo  Pubblicazione annullata.
-    echo  Modifiche locali mantenute. Rilancia publish.bat per riprovare.
+    echo  Publication cancelled.
+    echo  Local changes retained. Rerun publish.bat to retry.
     goto :final_cleanup
 )
 
 echo.
-echo  Pubblico su GitHub...
+echo  Publishing on GitHub...
 echo [INFO] gh release create v!NEW_VERSION!>> "!LOG_FILE!"
 
 gh release create "v!NEW_VERSION!" "!ZIP_NAME!" --title "AGENT 1 v!NEW_VERSION!" --notes-file "release/release-notes.tmp" --repo valsecchi75/agent1-platform
 if !ERRORLEVEL! NEQ 0 (
     echo.
-    echo  [ERRORE] Pubblicazione fallita.
-    echo  [INFO] Verifica:
+    echo  [ERROR] Publication failed.
+    echo  [INFO] Check:
     echo    1. gh auth status
-    echo    2. Connessione internet
-    echo    3. Il tag v!NEW_VERSION! non esista gia come release
+    echo    2. Internet connection
+    echo    3. Tag v!NEW_VERSION! doesn't already exist as release
     echo.
-    echo  Per riprovare SOLO la pubblicazione:
+    echo  To retry ONLY the publication:
     echo    gh release create "v!NEW_VERSION!" "!ZIP_NAME!" --title "AGENT 1 v!NEW_VERSION!" --notes-file "release/release-notes.tmp" --repo valsecchi75/agent1-platform
     echo.
-    echo [ERRORE] gh release create fallito>> "!LOG_FILE!"
+    echo [ERROR] gh release create failed>> "!LOG_FILE!"
     pause & exit /b 1
 )
 
 echo.
 echo  ========================================
-echo   Release v!NEW_VERSION! pubblicata!
+echo   Release v!NEW_VERSION! published!
 echo  ========================================
 echo.
 echo  URL: https://github.com/valsecchi75/agent1-platform/releases/tag/v!NEW_VERSION!
 echo.
-echo [OK] Release v!NEW_VERSION! pubblicata>> "!LOG_FILE!"
+echo [OK] Release v!NEW_VERSION! published>> "!LOG_FILE!"
 
 REM ================================================================
-REM  STEP 8 - Candidate Release ZIP (clean, senza DB/dati)
-REM  Usa script esterno build-candidate.js
+REM  STEP 8 - Candidate Release ZIP (clean, no DB/data)
+REM  Uses external script build-candidate.js
 REM ================================================================
 echo  ----------------------------------------
 echo   STEP 8: Candidate Release ZIP
@@ -563,26 +563,26 @@ set "CANDIDATE_STAGING=.candidate-staging"
 if exist "!CANDIDATE_STAGING!" rmdir /s /q "!CANDIDATE_STAGING!" 2>nul
 if not exist "!CANDIDATE_DIR!" mkdir "!CANDIDATE_DIR!" 2>nul
 
-echo  Creo staging pulito (esclusi: storage, .db, .env, Token.txt)...
+echo  Creating clean staging (excluded: storage, .db, .env, Token.txt)...
 
 node release/build-candidate.js "!NEW_VERSION!" "!PREVIOUS_VERSION!"
 
 if !ERRORLEVEL! NEQ 0 (
-    echo  [AVVISO] Staging Candidate fallito - ZIP non creato
-    echo [AVVISO] Candidate staging fallito>> "!LOG_FILE!"
+    echo  [WARNING] Candidate staging failed - ZIP not created
+    echo [WARNING] Candidate staging failed>> "!LOG_FILE!"
     goto :after_candidate
 )
 
 if exist "!CANDIDATE_ZIP!" del "!CANDIDATE_ZIP!" 2>nul
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try{Set-Location '!CD!';$td='.candidate-staging';if(-not(Test-Path $td)){throw 'Candidate staging non trovata'};Compress-Archive -Path \"$td\*\" -DestinationPath '!CANDIDATE_ZIP!' -Force;$sz=[math]::Round((Get-Item '!CANDIDATE_ZIP!').Length/1MB,2);Write-Host('  [OK] Candidate: agent1-candidate-v!NEW_VERSION!.zip ('+$sz+' MB)')}catch{Write-Host('  [AVVISO] Candidate ZIP fallito: '+$_.Exception.Message);exit 1}"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try{Set-Location '!CD!';$td='.candidate-staging';if(-not(Test-Path $td)){throw 'Candidate staging not found'};Compress-Archive -Path \"$td\*\" -DestinationPath '!CANDIDATE_ZIP!' -Force;$sz=[math]::Round((Get-Item '!CANDIDATE_ZIP!').Length/1MB,2);Write-Host('  [OK] Candidate: agent1-candidate-v!NEW_VERSION!.zip ('+$sz+' MB)')}catch{Write-Host('  [WARNING] Candidate ZIP failed: '+$_.Exception.Message);exit 1}"
 
 if not exist "!CANDIDATE_ZIP!" (
-    echo  [AVVISO] Candidate ZIP non creato
-    echo [AVVISO] Candidate ZIP non creato>> "!LOG_FILE!"
+    echo  [WARNING] Candidate ZIP not created
+    echo [WARNING] Candidate ZIP not created>> "!LOG_FILE!"
 ) else (
-    echo  [OK] Salvato in: Candidate Release\agent1-candidate-v!NEW_VERSION!.zip
-    echo [OK] Candidate Release ZIP creato>> "!LOG_FILE!"
+    echo  [OK] Saved in: Candidate Release\agent1-candidate-v!NEW_VERSION!.zip
+    echo [OK] Candidate Release ZIP created>> "!LOG_FILE!"
 )
 
 :after_candidate
@@ -592,23 +592,23 @@ goto :final_cleanup
 
 :abort_cleanup
 echo.
-echo  Operazione annullata.
-echo [INFO] Operazione annullata dall'utente>> "!LOG_FILE!"
+echo  Operation cancelled.
+echo [INFO] Operation cancelled by user>> "!LOG_FILE!"
 if exist "release\release-notes.tmp" del "release\release-notes.tmp" 2>nul
 if exist "!ZIP_NAME!" del "!ZIP_NAME!" 2>nul
 if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
 if exist ".candidate-staging" rmdir /s /q ".candidate-staging" 2>nul
 
-REM -- Verifica se il bump era gia avvenuto --
+REM -- Check if bump already happened --
 node -p "require('./package.json').version" > "%TEMP%\a1_curver.txt" 2>nul
 set /p ABORT_VER=<"%TEMP%\a1_curver.txt"
 del "%TEMP%\a1_curver.txt" 2>nul
 if not "!ABORT_VER!"=="!CURRENT_VERSION!" (
-    echo  [AVVISO] package.json e' stato modificato (v!ABORT_VER!).
-    echo  Per annullare il bump:
+    echo  [WARNING] package.json has been modified (v!ABORT_VER!).
+    echo  To cancel the bump:
     echo    git checkout package.json start.bat start.sh src/app/credits/page.tsx src/components/settings/CreditsModal.tsx
 ) else (
-    echo  [OK] Nessun file modificato - annullamento pulito.
+    echo  [OK] No files modified - clean abort.
 )
 echo.
 pause
@@ -623,6 +623,6 @@ if exist ".candidate-staging" rmdir /s /q ".candidate-staging" 2>nul
 REM -- Prune old logs (keep last 20) --
 node -e "var fs=require('fs'),p=require('path'),d='release/logs';try{var ls=fs.readdirSync(d).filter(function(f){return f.startsWith('publish-')&&f.endsWith('.log')}).sort().reverse();for(var i=20;i<ls.length;i++){try{fs.unlinkSync(p.join(d,ls[i]))}catch(e){}}}catch(e){}" 2>nul
 
-echo [INFO] Cleanup completato>> "!LOG_FILE!"
+echo [INFO] Cleanup completed>> "!LOG_FILE!"
 pause
 exit /b 0

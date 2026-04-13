@@ -24,10 +24,10 @@ log() {
 #  STEP 1 — Prerequisiti + Info versione
 # ================================================================
 
-command -v node >/dev/null 2>&1 || { log "[ERRORE] Node.js non trovato."; exit 1; }
-command -v git >/dev/null 2>&1 || { log "[ERRORE] Git non trovato."; exit 1; }
-command -v gh >/dev/null 2>&1 || { log "[ERRORE] GitHub CLI non trovato. Installa: brew install gh"; exit 1; }
-gh auth status >/dev/null 2>&1 || { log "[ERRORE] GitHub CLI non autenticato. Lancia: gh auth login"; exit 1; }
+command -v node >/dev/null 2>&1 || { log "[ERROR] Node.js not found."; exit 1; }
+command -v git >/dev/null 2>&1 || { log "[ERROR] Git not found."; exit 1; }
+command -v gh >/dev/null 2>&1 || { log "[ERROR] GitHub CLI not found. Install: brew install gh"; exit 1; }
+gh auth status >/dev/null 2>&1 || { log "[ERROR] GitHub CLI not authenticated. Run: gh auth login"; exit 1; }
 
 CURRENT_VERSION=$(node -e "console.log(require('./package.json').version)")
 log "Versione corrente: $CURRENT_VERSION"
@@ -43,13 +43,13 @@ done
 
 if [ "$DRY_RUN" = "1" ]; then
   log "========================================="
-  log " DRY RUN — nessuna azione reale"
+  log " DRY RUN — no real actions"
   log "========================================="
   echo ""
 fi
 
 if [ "$FORCE_FULL" = "1" ]; then
-  log "[INFO] Modalita FULL forzata (--full)"
+  log "[INFO] FULL mode forced (--full)"
   echo ""
 fi
 
@@ -63,35 +63,35 @@ else
 fi
 
 # ================================================================
-#  STEP 2 — Scelta tipo di bump
+#  STEP 2 — Choose bump type
 # ================================================================
 
 if [ "$PHASE" = "alpha" ]; then
-  echo "  Fase: ALPHA"
+  echo "  Phase: ALPHA"
   echo ""
-  echo "  Scegli il tipo di release:"
+  echo "  Choose release type:"
   echo "    [a] Alpha patch    0.9.x-alpha > 0.9.y-alpha"
-  echo "    [b] Promuovi a Beta          > 1.0.0-beta"
-  echo "    [r] Release finale           > 1.0.0"
+  echo "    [b] Promote to Beta          > 1.0.0-beta"
+  echo "    [r] Final release            > 1.0.0"
   echo ""
-  read -p "  Scelta: " BUMP
+  read -p "  Choice: " BUMP
 elif [ "$PHASE" = "beta" ]; then
-  echo "  Fase: BETA"
+  echo "  Phase: BETA"
   echo ""
-  echo "  Scegli il tipo di release:"
+  echo "  Choose release type:"
   echo "    [b] Beta patch     1.0.0-beta.x > 1.0.0-beta.y"
-  echo "    [r] Release finale              > 1.0.0"
+  echo "    [r] Final release              > 1.0.0"
   echo ""
-  read -p "  Scelta: " BUMP
+  read -p "  Choice: " BUMP
 else
-  echo "  Fase: STABILE"
+  echo "  Phase: STABLE"
   echo ""
-  echo "  Scegli il tipo di release:"
+  echo "  Choose release type:"
   echo "    [p] Patch   (bug fix)"
-  echo "    [m] Minor   (nuove feature)"
+  echo "    [m] Minor   (new features)"
   echo "    [M] Major   (breaking changes)"
   echo ""
-  read -p "  Scelta: " BUMP
+  read -p "  Choice: " BUMP
 fi
 
 # Calculate new version
@@ -126,27 +126,27 @@ console.log(nv || 'ERROR');
 ")
 
 if [ "$NEW_VERSION" = "ERROR" ] || [ -z "$NEW_VERSION" ]; then
-  log "[ERRORE] Scelta non valida."
+  log "[ERROR] Invalid choice."
   exit 1
 fi
 
 echo ""
-log "Nuova versione: $NEW_VERSION"
+log "New version: $NEW_VERSION"
 echo ""
-read -p "  Confermi questa versione? (s/n): " CONFIRM_VER
-if [ "$CONFIRM_VER" != "s" ] && [ "$CONFIRM_VER" != "S" ]; then
-  echo "  Annullato."
+read -p "  Confirm this version? (y/n): " CONFIRM_VER
+if [ "$CONFIRM_VER" != "y" ] && [ "$CONFIRM_VER" != "Y" ] && [ "$CONFIRM_VER" != "s" ] && [ "$CONFIRM_VER" != "S" ]; then
+  echo "  Cancelled."
   exit 0
 fi
 
 # Update package.json + start scripts
 node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version='$NEW_VERSION';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
-log "[OK] package.json aggiornato a v$NEW_VERSION"
+log "[OK] package.json updated to v$NEW_VERSION"
 
 for STARTER in start.sh start.bat; do
   if [ -f "$STARTER" ]; then
     node -e "const fs=require('fs');const f='$STARTER';let c=fs.readFileSync(f,'utf8');c=c.replace(/v\d+\.\d+\.\d+[^\s]*/,'v$NEW_VERSION');fs.writeFileSync(f,c)"
-    log "[OK] $STARTER aggiornato"
+    log "[OK] $STARTER updated"
   fi
 done
 
@@ -156,16 +156,16 @@ ZIP_NAME="agent1-v${NEW_VERSION}.zip"
 if [ "$DRY_RUN" = "1" ]; then
   echo ""
   echo "  ========================================"
-  echo "   RIEPILOGO PUBBLICAZIONE"
+  echo "   PUBLICATION SUMMARY"
   echo "  ========================================"
   echo ""
-  echo "  Versione:       v$NEW_VERSION"
+  echo "  Version:        v$NEW_VERSION"
   echo "  Repository:     valsecchi75/agent1-platform"
   echo "  Tag:            v$NEW_VERSION"
-  echo "  Zip:            [non creato — dry run]"
+  echo "  Zip:            [not created — dry run]"
   echo ""
-  log "[DRY RUN] Nessuna pubblicazione effettuata."
-  echo "  Comando che verrebbe eseguito:"
+  log "[DRY RUN] No publication performed."
+  echo "  Command that would be executed:"
   echo "  gh release create \"v$NEW_VERSION\" \"$ZIP_NAME\" --title \"AGENT 1 v$NEW_VERSION\" --notes-file \"release/release-notes.tmp\" --repo valsecchi75/agent1-platform"
   echo ""
   exit 0
@@ -174,22 +174,22 @@ fi
 # Helper: cleanup on abort
 abort_cleanup() {
   echo ""
-  log "Operazione annullata."
+  log "Operation cancelled."
   rm -f "release/release-notes.tmp" 2>/dev/null
   rm -f "$ZIP_NAME" 2>/dev/null
   rm -rf ".release-staging" 2>/dev/null
-  echo "  [INFO] package.json e' gia stato aggiornato a v$NEW_VERSION."
-  echo "  [INFO] Se vuoi annullare anche il bump: git checkout package.json start.bat start.sh"
+  echo "  [INFO] package.json has already been updated to v$NEW_VERSION."
+  echo "  [INFO] If you want to cancel the bump too: git checkout package.json start.bat start.sh"
   echo ""
   exit 0
 }
 
 # ================================================================
-#  STEP 2b — Auto-commit modifiche pendenti (GR-007)
+#  STEP 2b — Auto-commit pending changes (GR-007)
 # ================================================================
 echo ""
 echo "  ----------------------------------------"
-echo "   STEP 2b: Verifica modifiche non committate"
+echo "   STEP 2b: Check uncommitted changes"
 echo "  ----------------------------------------"
 echo ""
 
@@ -200,25 +200,25 @@ UNTRACKED=$(git ls-files --others --exclude-standard | wc -l)
 if [ "$UNTRACKED" -gt 0 ]; then HAS_CHANGES=1; fi
 
 if [ "$HAS_CHANGES" -eq 0 ]; then
-  echo "  [OK] Nessuna modifica pendente."
-  log "[OK] Working tree pulito"
+  echo "  [OK] No pending changes."
+  log "[OK] Clean working tree"
 else
-  echo "  Trovate modifiche non committate:"
+  echo "  Found uncommitted changes:"
   git status --short
   echo ""
-  read -p "  Committare automaticamente prima della release? (s/n): " AUTO_COMMIT
-  if [ "$AUTO_COMMIT" = "s" ] || [ "$AUTO_COMMIT" = "S" ]; then
+  read -p "  Auto-commit before release? (y/n): " AUTO_COMMIT
+  if [ "$AUTO_COMMIT" = "y" ] || [ "$AUTO_COMMIT" = "Y" ] || [ "$AUTO_COMMIT" = "s" ] || [ "$AUTO_COMMIT" = "S" ]; then
     git add -A
     if git commit -m "chore: pre-release changes for v${NEW_VERSION}"; then
-      echo "  [OK] Modifiche committate automaticamente."
+      echo "  [OK] Changes auto-committed."
       log "[OK] Auto-commit pre-release"
     else
-      echo "  [ATTENZIONE] Commit fallito. Procedo comunque."
-      log "[WARN] Auto-commit fallito"
+      echo "  [WARNING] Commit failed. Proceeding anyway."
+      log "[WARN] Auto-commit failed"
     fi
   else
-    echo "  [ATTENZIONE] Procedo senza commit. Il delta potrebbe non includere le ultime modifiche."
-    log "[WARN] Utente ha scelto di non committare"
+    echo "  [WARNING] Proceeding without commit. Delta may not include latest changes."
+    log "[WARN] User chose not to commit"
   fi
 fi
 
@@ -227,24 +227,24 @@ fi
 # ================================================================
 echo ""
 echo "  ----------------------------------------"
-echo "   STEP 3: Build di verifica"
+echo "   STEP 3: Verification build"
 echo "  ----------------------------------------"
 echo ""
 
 if npm run build; then
-  log "[OK] Build riuscito"
+  log "[OK] Build succeeded"
 else
-  log "[ERRORE] Build fallito."
-  read -p "  Vuoi abortire o continuare comunque? (a/c): " BUILD_CHOICE
+  log "[ERROR] Build failed."
+  read -p "  Do you want to abort or continue anyway? (a/c): " BUILD_CHOICE
   if [ "$BUILD_CHOICE" != "c" ] && [ "$BUILD_CHOICE" != "C" ]; then
     abort_cleanup
   fi
-  log "[ATTENZIONE] Continuo nonostante il build fallito."
+  log "[WARNING] Continuing despite build failure."
 fi
 
 echo ""
-read -p "  Proseguo con la creazione dello zip? (s/n): " CONFIRM_ZIP
-if [ "$CONFIRM_ZIP" != "s" ] && [ "$CONFIRM_ZIP" != "S" ]; then
+read -p "  Continue with zip creation? (y/n): " CONFIRM_ZIP
+if [ "$CONFIRM_ZIP" != "y" ] && [ "$CONFIRM_ZIP" != "Y" ] && [ "$CONFIRM_ZIP" != "s" ] && [ "$CONFIRM_ZIP" != "S" ]; then
   abort_cleanup
 fi
 
@@ -253,14 +253,14 @@ fi
 # ================================================================
 echo ""
 echo "  ----------------------------------------"
-echo "   STEP 4: Delta detection + Creazione zip"
+echo "   STEP 4: Delta detection + Zip creation"
 echo "  ----------------------------------------"
 echo ""
 
 rm -f "$ZIP_NAME"
 
 if [ ! -f "release/.releaseinclude" ]; then
-  log "[ERRORE] File release/.releaseinclude non trovato."
+  log "[ERROR] File release/.releaseinclude not found."
   exit 1
 fi
 
@@ -273,11 +273,11 @@ if [ "$FORCE_FULL" = "0" ]; then
 fi
 
 if [ -z "$LAST_TAG" ]; then
-  log "[INFO] Nessun tag precedente trovato. Creo release FULL."
+  log "[INFO] No previous tag found. Creating FULL release."
   RELEASE_TYPE="full"
   PREVIOUS_VERSION="none"
 else
-  log "[INFO] Ultimo tag: $LAST_TAG - Creo release DELTA."
+  log "[INFO] Last tag: $LAST_TAG - Creating DELTA release."
   RELEASE_TYPE="delta"
   PREVIOUS_VERSION="${LAST_TAG#v}"
 fi
@@ -290,7 +290,7 @@ if [ "$RELEASE_TYPE" = "full" ]; then
   # ================================================================
   #  FULL release: include everything from .releaseinclude
   # ================================================================
-  log "Creazione ZIP FULL (tutti i file dalla whitelist)..."
+  log "Creating FULL ZIP (all files from whitelist)..."
 
   while IFS= read -r line; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -312,7 +312,7 @@ else
   # ================================================================
   #  DELTA release: include only changed files
   # ================================================================
-  log "Calcolo diff tra $LAST_TAG e HEAD..."
+  log "Computing diff between $LAST_TAG and HEAD..."
 
   CHANGED_FILES=$(git diff --name-only "$LAST_TAG" HEAD 2>/dev/null)
   DELETED_FILES=$(git diff --diff-filter=D --name-only "$LAST_TAG" HEAD 2>/dev/null)
@@ -359,20 +359,20 @@ console.log('DELTA_OK:' + copied + ':' + deletedIncl.length);
 " 2>>"$LOG_FILE")
 
   if [ "$DELTA_RESULT" = "NO_CHANGES" ]; then
-    log "[ERRORE] Nessun file modificato rispetto a $LAST_TAG. Nulla da rilasciare."
+    log "[ERROR] No files changed since $LAST_TAG. Nothing to release."
     abort_cleanup
   fi
 
   DELTA_FILES=$(echo "$DELTA_RESULT" | grep "DELTA_OK:" | cut -d: -f2)
   DELTA_DELETED=$(echo "$DELTA_RESULT" | grep "DELTA_OK:" | cut -d: -f3)
 
-  log "[OK] Delta: $DELTA_FILES file modificati, $DELTA_DELETED file eliminati"
-  log "[OK] manifest.json generato (type: delta)"
+  log "[OK] Delta: $DELTA_FILES files changed, $DELTA_DELETED files deleted"
+  log "[OK] manifest.json generated (type: delta)"
 
   # Ensure package.json is in delta for version verification
   if [ ! -f "$TEMP_DIR/package.json" ] && [ -f "package.json" ]; then
     cp "package.json" "$TEMP_DIR/package.json"
-    log "[OK] package.json incluso nel delta"
+    log "[OK] package.json included in delta"
   fi
 fi
 
@@ -382,16 +382,16 @@ FILE_COUNT=$(find "$TEMP_DIR" -type f | wc -l | tr -d ' ')
 rm -rf "$TEMP_DIR"
 
 if [ ! -f "$ZIP_NAME" ]; then
-  log "[ERRORE] Creazione zip fallita."
+  log "[ERROR] Zip creation failed."
   exit 1
 fi
 
 SIZE=$(du -h "$ZIP_NAME" | cut -f1)
-log "[OK] ZIP creato: $ZIP_NAME - $SIZE - $FILE_COUNT file ($RELEASE_TYPE)"
+log "[OK] ZIP created: $ZIP_NAME - $SIZE - $FILE_COUNT files ($RELEASE_TYPE)"
 
 echo ""
-read -p "  Proseguo con il commit git? (s/n): " CONFIRM_GIT
-if [ "$CONFIRM_GIT" != "s" ] && [ "$CONFIRM_GIT" != "S" ]; then
+read -p "  Continue with git commit? (y/n): " CONFIRM_GIT
+if [ "$CONFIRM_GIT" != "y" ] && [ "$CONFIRM_GIT" != "Y" ] && [ "$CONFIRM_GIT" != "s" ] && [ "$CONFIRM_GIT" != "S" ]; then
   abort_cleanup
 fi
 
@@ -407,41 +407,41 @@ echo "  File modificati:"
 git status --short
 echo ""
 
-read -p "  Confermi commit e push? (s/n): " CONFIRM_COMMIT
-if [ "$CONFIRM_COMMIT" != "s" ] && [ "$CONFIRM_COMMIT" != "S" ]; then
+read -p "  Confirm commit and push? (y/n): " CONFIRM_COMMIT
+if [ "$CONFIRM_COMMIT" != "y" ] && [ "$CONFIRM_COMMIT" != "Y" ] && [ "$CONFIRM_COMMIT" != "s" ] && [ "$CONFIRM_COMMIT" != "S" ]; then
   abort_cleanup
 fi
 
 git add package.json start.bat start.sh 2>/dev/null || true
-git commit -m "release: v$NEW_VERSION" || log "[INFO] Nessun commit necessario."
+git commit -m "release: v$NEW_VERSION" || log "[INFO] No commit needed."
 
 # Create git tag
 git tag "v$NEW_VERSION" 2>/dev/null
 if [ $? -ne 0 ]; then
-  log "[ATTENZIONE] Tag v$NEW_VERSION gia' esistente."
-  read -p "  Vuoi sovrascrivere il tag? (s/n): " TAG_CHOICE
-  if [ "$TAG_CHOICE" = "s" ] || [ "$TAG_CHOICE" = "S" ]; then
+  log "[WARNING] Tag v$NEW_VERSION already exists."
+  read -p "  Do you want to overwrite the tag? (y/n): " TAG_CHOICE
+  if [ "$TAG_CHOICE" = "y" ] || [ "$TAG_CHOICE" = "Y" ] || [ "$TAG_CHOICE" = "s" ] || [ "$TAG_CHOICE" = "S" ]; then
     git tag -d "v$NEW_VERSION" 2>/dev/null
     git tag "v$NEW_VERSION"
   fi
 fi
-log "[OK] Tag v$NEW_VERSION creato"
+log "[OK] Tag v$NEW_VERSION created"
 
 if ! git push --set-upstream origin main 2>/dev/null; then
   if ! git push 2>/dev/null; then
-    log "[ATTENZIONE] Push fallito."
-    read -p "  Vuoi fare force push? (s/n): " FORCE_PUSH_CHOICE
-    if [ "$FORCE_PUSH_CHOICE" = "s" ] || [ "$FORCE_PUSH_CHOICE" = "S" ]; then
+    log "[WARNING] Push failed."
+    read -p "  Do you want to do force push? (y/n): " FORCE_PUSH_CHOICE
+    if [ "$FORCE_PUSH_CHOICE" = "y" ] || [ "$FORCE_PUSH_CHOICE" = "Y" ] || [ "$FORCE_PUSH_CHOICE" = "s" ] || [ "$FORCE_PUSH_CHOICE" = "S" ]; then
       git push --set-upstream origin main --force
     else
-      echo "  Push saltato. Puoi farlo manualmente dopo."
+      echo "  Push skipped. You can do it manually later."
     fi
   fi
 fi
 
 # Push tag
 git push origin "v$NEW_VERSION" 2>/dev/null
-log "[OK] Commit, tag e push completati"
+log "[OK] Commit, tag and push completed"
 echo ""
 
 # ================================================================
@@ -455,20 +455,20 @@ echo "  Genero release notes..."
 
 node -e "const fs=require('fs');try{const c=fs.readFileSync('CHANGELOG.md','utf8');const m=c.match(/## \[Unreleased\]\s*\n([\s\S]*?)(?=\n## \[|\$)/);fs.writeFileSync('release/release-notes.tmp',m?m[1].trim():'Release v$NEW_VERSION')}catch{fs.writeFileSync('release/release-notes.tmp','Release v$NEW_VERSION')}"
 
-echo "  Apro l'editor per modificare le release notes..."
+echo "  Opening editor to modify release notes..."
 echo ""
 
 while true; do
   ${EDITOR:-nano} "release/release-notes.tmp"
 
-  echo "  Anteprima release notes:"
+  echo "  Release notes preview:"
   echo "  ----------------------------------------"
   head -5 "release/release-notes.tmp" | sed 's/^/  /'
   echo "  ----------------------------------------"
   echo ""
 
-  read -p "  Release notes OK? (s/n): " NOTES_OK
-  if [ "$NOTES_OK" = "s" ] || [ "$NOTES_OK" = "S" ]; then
+  read -p "  Release notes OK? (y/n): " NOTES_OK
+  if [ "$NOTES_OK" = "y" ] || [ "$NOTES_OK" = "Y" ] || [ "$NOTES_OK" = "s" ] || [ "$NOTES_OK" = "S" ]; then
     break
   fi
 done
@@ -478,11 +478,11 @@ done
 # ================================================================
 echo ""
 echo "  ========================================"
-echo "   RIEPILOGO PUBBLICAZIONE"
+echo "   PUBLICATION SUMMARY"
 echo "  ========================================"
 echo ""
-echo "  Versione:       v$NEW_VERSION"
-echo "  Tipo:           $RELEASE_TYPE"
+echo "  Version:        v$NEW_VERSION"
+echo "  Type:           $RELEASE_TYPE"
 echo "  Repository:     valsecchi75/agent1-platform"
 echo "  Tag:            v$NEW_VERSION"
 echo "  Zip:            $ZIP_NAME ($SIZE)"
@@ -495,30 +495,30 @@ echo ""
 echo "  ========================================"
 echo ""
 
-read -p "  Pubblico la release? Questa azione non e' annullabile. (s/n): " CONFIRM_PUBLISH
-if [ "$CONFIRM_PUBLISH" != "s" ] && [ "$CONFIRM_PUBLISH" != "S" ]; then
+read -p "  Publish the release? This action cannot be undone. (y/n): " CONFIRM_PUBLISH
+if [ "$CONFIRM_PUBLISH" != "y" ] && [ "$CONFIRM_PUBLISH" != "Y" ] && [ "$CONFIRM_PUBLISH" != "s" ] && [ "$CONFIRM_PUBLISH" != "S" ]; then
   echo ""
-  echo "  Pubblicazione annullata."
+  echo "  Publication cancelled."
   rm -f "release/release-notes.tmp" 2>/dev/null
   rm -f "$ZIP_NAME" 2>/dev/null
   exit 0
 fi
 
 echo ""
-log "Pubblico su GitHub..."
+log "Publishing on GitHub..."
 if ! gh release create "v$NEW_VERSION" "$ZIP_NAME" --title "AGENT 1 v$NEW_VERSION" --notes-file "release/release-notes.tmp" --repo valsecchi75/agent1-platform; then
-  log "[ERRORE] Pubblicazione fallita (gh release create)."
-  log "Verifica: gh auth status, dimensione ZIP, connessione internet."
+  log "[ERROR] Publication failed (gh release create)."
+  log "Check: gh auth status, ZIP size, internet connection."
   echo ""
-  echo "  Puoi riprovare con: release/publish.sh"
-  echo "  Lo ZIP e' ancora presente: $ZIP_NAME"
+  echo "  You can retry with: release/publish.sh"
+  echo "  The ZIP is still present: $ZIP_NAME"
   exit 1
 fi
 
-log "[OK] Release v$NEW_VERSION pubblicata con successo!"
+log "[OK] Release v$NEW_VERSION published successfully!"
 echo ""
 echo "  ========================================"
-echo "   Release v$NEW_VERSION completata!"
+echo "   Release v$NEW_VERSION completed!"
 echo "  ========================================"
 echo ""
 echo "  URL: https://github.com/valsecchi75/agent1-platform/releases/tag/v$NEW_VERSION"
@@ -532,4 +532,4 @@ rm -rf ".release-staging" 2>/dev/null
 # Prune old logs (keep last 20)
 node -e "var fs=require('fs');var p=require('path');var d='release/logs';try{var ls=fs.readdirSync(d).filter(f=>f.startsWith('publish-')&&f.endsWith('.log')).sort().reverse();for(var i=20;i<ls.length;i++){try{fs.unlinkSync(p.join(d,ls[i]))}catch(e){}}}catch(e){}" 2>/dev/null
 
-log "Cleanup completato."
+log "Cleanup completed."

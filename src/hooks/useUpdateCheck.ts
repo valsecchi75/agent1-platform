@@ -7,9 +7,9 @@ const POLL_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours
 const SSE_TIMEOUT = 180_000; // 180s without data = connection lost (backup step can take 60-90s)
 
 /**
- * Legge il param ?dev-update=<mode> dall'URL corrente.
- * Possibili valori: available | available-real | error | uptodate
- * Ritorna null se non presente (comportamento normale).
+ * Reads the ?dev-update=<mode> param from the current URL.
+ * Possible values: available | available-real | error | uptodate
+ * Returns null if not present (normal behavior).
  */
 function getDevUpdateMode(): string | null {
   if (typeof window === 'undefined') return null;
@@ -17,11 +17,11 @@ function getDevUpdateMode(): string | null {
 }
 
 /**
- * Trasforma ?dev-update=<mode> nell'URL da chiamare per il check.
- * - available        → mock: banner "update disponibile" (no download reale)
- * - available-real   → check reale GitHub (bypass cache), download URL vero
- * - error            → mock: banner errore token
- * - uptodate         → mock: nessun banner
+ * Transforms ?dev-update=<mode> into the URL to call for the check.
+ * - available        → mock: "update available" banner (no real download)
+ * - available-real   → real GitHub check (bypass cache), real download URL
+ * - error            → mock: token error banner
+ * - uptodate         → mock: no banner
  */
 function buildCheckUrl(devMode: string | null): string {
   if (!devMode) return '/api/update-check';
@@ -29,7 +29,7 @@ function buildCheckUrl(devMode: string | null): string {
   if (devMode === 'available-real') return '/api/update-check?force=true';
   if (devMode === 'error')          return '/api/update-check?mock=error';
   if (devMode === 'uptodate')       return '/api/update-check?mock=uptodate';
-  // Fallback: passa il valore direttamente come mock mode
+  // Fallback: pass the value directly as mock mode
   return `/api/update-check?mock=${encodeURIComponent(devMode)}`;
 }
 
@@ -45,31 +45,60 @@ export function useUpdateCheck() {
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const checkNow = useCallback(async () => {
+  /**
+   * Check for updates. `silent` = true for automatic background checks:
+   * errors do not show banner (only console log). Error banner appears
+   * only when the user clicks "Retry" (silent = false).
+   */
+  const checkNow = useCallback(async (silent = false) => {
     const devMode = getDevUpdateMode();
     const url = buildCheckUrl(devMode);
     try {
       const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        // Suppress banner if user previously skipped this specific version
-        const skipped = useWorkflowStore.getState().updateSkippedVersion;
-        if (data.updateAvailable && data.latestVersion === skipped) {
-          data.updateAvailable = false;
+      if (!res.ok) {
+        // API route returned non-200 (e.g., 429 rate limit, 500 server error)
+        if (!silent) {
+          setUpdateInfo({
+            updateAvailable: false,
+            currentVersion: '',
+            latestVersion: null,
+            releaseNotes: null,
+            downloadUrl: null,
+            publishedAt: null,
+            error: `server_error_${res.status}`,
+          });
+        } else {
+          console.warn(`[update-check] Background check returned ${res.status}, will retry`);
         }
-        setUpdateInfo(data);
+        return;
       }
+      const data = await res.json();
+      // Suppress banner if user previously skipped this specific version
+      const skipped = useWorkflowStore.getState().updateSkippedVersion;
+      if (data.updateAvailable && data.latestVersion === skipped) {
+        data.updateAvailable = false;
+      }
+      // For silent background checks, don't show server-side errors (e.g., GitHub unreachable)
+      if (silent && data.error) {
+        console.warn('[update-check] Background check error (suppressed):', data.error);
+        return;
+      }
+      setUpdateInfo(data);
     } catch {
-      // Network error — set error info so banner can show friendly message
-      setUpdateInfo({
-        updateAvailable: false,
-        currentVersion: '',
-        latestVersion: null,
-        releaseNotes: null,
-        downloadUrl: null,
-        publishedAt: null,
-        error: 'network_error',
-      });
+      if (!silent) {
+        // Manual check failed — show error banner
+        setUpdateInfo({
+          updateAvailable: false,
+          currentVersion: '',
+          latestVersion: null,
+          releaseNotes: null,
+          downloadUrl: null,
+          publishedAt: null,
+          error: 'network_error',
+        });
+      } else {
+        console.warn('[update-check] Background check failed (network), will retry');
+      }
     }
   }, [setUpdateInfo]);
 
@@ -77,7 +106,7 @@ export function useUpdateCheck() {
     if (!updateInfo?.downloadUrl) {
       setUpdateProgress({
         isUpdating: false,
-        error: 'Download URL non disponibile. Riprova il controllo aggiornamenti.',
+        error: 'Download URL not available. Retry the update check.',
       });
       return;
     }
@@ -91,7 +120,7 @@ export function useUpdateCheck() {
         clearInterval(timeoutChecker);
         setUpdateProgress({
           isUpdating: false,
-          error: 'Connessione con il server persa. Ricarica la pagina per verificare lo stato dell\'aggiornamento.',
+          error: 'Connection to server lost. Reload the page to verify update status.',
         });
       }
     }, 5000);
@@ -163,12 +192,14 @@ export function useUpdateCheck() {
     }
   }, [updateInfo, setUpdateProgress]);
 
-  // Poll on mount and every POLL_INTERVAL
+  // Poll on mount and every POLL_INTERVAL — background checks are silent (no error banner)
+  // Dev mode checks are always non-silent (for testing error states)
   useEffect(() => {
-    checkNow();
-    // Se siamo in modalità dev non fare re-poll: l'URL è già fisso
-    if (!getDevUpdateMode()) {
-      pollRef.current = setInterval(checkNow, POLL_INTERVAL);
+    const devMode = getDevUpdateMode();
+    checkNow(devMode ? false : true);
+    // If we're in dev mode don't re-poll: the URL is already fixed
+    if (!devMode) {
+      pollRef.current = setInterval(() => checkNow(true), POLL_INTERVAL);
     }
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);

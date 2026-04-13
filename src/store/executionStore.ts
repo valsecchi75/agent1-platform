@@ -1,11 +1,11 @@
 /**
- * executionStore.ts — Execution Slice (Zona Congelata)
+ * executionStore.ts — Execution Slice (Frozen Zone)
  *
  * Owns: isRunning, currentNodeIds, pausedAtNodeId, maxConcurrentCalls, _abortController.
  * Provides: executeWorkflow, regenerateNode, executeSelectedNodes, stopWorkflow.
  *
- * ZONA CONGELATA — Do NOT modify without contract test + PR review.
- * See CLAUDE.md § "Zona Congelata" for rules.
+ * FROZEN ZONE — Do NOT modify without contract test + PR review.
+ * See CLAUDE.md § "Frozen Zone" for rules.
  */
 
 import type { StateCreator } from "zustand";

@@ -45,8 +45,8 @@ export async function GET(req: NextRequest) {
         updateAvailable: true,
         currentVersion,
         latestVersion: mockVersion,
-        releaseNotes: `## v${mockVersion}\n\n- Nuove funzionalità di test\n- Fix bug mockato\n- Miglioramenti UI`,
-        // downloadUrl: null → "Aggiorna ora" mostrerà errore URL mancante (nessun download reale)
+        releaseNotes: `## v${mockVersion}\n\n- New test features\n- Mocked bug fix\n- UI improvements`,
+        // downloadUrl: null → "Update now" will show missing URL error (no real download)
         downloadUrl: null,
         publishedAt: new Date().toISOString(),
         cachedAt: new Date().toISOString(),

@@ -153,7 +153,8 @@ async function fetchFromGitHub(): Promise<{ result: UpdateCheckResult; cacheDura
       },
       cacheDuration: CACHE_SUCCESS,
     };
-  } catch {
+  } catch (err) {
+    console.error('[versionCheck] Update check failed:', err instanceof Error ? `${err.name}: ${err.message}` : err);
     return {
       result: makeErrorResult(localVersion, 'Network error during update check'),
       cacheDuration: CACHE_NETWORK_ERROR,

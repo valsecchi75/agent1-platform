@@ -6,17 +6,17 @@ title AGENT 1 - First Release Setup
 
 echo.
 echo  ================================================================
-echo   AGENT 1 - Setup Completo + Prima Pubblicazione
+echo   AGENT 1 - Complete Setup + First Release
 echo  ================================================================
 echo.
-echo   Questo script fa TUTTO:
-echo   1. Verifica prerequisiti (Node, Git, GitHub CLI)
-echo   2. Autentica su GitHub (se necessario)
-echo   3. Crea il repo privato valsecchi75/agent1-platform
-echo   4. Verifica token auto-update (gia configurato)
-echo   5. Inizializza git e fa il primo push
-echo   6. Build di verifica
-echo   7. Crea zip e pubblica la prima release
+echo   This script does EVERYTHING:
+echo   1. Check prerequisites (Node, Git, GitHub CLI)
+echo   2. Authenticate on GitHub (if needed)
+echo   3. Create private repo valsecchi75/agent1-platform
+echo   4. Verify auto-update token (already configured)
+echo   5. Initialize git and push first commit
+echo   6. Verification build
+echo   7. Create zip and publish first release
 echo.
 echo  ================================================================
 echo.
@@ -32,7 +32,7 @@ echo.
 
 where node >nul 2>nul
 if !ERRORLEVEL! NEQ 0 (
-    echo  [ERRORE] Node.js non trovato. Scarica da: https://nodejs.org
+    echo  [ERROR] Node.js not found. Download from: https://nodejs.org
     pause & exit /b 1
 )
 node -v > "%TEMP%\a1_tmp.txt" 2>nul
@@ -42,20 +42,20 @@ echo  Node.js: !NODE_VER! [OK]
 
 where git >nul 2>nul
 if !ERRORLEVEL! NEQ 0 (
-    echo  [ERRORE] Git non trovato. Scarica da: https://git-scm.com
+    echo  [ERROR] Git not found. Download from: https://git-scm.com
     pause & exit /b 1
 )
 echo  Git [OK]
 
 where gh >nul 2>nul
 if !ERRORLEVEL! NEQ 0 (
-    echo  [ERRORE] GitHub CLI non trovato. Scarica da: https://cli.github.com
+    echo  [ERROR] GitHub CLI not found. Download from: https://cli.github.com
     pause & exit /b 1
 )
 echo  GitHub CLI [OK]
 
 echo.
-echo  Tutti i prerequisiti OK.
+echo  All prerequisites OK.
 echo.
 
 REM ================================================================
@@ -66,12 +66,12 @@ echo.
 
 gh auth status >nul 2>nul
 if !ERRORLEVEL! NEQ 0 (
-    echo  Non sei autenticato su GitHub CLI.
-    echo  Avvio login nel browser...
+    echo  You are not authenticated on GitHub CLI.
+    echo  Starting browser login...
     echo.
     gh auth login --web --git-protocol https
     if !ERRORLEVEL! NEQ 0 (
-        echo  [ERRORE] Autenticazione fallita.
+        echo  [ERROR] Authentication failed.
         pause & exit /b 1
     )
 )
@@ -85,7 +85,7 @@ echo.
 REM ================================================================
 REM  STEP 3 - Creazione repository privato
 REM ================================================================
-echo  [STEP 3/7] Verifica/creazione repository...
+echo  [STEP 3/7] Verify/create repository...
 echo.
 
 set "REPO_NAME=agent1-platform"
@@ -93,15 +93,15 @@ set "REPO_FULL=valsecchi75/!REPO_NAME!"
 
 gh repo view !REPO_FULL! >nul 2>nul
 if !ERRORLEVEL! EQU 0 (
-    echo  Repo !REPO_FULL! gia esistente. [OK]
+    echo  Repo !REPO_FULL! already exists. [OK]
 ) else (
-    echo  Creo repo privato !REPO_FULL!...
+    echo  Creating private repo !REPO_FULL!...
     gh repo create !REPO_FULL! --public --description "AGENT 1 - API-Driven Creative Generation Platform"
     if !ERRORLEVEL! NEQ 0 (
-        echo  [ERRORE] Creazione repo fallita.
+        echo  [ERROR] Repo creation failed.
         pause & exit /b 1
     )
-    echo  Repo creato. [OK]
+    echo  Repo created. [OK]
 )
 echo.
 
@@ -109,8 +109,8 @@ REM ================================================================
 REM  STEP 4 - REMOVED (public API, no token needed)
 REM ================================================================
 echo  [STEP 4/7] Token verification... SKIPPED (public API)
-echo  Il sistema di aggiornamenti usa le GitHub API pubbliche.
-echo  Nessun token necessario.
+echo  The update system uses public GitHub APIs.
+echo  No token required.
 echo.
 
 REM ================================================================
@@ -125,15 +125,15 @@ set /p PKG_VERSION=<"%TEMP%\a1_ver.txt"
 del "%TEMP%\a1_ver.txt" 2>nul
 
 if "!PKG_VERSION!"=="" (
-    echo  [ERRORE] Impossibile leggere versione da package.json.
+    echo  [ERROR] Unable to read version from package.json.
     pause & exit /b 1
 )
 echo  Versione: !PKG_VERSION!
 echo.
 
-REM Crea .gitignore se mancante (evita di committare node_modules/next)
+REM Create .gitignore if missing (avoids committing node_modules/next)
 if not exist ".gitignore" (
-    echo  Creo .gitignore...
+    echo  Creating .gitignore...
     (
         echo node_modules/
         echo .next/
@@ -147,21 +147,21 @@ if not exist ".gitignore" (
         echo input/
         echo output/
     ) > .gitignore
-    echo  .gitignore creato [OK]
+    echo  .gitignore created [OK]
 )
 
-REM Init git se necessario
+REM Initialize git if needed
 if exist ".git" (
-    echo  Repository git gia presente.
+    echo  Git repository already present.
     git remote get-url origin >nul 2>nul
     if !ERRORLEVEL! NEQ 0 (
-        echo  Aggiungo remote origin...
+        echo  Adding remote origin...
         git remote add origin "https://github.com/!REPO_FULL!.git"
     ) else (
-        echo  Remote origin gia configurato.
+        echo  Remote origin already configured.
     )
 ) else (
-    echo  Inizializzo git repository...
+    echo  Initializing git repository...
     git init -b main
     git remote add origin "https://github.com/!REPO_FULL!.git"
 )
@@ -170,32 +170,32 @@ git config core.filemode false
 git config core.autocrlf true
 
 echo.
-echo  Staging file e commit...
+echo  Staging files and commit...
 git add -A
 git status --short
 echo.
 
 git commit -m "release: AGENT 1 v!PKG_VERSION! initial release"
 if !ERRORLEVEL! NEQ 0 (
-    echo  [INFO] Nessun file da committare (potrebbe essere gia tutto staged).
+    echo  [INFO] No files to commit (may already be staged).
 )
 
 echo.
-echo  Push su GitHub...
+echo  Pushing to GitHub...
 git branch -M main
 git push -u origin main
 if !ERRORLEVEL! NEQ 0 (
     echo.
-    echo  [ATTENZIONE] Push fallito. Il repo potrebbe avere contenuti preesistenti.
-    set /p "FORCE_PUSH=  Fare force push? (s/n): "
-    if /i "!FORCE_PUSH!"=="s" (
+    echo  [WARNING] Push failed. The repo may have pre-existing content.
+    set /p "FORCE_PUSH=  Do force push? (y/n): "
+    if /i "!FORCE_PUSH!"=="y" (
         git push -u origin main --force
         if !ERRORLEVEL! NEQ 0 (
-            echo  [ERRORE] Force push fallito. Verifica la connessione e le credenziali.
+            echo  [ERROR] Force push failed. Check connection and credentials.
             pause & exit /b 1
         )
     ) else (
-        echo  Push saltato. Continuo con la pubblicazione della release.
+        echo  Push skipped. Continuing with release publication.
     )
 )
 echo  [OK] Codice su GitHub.
@@ -210,15 +210,15 @@ echo.
 call npm run build
 if !ERRORLEVEL! NEQ 0 (
     echo.
-    echo  [ATTENZIONE] Build fallito.
-    set /p "BUILD_CONT=  Continua comunque con la pubblicazione? (s/n): "
-    if /i not "!BUILD_CONT!"=="s" (
-        echo  Correggi gli errori di build e rilancia questo script.
+    echo  [WARNING] Build failed.
+    set /p "BUILD_CONT=  Continue anyway with publication? (y/n): "
+    if /i not "!BUILD_CONT!"=="y" (
+        echo  Fix build errors and rerun this script.
         pause & exit /b 1
     )
-    echo  [ATTENZIONE] Continuo nonostante il build fallito.
+    echo  [WARNING] Continuing despite build failure.
 ) else (
-    echo  [OK] Build riuscito.
+    echo  [OK] Build succeeded.
 )
 echo.
 
@@ -233,20 +233,20 @@ if exist "!ZIP_NAME!" del "!ZIP_NAME!" 2>nul
 if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
 
 if not exist "release\.releaseinclude" (
-    echo  [ERRORE] release\.releaseinclude non trovato. Impossibile creare lo zip.
+    echo  [ERROR] release\.releaseinclude not found. Unable to create zip.
     pause & exit /b 1
 )
 
-echo  Creo zip di distribuzione...
+echo  Creating distribution zip...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$items=Get-Content 'release\.releaseinclude'|Where-Object{$_ -and -not $_.StartsWith('#')}|ForEach-Object{$_.Trim().TrimEnd('/')};$td='.release-staging';New-Item -ItemType Directory -Path $td|Out-Null;foreach($i in $items){if(Test-Path $i){$dest=Join-Path $td $i;$par=Split-Path $dest -Parent;if(-not(Test-Path $par)){New-Item -ItemType Directory -Path $par -Force|Out-Null};if((Get-Item $i).PSIsContainer){Copy-Item -Recurse -Force $i $dest}else{Copy-Item -Force $i $dest}}};Compress-Archive -Path (Join-Path $td '*') -DestinationPath '!ZIP_NAME!' -Force;Remove-Item -Recurse -Force $td;$sz=[math]::Round((Get-Item '!ZIP_NAME!').Length/1MB,1);Write-Host('  Zip: !ZIP_NAME! ('+$sz+' MB)')"
 
 if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
 
 if not exist "!ZIP_NAME!" (
-    echo  [ERRORE] Creazione zip fallita.
+    echo  [ERROR] Zip creation failed.
     pause & exit /b 1
 )
-echo  [OK] Zip creato.
+echo  [OK] Zip created.
 echo.
 
 REM Scrivi release notes
@@ -256,13 +256,13 @@ if not exist "release\release-notes.tmp" (
     echo AGENT 1 v!PKG_VERSION! > release\release-notes.tmp
 )
 
-echo  Pubblico release su GitHub...
+echo  Publishing release on GitHub...
 gh release create "v!PKG_VERSION!" "!ZIP_NAME!" --title "AGENT 1 v!PKG_VERSION!" --notes-file "release/release-notes.tmp" --repo !REPO_FULL!
 if !ERRORLEVEL! NEQ 0 (
     echo.
-    echo  [ERRORE] Pubblicazione fallita.
-    echo  Zip disponibile: !ZIP_NAME!
-    echo  Riprova con: release\publish.bat
+    echo  [ERROR] Publication failed.
+    echo  Zip available: !ZIP_NAME!
+    echo  Retry with: release\publish.bat
     pause & exit /b 1
 )
 
@@ -274,12 +274,12 @@ if exist ".release-staging" rmdir /s /q ".release-staging" 2>nul
 echo.
 echo  ================================================================
 echo.
-echo   SETUP COMPLETATO CON SUCCESSO!
+echo   SETUP COMPLETED SUCCESSFULLY!
 echo.
 echo   Repo:    https://github.com/!REPO_FULL!
 echo   Release: https://github.com/!REPO_FULL!/releases/tag/v!PKG_VERSION!
 echo.
-echo   Prossime release: usa  release\publish.bat
+echo   Future releases: use  release\publish.bat
 echo.
 echo  ================================================================
 echo.

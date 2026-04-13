@@ -6,9 +6,9 @@ echo "  ========================================"
 echo "   AGENT 1 — Release Rollback"
 echo "  ========================================"
 echo ""
-echo "  Questo script sposta il flag \"latest\""
-echo "  su una release precedente di GitHub."
-echo "  Nessuna release viene cancellata."
+echo "  This script moves the \"latest\" flag"
+echo "  to a previous GitHub release."
+echo "  No releases are deleted."
 echo ""
 echo "  ========================================"
 echo ""
@@ -17,14 +17,14 @@ echo ""
 #  STEP 0 — Prerequisiti
 # ================================================================
 
-command -v gh >/dev/null 2>&1 || { echo "  [ERRORE] GitHub CLI non trovato. Installa: brew install gh"; exit 1; }
-gh auth status >/dev/null 2>&1 || { echo "  [ERRORE] GitHub CLI non autenticato. Lancia: gh auth login"; exit 1; }
+command -v gh >/dev/null 2>&1 || { echo "  [ERROR] GitHub CLI not found. Install: brew install gh"; exit 1; }
+gh auth status >/dev/null 2>&1 || { echo "  [ERROR] GitHub CLI not authenticated. Run: gh auth login"; exit 1; }
 
 REPO="valsecchi75/agent1-platform"
 
 if ! gh repo view "$REPO" >/dev/null 2>&1; then
-  echo "  [ERRORE] Impossibile accedere al repo $REPO."
-  echo "  Verifica di avere i permessi corretti."
+  echo "  [ERROR] Unable to access repo $REPO."
+  echo "  Verify you have correct permissions."
   exit 1
 fi
 
@@ -36,7 +36,7 @@ echo ""
 # ================================================================
 
 echo "  ----------------------------------------"
-echo "   Release disponibili"
+echo "   Available releases"
 echo "  ----------------------------------------"
 echo ""
 
@@ -57,13 +57,13 @@ while IFS=$'\t' read -r tag status date_info; do
 done < <(gh release list --repo "$REPO" --limit 10 2>/dev/null)
 
 if [ "$RELEASE_COUNT" -eq 0 ]; then
-  echo "  Nessuna release trovata."
+  echo "  No releases found."
   exit 0
 fi
 
 if [ "$RELEASE_COUNT" -le 1 ]; then
   echo ""
-  echo "  C'e' solo una release. Non c'e' niente a cui tornare."
+  echo "  There is only one release. Nothing to roll back to."
   exit 0
 fi
 
@@ -75,26 +75,26 @@ echo ""
 #  STEP 2 — Selezione versione target
 # ================================================================
 
-read -p "  Scegli il numero della release da promuovere a latest: " CHOICE
+read -p "  Choose the release number to promote to latest: " CHOICE
 
 TARGET_TAG="${REL_TAGS[$CHOICE]}"
 
 if [ -z "$TARGET_TAG" ]; then
-  echo "  [ERRORE] Scelta non valida."
+  echo "  [ERROR] Invalid choice."
   exit 1
 fi
 
 if [ "$TARGET_TAG" = "$CURRENT_LATEST" ]; then
-  echo "  [INFO] $TARGET_TAG e' gia la release latest."
+  echo "  [INFO] $TARGET_TAG is already the latest release."
   exit 0
 fi
 
 echo ""
-echo "  Hai scelto: $TARGET_TAG"
+echo "  You selected: $TARGET_TAG"
 echo ""
 
 # Show release details
-echo "  Dettagli release:"
+echo "  Release details:"
 echo "  ----------------------------------------"
 gh release view "$TARGET_TAG" --repo "$REPO" --json body --jq ".body" 2>/dev/null | head -5 | sed 's/^/  /'
 echo "  ----------------------------------------"
@@ -105,22 +105,22 @@ echo ""
 # ================================================================
 
 echo "  ========================================"
-echo "   ATTENZIONE"
+echo "   WARNING"
 echo "  ========================================"
 echo ""
-echo "  Stai per rendere $TARGET_TAG la release \"latest\"."
-echo "  La release corrente $CURRENT_LATEST NON verra' cancellata."
-echo "  I client riceveranno $TARGET_TAG al prossimo check aggiornamenti."
+echo "  You are about to make $TARGET_TAG the \"latest\" release."
+echo "  The current release $CURRENT_LATEST will NOT be deleted."
+echo "  Clients will receive $TARGET_TAG at the next update check."
 echo ""
-echo "  NOTA: Questo NON modifica i file locali. Per allineare il tuo"
-echo "  ambiente, usa il sistema di auto-update dalla UI dopo il rollback."
+echo "  NOTE: This does NOT modify local files. To align your"
+echo "  environment, use the auto-update system from UI after rollback."
 echo ""
 echo "  ========================================"
 echo ""
 
-read -p "  Confermi? (s/n): " CONFIRM
-if [ "$CONFIRM" != "s" ] && [ "$CONFIRM" != "S" ]; then
-  echo "  Annullato."
+read -p "  Confirm? (y/n): " CONFIRM
+if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ] && [ "$CONFIRM" != "s" ] && [ "$CONFIRM" != "S" ]; then
+  echo "  Cancelled."
   exit 0
 fi
 
@@ -129,18 +129,18 @@ fi
 # ================================================================
 
 echo ""
-echo "  Rimuovo flag latest da $CURRENT_LATEST..."
+echo "  Removing latest flag from $CURRENT_LATEST..."
 if ! gh release edit "$CURRENT_LATEST" --latest=false --repo "$REPO"; then
-  echo "  [ERRORE] Impossibile modificare $CURRENT_LATEST."
-  echo "  Nessuna modifica effettuata."
+  echo "  [ERROR] Unable to modify $CURRENT_LATEST."
+  echo "  No changes made."
   exit 1
 fi
 
-echo "  Imposto $TARGET_TAG come latest..."
+echo "  Setting $TARGET_TAG as latest..."
 if ! gh release edit "$TARGET_TAG" --latest=true --repo "$REPO"; then
   echo ""
-  echo "  [ATTENZIONE] Il flag latest potrebbe essere in uno stato indefinito."
-  echo "  Verifica con: gh release list --repo $REPO"
+  echo "  [WARNING] Latest flag may be in an undefined state."
+  echo "  Check with: gh release list --repo $REPO"
   exit 1
 fi
 
@@ -149,19 +149,19 @@ fi
 # ================================================================
 
 echo ""
-echo "  Verifico..."
+echo "  Verifying..."
 VERIFIED_TAG=$(gh release view --repo "$REPO" --json tagName --jq ".tagName" 2>/dev/null)
 
 if [ -z "$VERIFIED_TAG" ]; then
-  echo "  [ATTENZIONE] Impossibile verificare la release latest (errore di rete o auth)."
-  echo "  Verifica manualmente: gh release list --repo $REPO"
+  echo "  [WARNING] Unable to verify latest release (network or auth error)."
+  echo "  Check manually: gh release list --repo $REPO"
 elif [ "$VERIFIED_TAG" = "$TARGET_TAG" ]; then
-  echo "  [OK] Rollback completato!"
+  echo "  [OK] Rollback completed!"
   echo ""
-  echo "  La release latest e' ora: $TARGET_TAG"
+  echo "  Latest release is now: $TARGET_TAG"
 else
-  echo "  [ATTENZIONE] La verifica mostra: $VERIFIED_TAG (atteso: $TARGET_TAG)"
-  echo "  Verifica manualmente: gh release list --repo $REPO"
+  echo "  [WARNING] Verification shows: $VERIFIED_TAG (expected: $TARGET_TAG)"
+  echo "  Check manually: gh release list --repo $REPO"
 fi
 
 echo ""

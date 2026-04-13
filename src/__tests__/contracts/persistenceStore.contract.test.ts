@@ -1,8 +1,8 @@
 /**
- * persistenceStore — Zona Congelata Contract Tests
+ * persistenceStore — Frozen Zone Contract Tests
  *
  * Pins the public API surface of persistenceStore.ts.
- * These tests define the "Zona Congelata" for the persistence slice.
+ * These tests define the "Frozen Zone" for the persistence slice.
  * Breaking them requires a PR review.
  *
  * Contract coverage:

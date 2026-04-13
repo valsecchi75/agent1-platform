@@ -11,8 +11,8 @@
  * This file ONLY composes those slices and re-exports backward-compatible types.
  * The 113 consumers of useWorkflowStore() continue to work without changes.
  *
- * ZONA CONGELATA — This composition layer should not be modified except to
- * add/remove top-level slices. See CLAUDE.md § "Zona Congelata" for rules.
+ * FROZEN ZONE — This composition layer should not be modified except to
+ * add/remove top-level slices. See CLAUDE.md § "Frozen Zone" for rules.
  */
 
 import { create } from "zustand";

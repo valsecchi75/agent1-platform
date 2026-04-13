@@ -1,8 +1,8 @@
 /**
- * executionStore — Zona Congelata Contract Tests
+ * executionStore — Frozen Zone Contract Tests
  *
  * Pins the public API surface of executionStore.ts.
- * These tests define the "Zona Congelata" for the execution slice.
+ * These tests define the "Frozen Zone" for the execution slice.
  * Breaking them requires a PR review.
  *
  * Contract coverage:
