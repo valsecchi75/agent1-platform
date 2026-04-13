@@ -176,7 +176,11 @@ export function UpdateBanner() {
           <div className="flex items-center gap-2.5 px-4" style={{ height: 40 }}>
             <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#f87171' }} />
             <span className="text-xs flex-1 truncate" style={{ color: '#fca5a5', opacity: 0.8 }}>
-              Controllo aggiornamenti: {updateInfo.error}
+              {updateInfo.error === 'network_error' || updateInfo.error?.includes('Network')
+                ? 'Controllo aggiornamenti non riuscito. Verrà riprovato automaticamente.'
+                : updateInfo.error?.includes('rate limit') || updateInfo.error?.includes('Rate limit')
+                ? 'Troppe richieste al server. Nuovo tentativo tra un\'ora.'
+                : 'Impossibile verificare aggiornamenti. Verrà riprovato.'}
             </span>
             <button
               onClick={checkNow}

@@ -96,7 +96,7 @@ if !ERRORLEVEL! EQU 0 (
     echo  Repo !REPO_FULL! gia esistente. [OK]
 ) else (
     echo  Creo repo privato !REPO_FULL!...
-    gh repo create !REPO_FULL! --private --description "AGENT 1 - API-Driven Creative Generation Platform"
+    gh repo create !REPO_FULL! --public --description "AGENT 1 - API-Driven Creative Generation Platform"
     if !ERRORLEVEL! NEQ 0 (
         echo  [ERRORE] Creazione repo fallita.
         pause & exit /b 1
@@ -106,28 +106,11 @@ if !ERRORLEVEL! EQU 0 (
 echo.
 
 REM ================================================================
-REM  STEP 4 - Verifica token auto-update (gia configurato)
+REM  STEP 4 - REMOVED (public API, no token needed)
 REM ================================================================
-echo  [STEP 4/7] Verifica token auto-update...
-echo.
-
-set "TOKEN_FILE=src\lib\update\token.ts"
-if not exist "!TOKEN_FILE!" (
-    echo  [ATTENZIONE] !TOKEN_FILE! non trovato.
-    echo  Il sistema auto-update non sara attivo.
-    goto :step4_done
-)
-
-node -e "const c=require('fs').readFileSync('src/lib/update/token.ts','utf8');const ok=c.includes('OBFUSCATED_TOKEN')&&!c.includes(\"= ''\");process.exit(ok?0:1);" >nul 2>nul
-if !ERRORLEVEL! EQU 0 (
-    echo  Token auto-update configurato in token.ts [OK]
-) else (
-    echo  [ATTENZIONE] token.ts presente ma OBFUSCATED_TOKEN e vuoto.
-    echo  Il sistema di aggiornamenti non sara attivo.
-    echo  Puoi configurarlo in seguito con: node release\encode-token.js ^<token^>
-)
-
-:step4_done
+echo  [STEP 4/7] Token verification... SKIPPED (public API)
+echo  Il sistema di aggiornamenti usa le GitHub API pubbliche.
+echo  Nessun token necessario.
 echo.
 
 REM ================================================================

@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
         downloadUrl: null,
         publishedAt: null,
         cachedAt: new Date().toISOString(),
-        error: 'Token di autenticazione non valido (mock)',
+        error: 'GitHub API temporarily unavailable (mock)',
         _mock: true,
       });
     }

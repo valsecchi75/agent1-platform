@@ -1,13 +1,11 @@
 /**
- * Checks GitHub Releases API for newer versions.
+ * Checks GitHub Releases API (public, no auth) for newer versions.
  * Caches results in-memory with variable TTL based on response type.
- * Never exposes the decoded token in errors or logs.
  */
 
 import semver from 'semver';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { decodeToken } from './token';
 
 export interface UpdateCheckResult {
   updateAvailable: boolean;
@@ -24,6 +22,15 @@ interface CacheEntry {
   result: UpdateCheckResult;
   expiresAt: number;
 }
+
+// Cache TTLs (ms)
+const CACHE_SUCCESS       = 6 * 60 * 60 * 1000;  // 6 hours
+const CACHE_NETWORK_ERROR = 5 * 60 * 1000;        // 5 minutes
+const CACHE_RATE_LIMIT    = 61 * 60 * 1000;        // 61 minutes (fallback)
+const CACHE_OTHER_ERROR   = 15 * 60 * 1000;        // 15 minutes
+
+const GITHUB_REPO = process.env.GITHUB_REPO || 'valsecchi75/agent1-platform';
+const GITHUB_API = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 
 let updateCheckCache: CacheEntry | null = null;
 
@@ -54,48 +61,66 @@ function makeErrorResult(currentVersion: string, error: string): UpdateCheckResu
   };
 }
 
-async function fetchFromGitHub(): Promise<UpdateCheckResult> {
-  const GITHUB_REPO = process.env.GITHUB_REPO || 'valsecchi75/agent1-platform';
-  const localVersion = getLocalVersion();
-  const token = decodeToken();
-
-  if (!token) {
-    return makeErrorResult(localVersion, 'Update token not configured');
+/**
+ * Parse X-RateLimit-Reset header to get cache duration.
+ * Returns duration in ms, or fallback if header is missing/invalid.
+ */
+function getRateLimitCacheDuration(response: Response): number {
+  const resetHeader = response.headers.get('X-RateLimit-Reset');
+  if (resetHeader) {
+    const resetTimestamp = parseInt(resetHeader, 10);
+    if (!isNaN(resetTimestamp)) {
+      const now = Math.floor(Date.now() / 1000);
+      const waitMs = (resetTimestamp - now + 5) * 1000; // +5s buffer
+      if (waitMs > 0 && waitMs < 2 * 60 * 60 * 1000) { // sanity: max 2h
+        return waitMs;
+      }
+    }
   }
+  return CACHE_RATE_LIMIT; // fallback: 61 minutes
+}
+
+async function fetchFromGitHub(): Promise<{ result: UpdateCheckResult; cacheDuration: number }> {
+  const localVersion = getLocalVersion();
 
   try {
-    const response = await fetch(
-      `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
-      {
-        headers: {
-          Authorization: `token ${token}`,
-          'User-Agent': 'AGENT1-UpdateCheck',
-          Accept: 'application/vnd.github+json',
-        },
-      }
-    );
+    const response = await fetch(GITHUB_API, {
+      headers: {
+        'User-Agent': 'AGENT1-UpdateCheck',
+        'Accept': 'application/vnd.github+json',
+      },
+    });
 
-    if (response.status === 401) {
-      return makeErrorResult(localVersion, 'Update check authentication failed');
-    }
     if (response.status === 403) {
-      return makeErrorResult(localVersion, 'GitHub rate limit reached, will retry later');
-    }
-    if (response.status === 404) {
-      // No releases yet — return success with no update available
+      const cacheDuration = getRateLimitCacheDuration(response);
       return {
-        updateAvailable: false,
-        currentVersion: localVersion,
-        latestVersion: null,
-        releaseNotes: null,
-        downloadUrl: null,
-        publishedAt: null,
-        cachedAt: new Date().toISOString(),
-        error: null,
+        result: makeErrorResult(localVersion, 'GitHub rate limit reached, will retry later'),
+        cacheDuration,
       };
     }
+
+    if (response.status === 404) {
+      // No releases yet — not an error
+      return {
+        result: {
+          updateAvailable: false,
+          currentVersion: localVersion,
+          latestVersion: null,
+          releaseNotes: null,
+          downloadUrl: null,
+          publishedAt: null,
+          cachedAt: new Date().toISOString(),
+          error: null,
+        },
+        cacheDuration: CACHE_SUCCESS,
+      };
+    }
+
     if (!response.ok) {
-      return makeErrorResult(localVersion, `Update check unavailable (${response.status})`);
+      return {
+        result: makeErrorResult(localVersion, `Update check unavailable (${response.status})`),
+        cacheDuration: CACHE_OTHER_ERROR,
+      };
     }
 
     const release = await response.json();
@@ -104,7 +129,10 @@ async function fetchFromGitHub(): Promise<UpdateCheckResult> {
     const cleanRemote = semver.clean(remoteVersion);
 
     if (!cleanRemote) {
-      return makeErrorResult(localVersion, 'Invalid version in latest release');
+      return {
+        result: makeErrorResult(localVersion, 'Invalid version in latest release'),
+        cacheDuration: CACHE_OTHER_ERROR,
+      };
     }
 
     // Find the zip asset
@@ -113,17 +141,23 @@ async function fetchFromGitHub(): Promise<UpdateCheckResult> {
     );
 
     return {
-      updateAvailable: semver.gt(cleanRemote, cleanLocal),
-      currentVersion: localVersion,
-      latestVersion: remoteVersion,
-      releaseNotes: release.body || null,
-      downloadUrl: asset?.url || null,
-      publishedAt: release.published_at || null,
-      cachedAt: new Date().toISOString(),
-      error: null,
+      result: {
+        updateAvailable: semver.gt(cleanRemote, cleanLocal),
+        currentVersion: localVersion,
+        latestVersion: remoteVersion,
+        releaseNotes: release.body || null,
+        downloadUrl: asset?.url || null,
+        publishedAt: release.published_at || null,
+        cachedAt: new Date().toISOString(),
+        error: null,
+      },
+      cacheDuration: CACHE_SUCCESS,
     };
   } catch {
-    return makeErrorResult(localVersion, 'Network error during update check');
+    return {
+      result: makeErrorResult(localVersion, 'Network error during update check'),
+      cacheDuration: CACHE_NETWORK_ERROR,
+    };
   }
 }
 
@@ -134,14 +168,7 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
     return updateCheckCache.result;
   }
 
-  const result = await fetchFromGitHub();
-
-  // Variable cache TTL
-  const cacheDuration = result.error?.includes('authentication')
-    ? 24 * 60 * 60 * 1000   // Auth error: 24h
-    : result.error
-      ? 5 * 60 * 1000       // Other error: 5 min
-      : 60 * 60 * 1000;     // Success: 1h
+  const { result, cacheDuration } = await fetchFromGitHub();
 
   updateCheckCache = { result, expiresAt: now + cacheDuration };
   return result;

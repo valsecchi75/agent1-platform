@@ -351,9 +351,9 @@ Brand logo SVGs per skin: `src/components/settings/BrandLogo.tsx` → `public/sk
 
 ### Azure VM Configuration
 
-- **VM**: Windows Server at `72.146.168.162`
+- **VM**: Windows Server (IP redacted — see internal docs)
 - **Path on VM**: `C:\agent1`
-- **URL**: `http://72.146.168.162:3000`
+- **URL**: Accessible via Azure public IP on port 3000
 - **Auto-start**: Windows Task Scheduler (`schtasks /tn "Agent1"`)
 - **NSG**: Inbound rule `Allow-Agent1-3000` (port 3000, TCP, priority 310)
 

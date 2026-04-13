@@ -14,13 +14,11 @@ import { mkdirSync, existsSync, readFileSync, writeFileSync, readdirSync,
 import { join, resolve, dirname, relative, normalize } from 'path';
 import { execSync } from 'child_process';
 import extractZip from 'extract-zip';
-import { decodeToken } from './token';
 import { parseWhitelist, shouldInclude } from './whitelist';
 
 // Files that must NEVER be overwritten by an update, regardless of whitelist.
 // Protects secrets and user-specific config from being stomped by a release ZIP.
 const NEVER_OVERWRITE: string[] = [
-  'release/Token.txt',  // plaintext GitHub PAT — must never ship or be applied
   '.env',               // user secrets
 ];
 
@@ -28,7 +26,6 @@ function isNeverOverwrite(relPath: string): boolean {
   const normalized = relPath.replace(/\\/g, '/');
   const basename = normalized.split('/').pop()?.toLowerCase() ?? '';
   if (NEVER_OVERWRITE.some(n => normalized === n || normalized.endsWith('/' + n))) return true;
-  if (basename === 'token.txt') return true;
   if (basename === '.env') return true;
   return false;
 }
@@ -198,12 +195,9 @@ async function downloadZip(
   ensureDir(UPDATE_TEMP_DIR);
   const zipPath = join(UPDATE_TEMP_DIR, 'agent1-update.zip');
 
-  const token = decodeToken();
-  if (!token) throw new Error('Update token not available');
-
+  // Public repo — no auth needed for GitHub release asset downloads
   const response = await fetch(downloadUrl, {
     headers: {
-      Authorization: `token ${token}`,
       Accept: 'application/octet-stream',
       'User-Agent': 'AGENT1-UpdateEngine',
     },

@@ -60,7 +60,17 @@ export function useUpdateCheck() {
         setUpdateInfo(data);
       }
     } catch {
-      // Silent fail — update check is best-effort
+      // Network error — set error info so banner can show friendly message
+      setUpdateInfo({
+        updateAvailable: false,
+        currentVersion: '',
+        latestVersion: null,
+        releaseNotes: null,
+        downloadUrl: null,
+        publishedAt: null,
+        cachedAt: new Date().toISOString(),
+        error: 'network_error',
+      });
     }
   }, [setUpdateInfo]);
 
