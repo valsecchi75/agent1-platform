@@ -14,7 +14,7 @@ public/
 # Core node packs (always updated)
 custom_nodes/agent1-foundation/
 custom_nodes/agent1_neural_atelier/
-custom_nodes/morpheus-model-management/
+custom_nodes/agent1_morpheus_model_management/
 
 # Configuration files
 package.json
