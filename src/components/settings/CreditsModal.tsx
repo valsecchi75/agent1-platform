@@ -101,6 +101,7 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
           {/* Release */}
           <Section title="Release History">
             <div className="space-y-3">
+              {/* Current release — always open */}
               <div className="p-4 rounded-lg" style={{ background: 'var(--surface-2)', border: '1px solid var(--accent)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{formatVersion()}</span>
@@ -122,58 +123,37 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
                   ))}
                 </div>
               </div>
-              <div className="p-4 rounded-lg" style={{ background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Alpha 0.9</span>
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>March 2026</span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                  {[
-                    "Morpheus Model Management node",
-                    "Preview Image + Show Anything utility nodes",
-                    "Output handles: image, description, metadata",
-                    "Base64 conversion for API compatibility",
-                    "Lazy image loading + catalog performance",
-                    "Replit wake-up mechanism",
-                    "26-node Foundation pack",
-                    "RAG spec system for prompt-to-workflow",
-                    "Gallery, Loved, Reports pages + SQLite",
-                    "Session save/restore (multi-tab)",
-                    "db-guard + start.bat native rebuild",
-                    "Patreon auth + Supabase Edge Functions",
-                  ].map((item, i) => (
-                    <span key={i} className="text-[11px] flex gap-1.5" style={{ color: 'var(--text-secondary)' }}>
-                      <span style={{ color: 'var(--accent)' }}>+</span>{item}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="p-4 rounded-lg" style={{ background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Alpha 0.7</span>
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>March 2026</span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                  {[
-                    "Fork of Node Banana — all providers preserved",
-                    "PIN + username/password auth + JWT",
-                    "API key management panel (all providers)",
-                    "10-skin theme system + dark/light",
-                    "Data Tunnel WebGL login + audio-reactive",
-                    "Custom nodes: manifest.json discovery",
-                    "Neural Atelier node pack",
-                    "shadcn/ui + Lucide icon system",
-                    "Interactive canvas grid",
-                    "Node selection accent glow",
-                    "Cost dashboard with breakdown",
-                    "Cross-platform launch scripts",
-                  ].map((item, i) => (
-                    <span key={i} className="text-[11px] flex gap-1.5" style={{ color: 'var(--text-secondary)' }}>
-                      <span style={{ color: 'var(--accent)' }}>+</span>{item}
-                    </span>
-                  ))}
-                </div>
-              </div>
+
+              {/* Past releases — collapsible */}
+              <CollapsibleRelease version="Alpha 0.9" date="March 2026" items={[
+                "Morpheus Model Management node",
+                "Preview Image + Show Anything utility nodes",
+                "Output handles: image, description, metadata",
+                "Base64 conversion for API compatibility",
+                "Lazy image loading + catalog performance",
+                "Replit wake-up mechanism",
+                "26-node Foundation pack",
+                "RAG spec system for prompt-to-workflow",
+                "Gallery, Loved, Reports pages + SQLite",
+                "Session save/restore (multi-tab)",
+                "db-guard + start.bat native rebuild",
+                "Patreon auth + Supabase Edge Functions",
+              ]} />
+
+              <CollapsibleRelease version="Alpha 0.7" date="March 2026" items={[
+                "Fork of Node Banana — all providers preserved",
+                "PIN + username/password auth + JWT",
+                "API key management panel (all providers)",
+                "10-skin theme system + dark/light",
+                "Data Tunnel WebGL login + audio-reactive",
+                "Custom nodes: manifest.json discovery",
+                "Neural Atelier node pack",
+                "shadcn/ui + Lucide icon system",
+                "Interactive canvas grid",
+                "Node selection accent glow",
+                "Cost dashboard with breakdown",
+                "Cross-platform launch scripts",
+              ]} />
             </div>
           </Section>
 
@@ -218,6 +198,48 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <div className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         {children}
       </div>
+    </div>
+  );
+}
+
+function CollapsibleRelease({ version, date, items }: { version: string; date: string; items: string[] }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div className="rounded-lg overflow-hidden" style={{ background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2 p-4 text-left cursor-pointer hover:opacity-80 transition-opacity"
+      >
+        <svg
+          className="w-3 h-3 flex-shrink-0 transition-transform duration-200"
+          style={{ color: 'var(--text-muted)', transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+        <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{version}</span>
+        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{date}</span>
+        {!open && (
+          <span className="text-[10px] ml-auto" style={{ color: 'var(--text-muted)' }}>{items.length} changes</span>
+        )}
+      </button>
+      {open && (
+        <div className="px-4 pb-4 pt-0">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            {items.map((item, i) => (
+              <span key={i} className="text-[11px] flex gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+                <span style={{ color: 'var(--accent)' }}>+</span>{item}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
